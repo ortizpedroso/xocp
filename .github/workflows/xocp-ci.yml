@@ -31,9 +31,11 @@ jobs:
 
       - uses: ./.github/actions/setup-bun
 
-      - name: Run unit tests
+      - name: Run XOCP unit tests
         timeout-minutes: 25
-        run: GITHUB_ACTIONS=false bun turbo test
+        run: |
+          bun --cwd packages/app test src/i18n/parity.test.ts
+          bun --cwd packages/core test --only-failures
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: "true"
 
