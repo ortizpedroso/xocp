@@ -1,6 +1,6 @@
 import { Config } from "@opencode-ai/core/config"
-import type { GraphifySidecar } from "@opencode-ai/core/config/experimental"
 import { Graphify } from "@opencode-ai/core/graphify"
+import { GraphifyConfig } from "@opencode-ai/core/graphify/config"
 import type { Error as GraphifyServiceError } from "@opencode-ai/core/graphify/error"
 import { Location } from "@opencode-ai/core/location"
 import { SessionTelemetry } from "@opencode-ai/core/telemetry"
@@ -35,69 +35,63 @@ function mapGraphifyError<A, R>(effect: Effect.Effect<A, GraphifyServiceError, R
   )
 }
 
-function sidecarConfigured(sidecar: GraphifySidecar | undefined) {
-  if (!sidecar || sidecar.enabled !== true) return false
-  const url = sidecar.url?.trim()
-  return !!url
-}
-
 export const GraphifyHandler = HttpApiBuilder.group(Api, "server.graphify", (handlers) =>
-  Effect.gen(function* () {
-    const graphify = yield* Graphify.Service
-    const telemetry = yield* SessionTelemetry.Service
-
-    return handlers
-      .handle(
-        "session.graphify.suggestion",
-        Effect.fn(function* (ctx) {
-          const config = yield* Config.Service
-          const entries = yield* config.entries()
-          let configured = false
-          for (const entry of entries) {
-            if (entry.type !== "document") continue
-            if (!sidecarConfigured(entry.info.experimental?.graphify_sidecar)) continue
+  handlers
+    .handle(
+      "session.graphify.suggestion",
+      Effect.fn(function* (ctx) {
+        const config = yield* Config.Service
+        const telemetry = yield* SessionTelemetry.Service
+        const entries = yield* config.entries()
+        let configured = false
+        for (const entry of entries) {
+          if (entry.type !== "document") continue
+          const resolved = yield* GraphifyConfig.resolve(entry.info.experimental?.graphify_sidecar).pipe(Effect.option)
+          if (resolved._tag === "Some") {
             configured = true
             break
           }
-          const score = yield* telemetry.score(ctx.params.sessionID)
-          return {
-            eligible: score >= SUGGEST_MAP_THRESHOLD && configured,
-            score,
-            threshold: SUGGEST_MAP_THRESHOLD,
-            sidecarConfigured: configured,
-          }
-        }),
-      )
-      .handle(
-        "session.graphify.map",
-        Effect.fn(function* (ctx) {
-          const location = yield* Location.Service
-          const started = yield* mapGraphifyError(
-            graphify.startMap({
-              sessionID: ctx.params.sessionID,
-              directory: location.directory,
-            }),
-          )
-          return { jobID: started.id, status: "running" as const }
-        }),
-      )
-      .handle(
-        "session.graphify.map.get",
-        Effect.fn(function* (ctx) {
-          const job = yield* graphify.getMap(ctx.params.jobID)
-          if (!job) {
-            return yield* new GraphifyMapNotFoundError({
-              jobID: ctx.params.jobID,
-              message: `Graphify map job not found: ${ctx.params.jobID}`,
-            })
-          }
-          return {
-            id: job.id,
-            status: job.status,
-            ...(job.output !== undefined ? { output: job.output } : {}),
-            ...(job.error !== undefined ? { error: job.error } : {}),
-          }
-        }),
-      )
-  }),
+        }
+        const score = yield* telemetry.score(ctx.params.sessionID)
+        return {
+          eligible: score >= SUGGEST_MAP_THRESHOLD && configured,
+          score,
+          threshold: SUGGEST_MAP_THRESHOLD,
+          sidecarConfigured: configured,
+        }
+      }),
+    )
+    .handle(
+      "session.graphify.map",
+      Effect.fn(function* (ctx) {
+        const graphify = yield* Graphify.Service
+        const location = yield* Location.Service
+        const started = yield* mapGraphifyError(
+          graphify.startMap({
+            sessionID: ctx.params.sessionID,
+            directory: location.directory,
+          }),
+        )
+        return { jobID: started.id, status: "running" as const }
+      }),
+    )
+    .handle(
+      "session.graphify.map.get",
+      Effect.fn(function* (ctx) {
+        const graphify = yield* Graphify.Service
+        const job = yield* graphify.getMap(ctx.params.jobID)
+        if (!job) {
+          return yield* new GraphifyMapNotFoundError({
+            jobID: ctx.params.jobID,
+            message: `Graphify map job not found: ${ctx.params.jobID}`,
+          })
+        }
+        return {
+          id: job.id,
+          status: job.status,
+          ...(job.output !== undefined ? { output: job.output } : {}),
+          ...(job.error !== undefined ? { error: job.error } : {}),
+        }
+      }),
+    ),
 )
