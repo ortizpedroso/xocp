@@ -71,7 +71,6 @@ export const makeGraphifyGroup = <SessionLocationId extends HttpApiMiddleware.An
     .add(
       HttpApiEndpoint.post("session.graphify.map", "/api/session/:sessionID/graphify-map", {
         params: { sessionID: Session.ID },
-        payload: Schema.Struct({}),
         success: GraphifyMapStart,
         error: [SessionNotFoundError, GraphifyNotConfiguredError, GraphifySidecarError],
       })
