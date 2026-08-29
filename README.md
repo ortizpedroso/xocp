@@ -14,6 +14,10 @@ Early development on branch `dev`. Optional upstream sync from OpenCode is manua
 
 Requires [Bun 1.3.14](https://bun.sh) (see `packageManager` in `package.json`).
 
+### Full stack (recommended)
+
+Starts the API server and serves the web UI in one process:
+
 ```bash
 bun install
 bun dev web
@@ -21,10 +25,30 @@ bun dev web
 
 Open http://localhost:4096
 
+### Local UI development (hot reload)
+
+The web UI is a separate Vite app. It needs the API server on port **4096**; without it the page loads but buttons stay disabled.
+
+```bash
+bun install
+bun dev:local
+```
+
+Open http://localhost:4444 (API at http://localhost:4096).
+
+Or run the two processes in separate terminals:
+
+```bash
+bun dev serve --port 4096          # API
+bun run --cwd packages/app dev -- --port 4444   # UI with HMR
+```
+
+> **Note:** `bun dev:web` starts only the Vite frontend. Use `bun dev web` (no colon) for the full stack, or `bun dev:local` for frontend + API together.
+
 Other entrypoints:
 
 ```bash
-bun dev              # CLI / server (packages/opencode)
+bun dev              # CLI / TUI (packages/opencode)
 bun dev:desktop      # Desktop app
 ```
 
