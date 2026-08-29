@@ -872,6 +872,8 @@ export const dict = {
   "sidebar.menu.toggle": "Цэсийг сэлгэх",
   "sidebar.nav.projectsAndSessions": "Төсөл ба хуралдаанууд",
   "sidebar.settings": "Тохиргоо",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Туслаач",
   "sidebar.workspaces.enable": "Ажлын талбаруудыг идэвхжүүлэх",
   "sidebar.workspaces.disable": "Ажлын талбаруудыг идэвхгүй болгох",

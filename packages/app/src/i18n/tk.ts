@@ -865,6 +865,8 @@ export const dict = {
   "sidebar.menu.toggle": "Menýu açyň",
   "sidebar.nav.projectsAndSessions": "Taslamalar we sessiýalar",
   "sidebar.settings": "Sazlamalar",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Kömek",
   "sidebar.workspaces.enable": "Workspace-lary açyň",
   "sidebar.workspaces.disable": "Workspace-lary öçüriň",

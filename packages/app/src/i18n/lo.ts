@@ -860,6 +860,8 @@ export const dict = {
   "sidebar.menu.toggle": "ສະຫຼັບເມນູ",
   "sidebar.nav.projectsAndSessions": "ໂຄງການ ແລະກອງປະຊຸມ",
   "sidebar.settings": "ການຕັ້ງຄ່າ",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "ຊ່ວຍ",
   "sidebar.workspaces.enable": "ເປີດໃຊ້ພື້ນທີ່ເຮັດວຽກ",
   "sidebar.workspaces.disable": "ປິດການໃຊ້ງານພື້ນທີ່ເຮັດວຽກ",

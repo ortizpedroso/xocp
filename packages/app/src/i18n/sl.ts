@@ -870,6 +870,8 @@ export const dict = {
   "sidebar.menu.toggle": "Preklopi meni",
   "sidebar.nav.projectsAndSessions": "Projekti in seje",
   "sidebar.settings": "nastavitve",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "pomoč",
   "sidebar.workspaces.enable": "Omogoči delovne prostore",
   "sidebar.workspaces.disable": "Onemogoči delovne prostore",

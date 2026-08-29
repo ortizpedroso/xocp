@@ -954,6 +954,8 @@ export const dict = {
   "sidebar.menu.toggle": "Перемкнути меню",
   "sidebar.nav.projectsAndSessions": "Проєкти та сесії",
   "sidebar.settings": "Налаштування",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Довідка",
   "sidebar.workspaces.enable": "Увімкнути робочі області",
   "sidebar.workspaces.disable": "Вимкнути робочі області",

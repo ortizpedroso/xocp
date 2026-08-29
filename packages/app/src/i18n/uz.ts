@@ -871,6 +871,8 @@ export const dict = {
   "sidebar.menu.toggle": "Menyuni almashtirish",
   "sidebar.nav.projectsAndSessions": "Loyihalar va sessiyalar",
   "sidebar.settings": "Sozlamalar",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Yordam",
   "sidebar.workspaces.enable": "Ish joylarini yoqish",
   "sidebar.workspaces.disable": "Ish joylarini o'chirib qo'ying",

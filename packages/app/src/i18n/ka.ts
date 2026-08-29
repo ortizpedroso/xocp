@@ -864,6 +864,8 @@ export const dict = {
   "sidebar.menu.toggle": "გადართვა მენიუ",
   "sidebar.nav.projectsAndSessions": "პროექტები და სესიები",
   "sidebar.settings": "პარამეტრები",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "დახმარება",
   "sidebar.workspaces.enable": "სამუშაო სივრცის ჩართვა",
   "sidebar.workspaces.disable": "სამუშაო სივრცის გამორთვა",

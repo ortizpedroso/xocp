@@ -879,6 +879,8 @@ export const dict: Record<string, string> = {
   "sidebar.menu.toggle": "དཀར་ཆག་སོར་བསྒྱུར་འབད།",
   "sidebar.nav.projectsAndSessions": "ལས་གཞི་དང་ཚོགས་ཚན།",
   "sidebar.settings": "སྒྲིག་སྟངས་ཚུ།",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "ཆ་རོགས་འབད་ནི",
   "sidebar.workspaces.enable": "ལཱ་གི་ས་སྒོ་ཚུ་ལྕོགས་ཅན་བཟོ།",
   "sidebar.workspaces.disable": "ལཱ་གི་ས་སྒོ་ཚུ་ལྕོགས་མིན་བཟོ།",

@@ -865,6 +865,8 @@ export const dict = {
   "sidebar.menu.toggle": "Skift valmynd",
   "sidebar.nav.projectsAndSessions": "Verkætlanir og setur",
   "sidebar.settings": "Innstillingar",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Hjálp",
   "sidebar.workspaces.enable": "Virkja workspace",
   "sidebar.workspaces.disable": "Slá workspace frá",

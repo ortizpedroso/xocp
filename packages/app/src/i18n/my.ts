@@ -874,6 +874,8 @@ export const dict = {
   "sidebar.menu.toggle": "မီနူးကို ပြောင်းရန်",
   "sidebar.nav.projectsAndSessions": "ပရောဂျက်များနှင့် ဆက်ရှင်များ",
   "sidebar.settings": "ဆက်တင်များ",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "အကူအညီ",
   "sidebar.workspaces.enable": "အလုပ်နေရာများကို ဖွင့်ပါ။",
   "sidebar.workspaces.disable": "အလုပ်နေရာများကို ပိတ်ပါ။",

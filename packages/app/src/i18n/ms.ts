@@ -864,6 +864,8 @@ export const dict = {
   "sidebar.menu.toggle": "Togol menu",
   "sidebar.nav.projectsAndSessions": "Projek dan sesi",
   "sidebar.settings": "Tetapan",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Bantuan",
   "sidebar.workspaces.enable": "Aktifkan ruang kerja",
   "sidebar.workspaces.disable": "Nyahaktifkan ruang kerja",

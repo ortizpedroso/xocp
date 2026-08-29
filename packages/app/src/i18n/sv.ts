@@ -870,6 +870,8 @@ export const dict = {
   "sidebar.menu.toggle": "Växla meny",
   "sidebar.nav.projectsAndSessions": "Projekt och sessioner",
   "sidebar.settings": "Inställningar",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Hjälp",
   "sidebar.workspaces.enable": "Aktivera arbetsytor",
   "sidebar.workspaces.disable": "Inaktivera arbetsytor",

@@ -864,6 +864,8 @@ export const dict = {
   "sidebar.menu.toggle": "تغییر منو",
   "sidebar.nav.projectsAndSessions": "پروژه ها و جلسات",
   "sidebar.settings": "تنظیمات",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "کمک کنید",
   "sidebar.workspaces.enable": "فضاهای کاری را فعال کنید",
   "sidebar.workspaces.disable": "غیرفعال کردن فضاهای کاری",

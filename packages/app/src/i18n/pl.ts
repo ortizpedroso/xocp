@@ -820,6 +820,8 @@ export const dict = {
   "sidebar.menu.toggle": "Przełącz menu",
   "sidebar.nav.projectsAndSessions": "Projekty i sesje",
   "sidebar.settings": "Ustawienia",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Pomoc",
   "sidebar.workspaces.enable": "Włącz przestrzenie robocze",
   "sidebar.workspaces.disable": "Wyłącz przestrzenie robocze",

@@ -878,6 +878,8 @@ export const dict = {
   "sidebar.menu.toggle": "Perjungti meniu",
   "sidebar.nav.projectsAndSessions": "Projektai ir užsiėmimai",
   "sidebar.settings": "Nustatymai",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Pagalba",
   "sidebar.workspaces.enable": "Įgalinti darbo sritis",
   "sidebar.workspaces.disable": "Išjungti darbo sritis",
