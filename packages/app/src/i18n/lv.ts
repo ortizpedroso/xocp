@@ -870,6 +870,8 @@ export const dict = {
   "sidebar.menu.toggle": "Pārslēgt izvēlni",
   "sidebar.nav.projectsAndSessions": "Projekti un sesijas",
   "sidebar.settings": "Iestatījumi",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Palīdzība",
   "sidebar.workspaces.enable": "Ieslēgt darba telpas",
   "sidebar.workspaces.disable": "Izslēgt darba telpas",

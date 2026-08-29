@@ -875,6 +875,8 @@ export const dict = {
   "sidebar.menu.toggle": "Canvia el menú",
   "sidebar.nav.projectsAndSessions": "Projectes i sessions",
   "sidebar.settings": "Configuració",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Ajuda",
   "sidebar.workspaces.enable": "Habilita els espais de treball",
   "sidebar.workspaces.disable": "Desactivar els espais de treball",

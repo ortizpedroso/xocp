@@ -876,6 +876,8 @@ export const dict = {
   "sidebar.menu.toggle": "مینو دکھائیں یا چھپائیں",
   "sidebar.nav.projectsAndSessions": "پروجیکٹس اور سیشنز",
   "sidebar.settings": "ترتیبات",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "مدد",
   "sidebar.workspaces.enable": "ورک اسپیسز کو فعال کریں۔",
   "sidebar.workspaces.disable": "ورک اسپیس کو غیر فعال کریں۔",

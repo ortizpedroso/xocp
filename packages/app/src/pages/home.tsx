@@ -40,6 +40,7 @@ export function NewHome() {
           <HomeUtilityNav
             class="flex lg:hidden"
             onOpenSettings={projects.utility.settings}
+            onOpenDocumentation={projects.utility.documentation}
             onOpenHelp={projects.utility.help}
             language={projects.copy.language}
           />

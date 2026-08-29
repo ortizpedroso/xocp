@@ -873,6 +873,8 @@ export const dict = {
   "sidebar.menu.toggle": "مینو ٹوگل کرو",
   "sidebar.nav.projectsAndSessions": "پروجیکٹ تے سیشن",
   "sidebar.settings": "ترتیبات",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "مدد",
   "sidebar.workspaces.enable": "ورک سپیس چالو کرو",
   "sidebar.workspaces.disable": "ورک اسپیسز نو غیر فعال کرو",

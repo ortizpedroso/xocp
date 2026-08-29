@@ -1,3 +1,8 @@
-# web + desktop packages
-packages/app/      @Hona @Brendonovich
-packages/desktop/  @Hona @Brendonovich
+# XOCP — default owner for all paths
+* @ortizpedroso
+
+# XOCP-owned docs and specs
+/AGENTS.md @ortizpedroso
+/README.md @ortizpedroso
+/specs/xocp/ @ortizpedroso
+/.cursor/ @ortizpedroso

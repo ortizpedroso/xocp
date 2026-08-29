@@ -869,6 +869,8 @@ export const dict = {
   "sidebar.menu.toggle": "Вклучете го менито",
   "sidebar.nav.projectsAndSessions": "Проекти и сесии",
   "sidebar.settings": "Поставки",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Помош",
   "sidebar.workspaces.enable": "Овозможете работни простори",
   "sidebar.workspaces.disable": "Оневозможи работни простори",

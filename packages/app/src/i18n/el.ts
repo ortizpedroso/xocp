@@ -874,6 +874,8 @@ export const dict = {
   "sidebar.menu.toggle": "Εναλλαγή μενού",
   "sidebar.nav.projectsAndSessions": "Έργα και συνεδρίες",
   "sidebar.settings": "Ρυθμίσεις",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Βοήθεια",
   "sidebar.workspaces.enable": "Ενεργοποίηση χώρων εργασίας",
   "sidebar.workspaces.disable": "Απενεργοποίηση χώρων εργασίας",

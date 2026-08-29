@@ -868,6 +868,8 @@ export const dict = {
   "sidebar.menu.toggle": "Менюи гузариш",
   "sidebar.nav.projectsAndSessions": "Лоиҳаҳо ва ҷаласаҳо",
   "sidebar.settings": "Танзимотҳо",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Кӯмак",
   "sidebar.workspaces.enable": "Фазои кории фаъолро фаъол созед",
   "sidebar.workspaces.disable": "Ҷойҳои кории худро ғайрифаъол кунед",

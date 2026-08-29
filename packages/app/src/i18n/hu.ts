@@ -872,6 +872,8 @@ export const dict = {
   "sidebar.menu.toggle": "Váltó menü",
   "sidebar.nav.projectsAndSessions": "Projektek és foglalkozások",
   "sidebar.settings": "Beállítások",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Segítség",
   "sidebar.workspaces.enable": "Munkaterületek engedélyezése",
   "sidebar.workspaces.disable": "Munkaterületek letiltása",

@@ -874,6 +874,8 @@ export const dict = {
   "sidebar.menu.toggle": "Menu tonen of verbergen",
   "sidebar.nav.projectsAndSessions": "Projecten en sessies",
   "sidebar.settings": "Instellingen",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Hulp",
   "sidebar.workspaces.enable": "Schakel werkruimten in",
   "sidebar.workspaces.disable": "Schakel werkruimten uit",

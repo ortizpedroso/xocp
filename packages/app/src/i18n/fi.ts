@@ -764,6 +764,8 @@ export const dict = {
   "sidebar.menu.toggle": "Näytä tai piilota valikko",
   "sidebar.nav.projectsAndSessions": "Projektit ja istunnot",
   "sidebar.settings": "Asetukset",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Ohje",
   "sidebar.workspaces.enable": "Ota työtilat käyttöön",
   "sidebar.workspaces.disable": "Poista työtilat käytöstä",

@@ -868,6 +868,8 @@ export const dict = {
   "sidebar.menu.toggle": "Skipta um valmynd",
   "sidebar.nav.projectsAndSessions": "Verkefni og setur",
   "sidebar.settings": "Stillingar",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Hjálp",
   "sidebar.workspaces.enable": "Virkjaðu vinnusvæði",
   "sidebar.workspaces.disable": "Slökktu á vinnusvæðum",

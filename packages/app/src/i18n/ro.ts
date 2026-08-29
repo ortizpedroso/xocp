@@ -870,6 +870,8 @@ export const dict = {
   "sidebar.menu.toggle": "Comută meniul",
   "sidebar.nav.projectsAndSessions": "Proiecte și sesiuni",
   "sidebar.settings": "Setări",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Ajutor",
   "sidebar.workspaces.enable": "Activează spațiile de lucru",
   "sidebar.workspaces.disable": "Dezactivează spațiile de lucru",

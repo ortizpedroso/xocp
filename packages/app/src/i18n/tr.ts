@@ -885,6 +885,8 @@ export const dict = {
   "sidebar.menu.toggle": "Menüyü aç/kapat",
   "sidebar.nav.projectsAndSessions": "Projeler ve oturumlar",
   "sidebar.settings": "Ayarlar",
+  "documentation.title": "Documentation",
+  "sidebar.documentation": "Documentation",
   "sidebar.help": "Yardım",
   "sidebar.workspaces.enable": "Çalışma alanlarını etkinleştir",
   "sidebar.workspaces.disable": "Çalışma alanlarını devre dışı bırak",
