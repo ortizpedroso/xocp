@@ -38,7 +38,7 @@ No `feat/` or `fix/` prefixes on Cloud Agent branches.
 
 ## XOCP workflow and GitHub
 
-- Development workflow (local vs Cloud Agent): `specs/xocp/workflow.md`
+- Development workflow (Cloud Agent primary, local for testing): `specs/xocp/workflow.md`
 - GitHub rules, CI, and branch protection: `specs/xocp/github-governance.md`
 
 ---
