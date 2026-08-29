@@ -1,5 +1,3 @@
-import { DIFFS_TAG_NAME } from "@pierre/diffs"
-
 /**
  * TypeScript declaration for the <diffs-container> custom element.
  * This tells TypeScript that <diffs-container> is a valid JSX element in SolidJS.
@@ -9,7 +7,7 @@ import { DIFFS_TAG_NAME } from "@pierre/diffs"
 declare module "solid-js" {
   namespace JSX {
     interface IntrinsicElements {
-      [DIFFS_TAG_NAME]: HTMLAttributes<HTMLElement>
+      "diffs-container": HTMLAttributes<HTMLElement>
     }
   }
 }
