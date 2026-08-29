@@ -25,7 +25,8 @@
     "prepare": "husky",
     "random": "echo 'Random script'",
     "sso": "aws sso login --sso-session=opencode --no-browser",
-    "translate:app": "bun run script/translate-app.ts",
+    "generate:xocp-docs": "bun ./script/generate-xocp-docs.ts",
+    "check:xocp-docs": "bun ./script/generate-xocp-docs.ts --check",
     "test": "echo 'do not run tests from root' && exit 1"
   },
   "workspaces": {

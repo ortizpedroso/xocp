@@ -34,6 +34,7 @@ No `feat/` or `fix/` prefixes on Cloud Agent branches.
 - No auto-activation of map/clusters; user opt-in only.
 - Python for Graphify orchestration; TypeScript for session, UI, and API.
 - Preserve MIT license and upstream copyright notice.
+- When changing XOCP architecture, session flow, stack, or roadmap, update `specs/xocp/documentacao.md` and run `bun run generate:xocp-docs` (CI enforces this via `xocp-ci`).
 
 ---
 
