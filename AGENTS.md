@@ -35,6 +35,11 @@ No `feat/` or `fix/` prefixes on Cloud Agent branches.
 - Python for Graphify orchestration; TypeScript for session, UI, and API.
 - Preserve MIT license and upstream copyright notice.
 
+## XOCP workflow and GitHub
+
+- Development workflow (local vs Cloud Agent): `specs/xocp/workflow.md`
+- GitHub rules, CI, and branch protection: `specs/xocp/github-governance.md`
+
 ---
 
 ## Upstream OpenCode rules
