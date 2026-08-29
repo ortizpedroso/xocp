@@ -62,15 +62,10 @@ function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config
     Layer.provide(auth),
     Layer.provide(serviceLayer),
     Layer.provide(backgroundJobLayer),
-  )
+  ) as Layer.Layer<never, unknown, HttpRouter.HttpRouter>
 }
 
 export const routes = createRoutes()
 
 export const webHandler = () =>
-  HttpRouter.toWebHandler(
-    // Graphify joins location services with a global BackgroundJob dependency; Effect's Layer
-    // inference does not narrow the merged route layer type here yet.
-    routes.pipe(Layer.provide(HttpServer.layerServices)) as Layer.Layer<never, never, HttpRouter.HttpRouter>,
-    { disableLogger: true },
-  )
+  HttpRouter.toWebHandler(routes.pipe(Layer.provide(HttpServer.layerServices)), { disableLogger: true })
