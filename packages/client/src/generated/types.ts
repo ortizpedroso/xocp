@@ -94,6 +94,29 @@ export type QuestionNotFoundError = {
 export const isQuestionNotFoundError = (value: unknown): value is QuestionNotFoundError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "QuestionNotFoundError"
 
+export type GraphifyNotConfiguredError = {
+  readonly _tag: "GraphifyNotConfiguredError"
+  readonly code: "graphify_not_configured"
+}
+export const isGraphifyNotConfiguredError = (value: unknown): value is GraphifyNotConfiguredError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "GraphifyNotConfiguredError"
+
+export type GraphifySidecarError = {
+  readonly _tag: "GraphifySidecarError"
+  readonly code: "graphify_sidecar_error"
+  readonly message: string
+}
+export const isGraphifySidecarError = (value: unknown): value is GraphifySidecarError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "GraphifySidecarError"
+
+export type GraphifyMapNotFoundError = {
+  readonly _tag: "GraphifyMapNotFoundError"
+  readonly jobID: string
+  readonly message: string
+}
+export const isGraphifyMapNotFoundError = (value: unknown): value is GraphifyMapNotFoundError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "GraphifyMapNotFoundError"
+
 export type ProjectCopyError = {
   readonly name: "ProjectCopyError"
   readonly data: { readonly message: string; readonly forceRequired?: boolean | undefined }
@@ -2744,6 +2767,31 @@ export type QuestionsRejectInput = {
 }
 
 export type QuestionsRejectOutput = void
+
+export type ServerGraphifySuggestionInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type ServerGraphifySuggestionOutput = {
+  readonly eligible: boolean
+  readonly score: number
+  readonly threshold: number
+  readonly sidecarConfigured: boolean
+}
+
+export type ServerGraphifyMapInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type ServerGraphifyMapOutput = { readonly jobID: string; readonly status: "running" }
+
+export type ServerGraphifyGetInput = {
+  readonly sessionID: { readonly sessionID: string; readonly jobID: string }["sessionID"]
+  readonly jobID: { readonly sessionID: string; readonly jobID: string }["jobID"]
+}
+
+export type ServerGraphifyGetOutput = {
+  readonly id: string
+  readonly status: "running" | "completed" | "error" | "cancelled"
+  readonly output?: string | undefined
+  readonly error?: string | undefined
+}
 
 export type ReferencesListInput = {
   readonly location?: {

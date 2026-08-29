@@ -104,6 +104,12 @@ import type {
   QuestionsReplyOutput,
   QuestionsRejectInput,
   QuestionsRejectOutput,
+  ServerGraphifySuggestionInput,
+  ServerGraphifySuggestionOutput,
+  ServerGraphifyMapInput,
+  ServerGraphifyMapOutput,
+  ServerGraphifyGetInput,
+  ServerGraphifyGetOutput,
   ReferencesListInput,
   ReferencesListOutput,
   ProjectCopiesCreateInput,
@@ -929,6 +935,42 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [404, 400, 401],
             empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    "server.graphify": {
+      suggestion: (input: ServerGraphifySuggestionInput, requestOptions?: RequestOptions) =>
+        request<ServerGraphifySuggestionOutput>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/graphify-suggestion`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      map: (input: ServerGraphifyMapInput, requestOptions?: RequestOptions) =>
+        request<ServerGraphifyMapOutput>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/graphify-map`,
+            body: undefined,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 502, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: ServerGraphifyGetInput, requestOptions?: RequestOptions) =>
+        request<ServerGraphifyGetOutput>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/graphify-map/${encodeURIComponent(input.jobID)}`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
           },
           requestOptions,
         ),

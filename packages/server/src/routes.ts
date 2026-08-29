@@ -8,6 +8,7 @@ import { PermissionSaved } from "@opencode-ai/core/permission/saved"
 import { PtyTicket } from "@opencode-ai/core/pty/ticket"
 import { SessionV2 } from "@opencode-ai/core/session"
 import { SessionExecution } from "@opencode-ai/core/session/execution"
+import { BackgroundJob } from "@opencode-ai/core/background-job"
 import { LocationServiceMap } from "@opencode-ai/core/location-service-map"
 import { SessionExecutionLocal } from "@opencode-ai/core/session/execution/local"
 import { ToolOutputStore } from "@opencode-ai/core/tool-output-store"
@@ -50,6 +51,7 @@ export function createEmbeddedRoutes() {
 
 function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>) {
   const serviceLayer = AppNodeBuilder.build(applicationServices, [[SessionExecution.node, SessionExecutionLocal.node]])
+  const backgroundJobLayer = LayerNode.compile(BackgroundJob.node)
 
   return HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
     Layer.provide(handlers),
@@ -59,10 +61,16 @@ function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config
     Layer.provide(schemaErrorLayer),
     Layer.provide(auth),
     Layer.provide(serviceLayer),
+    Layer.provide(backgroundJobLayer),
   )
 }
 
 export const routes = createRoutes()
 
 export const webHandler = () =>
-  HttpRouter.toWebHandler(routes.pipe(Layer.provide(HttpServer.layerServices)), { disableLogger: true })
+  HttpRouter.toWebHandler(
+    // Graphify joins location services with a global BackgroundJob dependency; Effect's Layer
+    // inference does not narrow the merged route layer type here yet.
+    routes.pipe(Layer.provide(HttpServer.layerServices)) as Layer.Layer<never, never, HttpRouter.HttpRouter>,
+    { disableLogger: true },
+  )
