@@ -37,6 +37,7 @@ import { SessionRevert } from "./session/revert"
 import { Revert } from "@opencode-ai/schema/revert"
 import { FSUtil } from "./fs-util"
 import { SessionDurable } from "@opencode-ai/schema/durable-event-manifest"
+import { SessionTelemetry } from "./telemetry"
 
 export const RevertState = Revert.State
 export type RevertState = Revert.State
@@ -257,6 +258,16 @@ const layer = Layer.effect(
             }),
           )
         if (projected.type === "existing") return projected.session
+        yield* SessionTelemetry.observe({
+          sessionID,
+          event: {
+            _tag: "session.started",
+            ...(input.agent ? { agent: input.agent } : {}),
+            ...(input.model
+              ? { model: `${input.model.providerID}/${ModelV2.ID.make(input.model.id)}` }
+              : {}),
+          },
+        }).pipe(Effect.provide(locations.get(input.location)))
         // TODO: Restore recorded sessions onto replacement synchronized workspaces in a future API slice.
         return yield* result.get(sessionID).pipe(Effect.orDie)
       }),
