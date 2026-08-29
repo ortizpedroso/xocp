@@ -1,3 +1,44 @@
+# XOCP project rules
+
+XOCP (**eXtensible Open Code Platform**, by Pedroso) is an independent fork of [OpenCode](https://github.com/anomalyco/opencode) (MIT). Repository: `github.com/ortizpedroso/xocp`. Default branch: `dev`.
+
+## Remotes
+
+- `origin` — XOCP (this repo)
+- `opencode` — upstream OpenCode for optional merges
+
+Do not treat this repo as a GitHub fork of OpenCode. Sync upstream manually on a dedicated branch.
+
+## Branch names
+
+| Context | Pattern | Example |
+|---------|---------|---------|
+| Cloud Agent | `cursor/<short-name>-9521` | `cursor/session-telemetry-9521` |
+| Local feature | short hyphenated name (max 3 words) | `session-telemetry`, `graph-sidecar` |
+
+No `feat/` or `fix/` prefixes on Cloud Agent branches.
+
+## XOCP roadmap (implement in order)
+
+1. **Telemetry** — session score, event log, feature flags (`experimental.graphify`)
+2. **Graphify sidecar** — Python FastAPI + `graphifyy`; map jobs via `BackgroundJob`
+3. **UI** — opt-in suggestion, “Map” button, toast when ready
+4. **Handoff** — durable ≤2000 chars (port or reimplement; not UI LRU in `packages/app/src/pages/session/handoff.ts`)
+5. **Clusters** — FE / BE / Core routing + `work-map.json`
+6. **Prefetch** — background map only if telemetry proves value
+
+## XOCP constraints
+
+- Keep OpenCode session core (SessionV2) behavior unless a spec says otherwise.
+- Graphify is an external sidecar — do not vendor the Graphify repo into the monorepo.
+- No auto-activation of map/clusters; user opt-in only.
+- Python for Graphify orchestration; TypeScript for session, UI, and API.
+- Preserve MIT license and upstream copyright notice.
+
+---
+
+## Upstream OpenCode rules
+
 - To regenerate the legacy JavaScript SDK, run `./packages/sdk/js/script/build.ts`.
 - After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.
 - Keep runtime dependencies directed from Schema to Core and Protocol, then from Core and Protocol to Server. Client runtime code may depend on Schema and Protocol but never Core or Server; `sdk-next` composes Client, Core, and Server.

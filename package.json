@@ -1,8 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "opencode",
-  "description": "AI-powered development tool",
+  "description": "XOCP — eXtensible Open Code Platform by Pedroso",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ortizpedroso/xocp.git"
+  },
   "type": "module",
   "packageManager": "bun@1.3.14",
   "scripts": {
