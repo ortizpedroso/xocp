@@ -80,6 +80,7 @@
       },
       "devDependencies": {
         "@happy-dom/global-registrator": "20.0.11",
+        "@opencode-ai/protocol": "workspace:*",
         "@playwright/test": "catalog:",
         "@sentry/vite-plugin": "catalog:",
         "@tailwindcss/vite": "catalog:",

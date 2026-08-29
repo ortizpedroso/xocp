@@ -285,6 +285,16 @@ export default {
       yield* tx.run(
         `CREATE INDEX \`session_telemetry_event_session_type_idx\` ON \`session_telemetry_event\` (\`session_id\`,\`type\`);`,
       )
+      yield* tx.run(`
+        CREATE TABLE \`session_handoff\` (
+          \`id\` text PRIMARY KEY,
+          \`session_id\` text NOT NULL,
+          \`content\` text NOT NULL,
+          \`created_at\` integer NOT NULL,
+          CONSTRAINT \`fk_session_handoff_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`CREATE INDEX \`session_handoff_session_idx\` ON \`session_handoff\` (\`session_id\`);`)
     })
   },
 } satisfies Omit<DatabaseMigration.Migration, "id">
