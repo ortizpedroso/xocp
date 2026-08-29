@@ -13,7 +13,7 @@ Do not treat this repo as a GitHub fork of OpenCode. Sync upstream manually on a
 
 | Context | Pattern | Example |
 |---------|---------|---------|
-| Cloud Agent | `cursor/<short-name>-9521` | `cursor/session-telemetry-9521` |
+| Cloud Agent | `cursor/<short-name>-40fd` | `cursor/documentacao-page-40fd` |
 | Local feature | short hyphenated name (max 3 words) | `session-telemetry`, `graph-sidecar` |
 
 No `feat/` or `fix/` prefixes on Cloud Agent branches.
@@ -35,6 +35,11 @@ No `feat/` or `fix/` prefixes on Cloud Agent branches.
 - Python for Graphify orchestration; TypeScript for session, UI, and API.
 - Preserve MIT license and upstream copyright notice.
 - When changing XOCP architecture, session flow, stack, or roadmap, update `specs/xocp/documentacao.md` and run `bun run generate:xocp-docs` (CI enforces this via `xocp-ci`).
+
+## XOCP workflow and GitHub
+
+- Development workflow (local vs Cloud Agent): `specs/xocp/workflow.md`
+- GitHub rules, CI, and branch protection: `specs/xocp/github-governance.md`
 
 ---
 

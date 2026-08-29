@@ -1,29 +1,20 @@
-### Issue for this PR
+### O que este PR faz?
 
-Closes #
+Descreva a mudança em poucas frases. Se for feature XOCP, indique o item do roadmap em `AGENTS.md`.
 
-### Type of change
+### Como foi verificado?
+
+- [ ] CI `xocp-ci` passou (typecheck, test, xocp-docs)
+- [ ] Testado no Cloud Agent (ou localmente com `bun dev web`)
+
+### Spec / documentação
+
+- [ ] N/A — sem impacto em arquitetura ou fluxo
+- [ ] Atualizei `specs/xocp/documentacao.md` e rodei `bun run generate:xocp-docs`
+
+### Tipo
 
 - [ ] Bug fix
-- [ ] New feature
-- [ ] Refactor / code improvement
-- [ ] Documentation
-
-### What does this PR do?
-
-Please provide a description of the issue, the changes you made to fix it, and why they work. It is expected that you understand why your changes work and if you do not understand why at least say as much so a maintainer knows how much to value the PR.
-
-**If you paste a large clearly AI generated description here your PR may be IGNORED or CLOSED!**
-
-### How did you verify your code works?
-
-### Screenshots / recordings
-
-_If this is a UI change, please include a screenshot or recording._
-
-### Checklist
-
-- [ ] I have tested my changes locally
-- [ ] I have not included unrelated changes in this PR
-
-_If you do not follow this template your PR will be automatically rejected._
+- [ ] Feature XOCP
+- [ ] Chore / governança
+- [ ] Docs
