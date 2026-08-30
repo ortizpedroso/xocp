@@ -236,8 +236,9 @@ describe("location services", () => {
 
 describe("graphify integration", () => {
   test("runs uv graphify update when uv is installed", async () => {
-    const { which } = await import("../../src/util/which")
-    if (!which("uv")) return
+    const whichPkg = (await import("which")).default
+    const uvPath = whichPkg.sync("uv", { nothrow: true })
+    if (!uvPath || typeof uvPath !== "string") return
     const root = path.join("/tmp", "graphify-integration")
     rmSync(root, { recursive: true, force: true })
     mkdirSync(path.join(root, "src"), { recursive: true })
@@ -247,7 +248,7 @@ describe("graphify integration", () => {
       proc
         .run(
           (await import("effect/unstable/process")).ChildProcess.make(
-            "uv",
+            uvPath,
             ["tool", "run", "--from", "graphifyy==0.9.52", "graphify", "update", root],
             { cwd: root, extendEnv: true },
           ),
