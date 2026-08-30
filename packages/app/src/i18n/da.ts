@@ -1247,4 +1247,11 @@ export const dict = {
   "help.tabs.persistence": "Dine faner er stadig åbne, når du åbner appen igen.",
   "help.tabs.worktrees":
     "Det nye design understøtter endnu ikke Git Worktrees, men understøttelsen kommer snart. Hvis du foretrækker at fortsætte med det tidligere layout, kan du skifte mellem layoutene under Indstillinger. Bemærk, at det nye layout bliver permanent om nogle få uger.",
+  "session.graphify.suggestion.message": "This session looks ready for a project map.",
+  "session.graphify.map.action": "Map project",
+  "session.graphify.map.loading": "Mapping...",
+  "session.graphify.error.disabled": "Graphify mapping is disabled.",
+  "session.graphify.error.uvNotFound": "Graphify is not available on this machine. Install uv: https://docs.astral.sh/uv/",
+  "session.graphify.error.updateFailed": "Graphify map update failed.",
+  "session.graphify.toast.ready": "Project map ready",
 }

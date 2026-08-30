@@ -3,6 +3,7 @@ import { create as createIdentifier } from "@opencode-ai/schema/identifier"
 const prefixes = {
   job: "job",
   event: "evt",
+  handoff: "hnd",
   session: "ses",
   message: "msg",
   permission: "per",

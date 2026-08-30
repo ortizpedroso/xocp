@@ -1,5 +1,7 @@
 import { describe, expect } from "bun:test"
+import { mkdirSync } from "fs"
 import path from "path"
+import { tmpdir as osTmpdir } from "os"
 import { Effect, Layer, Stream } from "effect"
 import { AgentV2 } from "@opencode-ai/core/agent"
 import { asc, eq } from "drizzle-orm"
@@ -44,7 +46,9 @@ const it = testEffect(
     ],
   ),
 )
-const location = Location.Ref.make({ directory: AbsolutePath.make("/project") })
+const projectDir = path.join(osTmpdir(), "session-create-test-project")
+mkdirSync(projectDir, { recursive: true })
+const location = Location.Ref.make({ directory: AbsolutePath.make(projectDir) })
 const id = SessionV2.ID.create()
 
 describe("SessionV2.create", () => {

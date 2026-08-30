@@ -87,6 +87,15 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`session_handoff\` (
+          \`id\` text PRIMARY KEY,
+          \`session_id\` text NOT NULL,
+          \`content\` text NOT NULL,
+          \`created_at\` integer NOT NULL,
+          CONSTRAINT \`fk_session_handoff_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`permission\` (
           \`id\` text PRIMARY KEY,
           \`project_id\` text NOT NULL,
@@ -236,8 +245,19 @@ export default {
           CONSTRAINT \`fk_session_share_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
         );
       `)
+      yield* tx.run(`
+        CREATE TABLE \`session_telemetry_event\` (
+          \`id\` text PRIMARY KEY,
+          \`session_id\` text NOT NULL,
+          \`type\` text NOT NULL,
+          \`recorded_at\` integer NOT NULL,
+          \`payload\` text NOT NULL,
+          CONSTRAINT \`fk_session_telemetry_event_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
       yield* tx.run(`CREATE UNIQUE INDEX \`event_aggregate_seq_idx\` ON \`event\` (\`aggregate_id\`,\`seq\`);`)
       yield* tx.run(`CREATE INDEX \`event_aggregate_type_seq_idx\` ON \`event\` (\`aggregate_id\`,\`type\`,\`seq\`);`)
+      yield* tx.run(`CREATE INDEX \`session_handoff_session_idx\` ON \`session_handoff\` (\`session_id\`);`)
       yield* tx.run(
         `CREATE UNIQUE INDEX \`permission_project_action_resource_idx\` ON \`permission\` (\`project_id\`,\`action\`,\`resource\`);`,
       )
@@ -269,6 +289,12 @@ export default {
       yield* tx.run(`CREATE INDEX \`session_workspace_idx\` ON \`session\` (\`workspace_id\`);`)
       yield* tx.run(`CREATE INDEX \`session_parent_idx\` ON \`session\` (\`parent_id\`);`)
       yield* tx.run(`CREATE INDEX \`todo_session_idx\` ON \`todo\` (\`session_id\`);`)
+      yield* tx.run(
+        `CREATE INDEX \`session_telemetry_event_session_idx\` ON \`session_telemetry_event\` (\`session_id\`);`,
+      )
+      yield* tx.run(
+        `CREATE INDEX \`session_telemetry_event_session_type_idx\` ON \`session_telemetry_event\` (\`session_id\`,\`type\`);`,
+      )
     })
   },
 } satisfies Omit<DatabaseMigration.Migration, "id">

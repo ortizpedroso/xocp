@@ -1163,4 +1163,11 @@ export const dict = {
   "workspace.reset.archived.one": "1 سیشن آرکائیو کیا جائے گا۔",
   "workspace.reset.archived.many": "{{count}} سیشنز آرکائیو کیے جائیں گے۔",
   "workspace.reset.note": "یہ ڈیفالٹ برانچ سے ملنے کے لیے ورک اسپیس کو دوبارہ ترتیب دے گا۔",
+  "session.graphify.suggestion.message": "This session looks ready for a project map.",
+  "session.graphify.map.action": "Map project",
+  "session.graphify.map.loading": "Mapping...",
+  "session.graphify.error.disabled": "Graphify mapping is disabled.",
+  "session.graphify.error.uvNotFound": "Graphify is not available on this machine. Install uv: https://docs.astral.sh/uv/",
+  "session.graphify.error.updateFailed": "Graphify map update failed.",
+  "session.graphify.toast.ready": "Project map ready",
 }

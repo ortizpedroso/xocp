@@ -1156,4 +1156,11 @@ export const dict: Record<string, string> = {
   "workspace.reset.archived.many": "{{count}} सत्रहरू अभिलेख गरिनेछ।",
   "workspace.reset.note": "यसले पूर्वनिर्धारित शाखासँग मिलाउन कार्यस्थान रिसेट गर्नेछ।",
   "dialog.usageExceeded.dontShowAgain": "फेरि नदेखाउनुहोस्",
+  "session.graphify.suggestion.message": "This session looks ready for a project map.",
+  "session.graphify.map.action": "Map project",
+  "session.graphify.map.loading": "Mapping...",
+  "session.graphify.error.disabled": "Graphify mapping is disabled.",
+  "session.graphify.error.uvNotFound": "Graphify is not available on this machine. Install uv: https://docs.astral.sh/uv/",
+  "session.graphify.error.updateFailed": "Graphify map update failed.",
+  "session.graphify.toast.ready": "Project map ready",
 }

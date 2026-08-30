@@ -37,6 +37,7 @@ import { createLLMEventPublisher } from "./publish-llm-event"
 import { toLLMMessages } from "./to-llm-message"
 import { MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
+import { SessionTelemetry } from "../../telemetry"
 import { makeLocationNode } from "../../effect/app-node"
 import { llmClient } from "../../effect/app-node-platform"
 
@@ -176,6 +177,7 @@ const layer = Layer.effect(
       step: number,
       recoverOverflow?: typeof compaction.compactAfterOverflow,
     ) {
+      const turnStartedAt = Date.now()
       const session = yield* getSession(sessionID)
       if (session.location.directory !== location.directory || session.location.workspaceID !== location.workspaceID)
         return yield* Effect.interrupt
@@ -248,6 +250,10 @@ const layer = Layer.effect(
             }
             yield* publish(event)
             if (event.type !== "tool-call" || event.providerExecuted) return
+            yield* SessionTelemetry.observe({
+              sessionID: session.id,
+              event: { _tag: "session.tool_used", tool: event.name, turn: currentStep },
+            })
             if (!toolMaterialization) {
               yield* withPublication(publisher.failUnsettledTools("Tools are disabled after the maximum agent steps"))
               return
@@ -349,6 +355,14 @@ const layer = Layer.effect(
           if (stream._tag === "Failure") return yield* Effect.failCause(stream.cause)
           if (settled._tag === "Failure" && Cause.hasInterrupts(settled.cause))
             return yield* Effect.failCause(settled.cause)
+          yield* SessionTelemetry.observe({
+            sessionID: session.id,
+            event: {
+              _tag: "session.turn",
+              turn: currentStep,
+              duration_ms: Date.now() - turnStartedAt,
+            },
+          })
           return { needsContinuation: !publisher.hasProviderError() && needsContinuation, step: currentStep }
         }),
       )
@@ -410,6 +424,10 @@ const layer = Layer.effect(
         shouldRun = yield* SessionInput.hasPending(db, input.sessionID, "queue")
         promotion = shouldRun ? "queue" : undefined
       }
+      yield* SessionTelemetry.observe({
+        sessionID: input.sessionID,
+        event: { _tag: "session.ended", reason: "idle" },
+      })
     })
 
     return Service.of({
@@ -435,5 +453,6 @@ export const node = makeLocationNode({
     Config.node,
     Snapshot.node,
     Database.node,
+    SessionTelemetry.node,
   ],
 })

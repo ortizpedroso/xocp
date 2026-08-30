@@ -20,12 +20,14 @@ No `feat/` or `fix/` prefixes on Cloud Agent branches.
 
 ## XOCP roadmap (implement in order)
 
-1. **Telemetry** — session score, event log, feature flags (`experimental.graphify`)
-2. **Graphify sidecar** — Python FastAPI + `graphifyy`; map jobs via `BackgroundJob`
-3. **UI** — opt-in suggestion, “Map” button, toast when ready
-4. **Handoff** — durable ≤2000 chars (port or reimplement; not UI LRU in `packages/app/src/pages/session/handoff.ts`)
-5. **Clusters** — FE / BE / Core routing + `work-map.json`
-6. **Prefetch** — background map only if telemetry proves value
+Track audited status in `specs/xocp/implementation-checklist.md`.
+
+1. **Telemetry** — session score, event log, feature flags (`experimental.graphify`) — **done** (PR [#9](https://github.com/ortizpedroso/xocp/pull/9), pending merge to `dev`)
+2. **Graphify** — local CLI via `uv tool run --from graphifyy==<pinned>`; map jobs via `BackgroundJob`; no HTTP sidecar — **done** (PR #9)
+3. **UI** — opt-in suggestion, “Map” button, toast when ready — **done** (PR #9)
+4. **Handoff** — durable ≤2000 chars (port or reimplement; not UI LRU in `packages/app/src/pages/session/handoff.ts`) — **done** (PR #9)
+5. **Clusters** — FE / BE / Core routing + `work-map.json` — **deferred** (needs hypothesis validation; see checklist)
+6. **Prefetch** — background map only if telemetry proves value — **deferred**
 
 ## XOCP constraints
 

@@ -4,6 +4,7 @@ import { useSettings } from "@/context/settings"
 import { SessionPermissionDock } from "@/pages/session/composer/session-permission-dock"
 import { SessionQuestionDock } from "@/pages/session/composer/session-question-dock"
 import { SessionFollowupDock } from "@/pages/session/composer/session-followup-dock"
+import { GraphifySuggestion } from "@/pages/session/graphify-suggestion-ui"
 import { SessionRevertDock } from "@/pages/session/composer/session-revert-dock"
 import { SessionTodoDock } from "@/pages/session/composer/session-todo-dock"
 import type { SessionComposerRegionController } from "./session-composer-region-controller"
@@ -11,6 +12,7 @@ import type { SessionComposerRegionController } from "./session-composer-region-
 export function SessionComposerRegion(props: {
   controller: SessionComposerRegionController
   promptInput: JSX.Element
+  graphifyTurnID?: () => string | undefined
 }) {
   const language = useLanguage()
   const controller = props.controller
@@ -131,6 +133,7 @@ export function SessionComposerRegion(props: {
                 "margin-top": `${-controller.lift()}px`,
               }}
             >
+              {props.graphifyTurnID ? <GraphifySuggestion userTurnID={props.graphifyTurnID} /> : null}
               <Show when={controller.followup()?.items.length}>
                 <SessionFollowupDock
                   items={controller.followup()!.items}
