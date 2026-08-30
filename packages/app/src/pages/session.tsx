@@ -2179,6 +2179,7 @@ export default function Page() {
           return (
             <SessionComposerRegion
               controller={controller}
+              graphifyTurnID={() => visibleUserMessages().at(-1)?.id}
               promptInput={
                 <Show
                   when={newSessionDesign()}

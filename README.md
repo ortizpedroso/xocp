@@ -72,11 +72,12 @@ git merge sync-opencode-$(date +%Y-%m-%d)
 
 ## Roadmap
 
-- [ ] Session telemetry and complexity score
-- [ ] Graphify sidecar (code map, zero-token queries)
-- [ ] Opt-in map UI (background jobs, toast)
-- [ ] Durable handoff (≤2000 chars per cluster)
-- [ ] Cluster orchestration (frontend / backend / core)
+- [x] Session telemetry and complexity score
+- [x] Graphify local CLI (code map via `uv tool run`, pinned `graphifyy` version)
+- [x] Opt-in map UI (background jobs, toast)
+- [x] Durable handoff (≤2000 chars per session)
+- [ ] Cluster orchestration (frontend / backend / core) — deferred; see `specs/xocp/architecture.md` §5.4
+- [ ] Background map prefetch — deferred until telemetry validates value; see `specs/xocp/implementation-checklist.md`
 
 See `AGENTS.md` for implementation rules and phased delivery.
 
