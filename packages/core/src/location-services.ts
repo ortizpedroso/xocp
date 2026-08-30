@@ -32,6 +32,7 @@ import { SkillGuidance } from "./skill/guidance"
 import { SessionTelemetry } from "./telemetry"
 import { Graphify } from "./graphify"
 import { Handoff } from "./handoff"
+import { HandoffContext } from "./handoff-context"
 import { Snapshot } from "./snapshot"
 import { SystemContextBuiltIns } from "./system-context/builtins"
 import { SystemContextRegistry } from "./system-context/registry"
@@ -81,6 +82,7 @@ export const locationServices = LayerNode.group([
   SessionTelemetry.node,
   Graphify.node,
   Handoff.node,
+  HandoffContext.node,
   SessionRunnerLLM.node,
 ])
 
