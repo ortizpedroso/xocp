@@ -77,6 +77,7 @@ git merge sync-opencode-$(date +%Y-%m-%d)
 - [x] Opt-in map UI (background jobs, toast)
 - [x] Durable handoff (≤2000 chars per session)
 - [ ] Cluster orchestration (frontend / backend / core) — deferred; see `specs/xocp/architecture.md` §5.4
+- [ ] Background map prefetch — deferred until telemetry validates value; see `specs/xocp/implementation-checklist.md`
 
 See `AGENTS.md` for implementation rules and phased delivery.
 
