@@ -5,7 +5,7 @@ export type GraphifySuggestionState = {
   eligible: boolean
   score: number
   threshold: number
-  sidecarConfigured: boolean
+  available: boolean
 }
 
 export type GraphifyMapJobStatus = "running" | "completed" | "error" | "cancelled"
@@ -22,11 +22,12 @@ export function graphifyMapErrorMessage(
   input: { code?: string; message?: string },
   language: { t: (key: string) => string },
 ) {
-  if (input.code === "graphify_not_configured") return language.t("session.graphify.error.notConfigured")
-  if (input.code === "graphify_sidecar_error") {
-    return input.message || language.t("session.graphify.error.sidecar")
+  if (input.code === "graphify_disabled") return language.t("session.graphify.error.disabled")
+  if (input.code === "graphify_uv_not_found") return language.t("session.graphify.error.uvNotFound")
+  if (input.code === "graphify_update_failed") {
+    return input.message || language.t("session.graphify.error.updateFailed")
   }
-  return language.t("session.graphify.error.sidecar")
+  return language.t("session.graphify.error.updateFailed")
 }
 
 export function graphifyJobShowsSuccessToast(status: GraphifyMapJobStatus) {

@@ -35,14 +35,18 @@ describe("shouldStopGraphifyPolling", () => {
 })
 
 describe("graphifyMapErrorMessage", () => {
-  test("maps 409 to not configured copy", () => {
-    expect(graphifyMapErrorMessage({ code: "graphify_not_configured" }, language)).toBe(
-      "session.graphify.error.notConfigured",
+  test("maps disabled code", () => {
+    expect(graphifyMapErrorMessage({ code: "graphify_disabled" }, language)).toBe("session.graphify.error.disabled")
+  })
+
+  test("maps uv missing code", () => {
+    expect(graphifyMapErrorMessage({ code: "graphify_uv_not_found" }, language)).toBe(
+      "session.graphify.error.uvNotFound",
     )
   })
 
-  test("maps 502 to sidecar copy", () => {
-    expect(graphifyMapErrorMessage({ code: "graphify_sidecar_error", message: "down" }, language)).toBe("down")
+  test("maps update failure code", () => {
+    expect(graphifyMapErrorMessage({ code: "graphify_update_failed", message: "stderr" }, language)).toBe("stderr")
   })
 })
 
@@ -62,8 +66,8 @@ describe("graphifyJobShowsErrorToast", () => {
 
 describe("graphifyErrorData", () => {
   test("reads API error payload", () => {
-    expect(graphifyErrorData({ data: { code: "graphify_not_configured" } })).toEqual({
-      code: "graphify_not_configured",
+    expect(graphifyErrorData({ data: { code: "graphify_disabled" } })).toEqual({
+      code: "graphify_disabled",
       message: undefined,
     })
   })
