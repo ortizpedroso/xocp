@@ -1,4 +1,7 @@
 import { describe, expect } from "bun:test"
+import { mkdirSync } from "fs"
+import path from "path"
+import { tmpdir as osTmpdir } from "os"
 import { Effect, Layer, Schema } from "effect"
 import { Database } from "@opencode-ai/core/database/database"
 import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
@@ -32,7 +35,9 @@ const it = testEffect(
     ],
   ),
 )
-const location = Location.Ref.make({ directory: AbsolutePath.make("/project") })
+const projectDir = path.join(osTmpdir(), "session-history-test-project")
+mkdirSync(projectDir, { recursive: true })
+const location = Location.Ref.make({ directory: AbsolutePath.make(projectDir) })
 
 const GapEvent = EventV2.define({
   type: "test.session.history.gap",
@@ -48,7 +53,7 @@ describe("SessionV2.history", () => {
       const sessionID = SessionV2.ID.make("ses_empty_history")
       yield* db
         .insert(ProjectTable)
-        .values({ id: ProjectV2.ID.global, worktree: AbsolutePath.make("/project"), sandboxes: [] })
+        .values({ id: ProjectV2.ID.global, worktree: AbsolutePath.make(projectDir), sandboxes: [] })
         .onConflictDoNothing()
         .run()
       yield* db
@@ -57,7 +62,7 @@ describe("SessionV2.history", () => {
           id: sessionID,
           project_id: ProjectV2.ID.global,
           slug: "empty-history",
-          directory: "/project",
+          directory: projectDir,
           title: "Empty history",
           version: "test",
         })
