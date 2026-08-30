@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "paths": {
+      "@opencode-ai/protocol/*": ["../../protocol/src/*"],
+      "@opencode-ai/schema/*": ["../../schema/src/*"]
+    }
+  },
+  "include": ["check-graphify-contract.ts"]
+}
