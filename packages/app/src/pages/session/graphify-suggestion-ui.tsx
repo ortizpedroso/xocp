@@ -141,20 +141,20 @@ export function GraphifySuggestion(props: {
     <Show when={state.visible()}>
       <div
         data-component="session-graphify-suggestion"
-        class="mb-2 flex flex-wrap items-center gap-2 rounded-md border border-border-weak-base bg-background-base px-3 py-2 text-13-regular text-text-base"
+        class="mb-2 flex flex-wrap items-center gap-2 rounded-md border border-text-interactive-base bg-surface-info-base px-3 py-2 text-13-regular text-text-base"
       >
         <span class="min-w-0 flex-1 text-text-weak">{language.t("session.graphify.suggestion.message")}</span>
         <Show
           when={settings.general.newLayoutDesigns()}
           fallback={
-            <Button size="small" variant="secondary" disabled={state.loading()} onClick={() => void state.startMap()}>
+            <Button size="small" variant="primary" disabled={state.loading()} onClick={() => void state.startMap()}>
               {state.loading()
                 ? language.t("session.graphify.map.loading")
                 : language.t("session.graphify.map.action")}
             </Button>
           }
         >
-          <ButtonV2 variant="outline" disabled={state.loading()} onClick={() => void state.startMap()}>
+          <ButtonV2 variant="contrast" disabled={state.loading()} onClick={() => void state.startMap()}>
             {state.loading() ? language.t("session.graphify.map.loading") : language.t("session.graphify.map.action")}
           </ButtonV2>
         </Show>
