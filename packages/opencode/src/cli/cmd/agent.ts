@@ -25,6 +25,8 @@ const AVAILABLE_PERMISSIONS = [
   "webfetch",
   "task",
   "todowrite",
+  "handoff_write",
+  "handoff_read",
   "websearch",
   "lsp",
   "skill",

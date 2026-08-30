@@ -14,6 +14,8 @@ import { Database } from "@opencode-ai/core/database/database"
 import { TodoWriteTool } from "./todo"
 import { WebFetchTool } from "./webfetch"
 import { WriteTool } from "./write"
+import { HandoffWriteTool } from "./handoff-write"
+import { HandoffReadTool } from "./handoff-read"
 import { InvalidTool } from "./invalid"
 import { SkillTool } from "./skill"
 import * as Tool from "./tool"
@@ -52,8 +54,9 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { MCP } from "@/mcp"
-import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { McpCatalog } from "@/mcp/catalog"
+import { PermissionV1 } from "@opencode-ai/core/v1/permission"
+import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/location-services"
 
 export function webSearchEnabled(providerID: ProviderV2.ID, flags = { exa: false, parallel: false }) {
   return (
@@ -98,6 +101,8 @@ const layer = Layer.effect(
     const flags = yield* RuntimeFlags.Service
     const mcp = yield* MCP.Service
 
+    const handoffWrite = yield* HandoffWriteTool
+    const handoffRead = yield* HandoffReadTool
     const invalid = yield* InvalidTool
     const task = yield* TaskTool
     const read = yield* ReadTool
@@ -217,6 +222,8 @@ const layer = Layer.effect(
           task: Tool.init(task),
           fetch: Tool.init(webfetch),
           todo: Tool.init(todo),
+          handoffWrite: Tool.init(handoffWrite),
+          handoffRead: Tool.init(handoffRead),
           search: Tool.init(websearch),
           skill: Tool.init(skilltool),
           patch: Tool.init(patchtool),
@@ -240,6 +247,8 @@ const layer = Layer.effect(
             tool.task,
             tool.fetch,
             tool.todo,
+            tool.handoffWrite,
+            tool.handoffRead,
             tool.search,
             tool.skill,
             tool.patch,
@@ -424,6 +433,12 @@ function isJsonSchemaObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
+const locationServiceMapNode = LayerNode.make({
+  service: LocationServiceMap.Service,
+  layer: locationServiceMapLayer,
+  deps: [],
+})
+
 export const node = LayerNode.make({
   service: Service,
   layer,
@@ -449,6 +464,7 @@ export const node = LayerNode.make({
     MCP.node,
     Database.node,
     Ripgrep.node,
+    locationServiceMapNode,
   ],
 })
 
