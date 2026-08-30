@@ -31,6 +31,7 @@ import { SkillV2 } from "./skill"
 import { SkillGuidance } from "./skill/guidance"
 import { SessionTelemetry } from "./telemetry"
 import { Graphify } from "./graphify"
+import { Handoff } from "./handoff"
 import { Snapshot } from "./snapshot"
 import { SystemContextBuiltIns } from "./system-context/builtins"
 import { SystemContextRegistry } from "./system-context/registry"
@@ -79,6 +80,7 @@ export const locationServices = LayerNode.group([
   Snapshot.node,
   SessionTelemetry.node,
   Graphify.node,
+  Handoff.node,
   SessionRunnerLLM.node,
 ])
 
