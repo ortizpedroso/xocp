@@ -1,33 +1,59 @@
 # Documentação XOCP
 
-**eXtensible Open Code Platform** — plataforma de agente de código com mapeamento estrutural (Graphify), orquestração por clusters e handoff durável entre agentes.
+**eXtensible Open Code Platform** — agente de código com mapeamento
+estrutural de projeto (Graphify), telemetria de sessão e continuidade de
+trabalho entre sessões (handoff durável).
 
-> Fork independente do [OpenCode](https://github.com/anomalyco/opencode) (MIT). Repositório: [github.com/ortizpedroso/xocp](https://github.com/ortizpedroso/xocp).
+> Fork independente do [OpenCode](https://github.com/anomalyco/opencode)
+> (MIT). Repositório: [github.com/ortizpedroso/xocp](https://github.com/ortizpedroso/xocp).
 
 _Última atualização: gerada a partir de `specs/xocp/documentacao.md`._
 
 ---
 
-## O que a IA faz
+## O que o XOCP faz
 
 O XOCP é um **agente de programação** que:
 
 1. Recebe prompts do usuário (texto, comandos `/`, contexto `@`)
 2. Mantém **sessões duráveis** com histórico, ferramentas e permissões
 3. Chama modelos de linguagem (LLM) com contexto do projeto
-4. Executa **ferramentas** no ambiente local (arquivos, shell, busca, tarefas em background)
+4. Executa **ferramentas** no ambiente local (arquivos, shell, busca,
+   tarefas em background, incluindo subagentes paralelos via `task`)
 5. Devolve respostas em streaming até concluir o turno ou pedir aprovação
 
-Recursos planejados no roadmap XOCP (em ordem):
+Além da base herdada do OpenCode, o XOCP adiciona três capacidades
+próprias, já em funcionamento:
 
-| # | Recurso | Status |
-|---|---------|--------|
-| 1 | Telemetria de sessão + score | Planejado |
-| 2 | Graphify (mapa estrutural do código) | Planejado |
-| 3 | UI de mapa (opt-in) | Planejado |
-| 4 | Handoff durável (≤2000 chars) | Planejado |
-| 5 | Clusters FE / BE / Core | Planejado |
-| 6 | Prefetch de mapa | Planejado |
+| # | Recurso | O que faz | Status |
+|---|---------|-----------|--------|
+| 1 | Telemetria de sessão | Observa cada sessão (turnos, ferramentas usadas, duração) e calcula um score de complexidade | **Ativo** |
+| 2/3 | Mapeamento estrutural (Graphify) | Sob demanda (opt-in), mapeia a estrutura do código em um grafo — chamadas, imports, herança — sem custo de LLM. Sugestão aparece quando a sessão fica complexa o suficiente | **Ativo** |
+| 4 | Handoff durável | O agente pode gravar um resumo (até 2000 caracteres) ao fim de um trabalho, pra outra sessão retomar depois sem reconstruir contexto do zero | **Ativo** |
+| 5 | Roteamento automático por domínio (clusters) | Dividir tarefas automaticamente entre agentes especializados por área do código | Adiado — testado, sem ganho comprovado em ambiente controlado; retomada depende de dado de uso real |
+| 6 | Pré-busca de mapa em segundo plano | Mapear o projeto automaticamente antes do usuário pedir | Adiado — depende do item 1 validar valor em produção primeiro |
+
+## Como o mapeamento de código funciona (Graphify)
+
+Diferente de sistemas baseados em busca por similaridade de texto
+(embeddings/RAG vetorial), o XOCP usa um **grafo real de código**: cada
+arquivo/função vira um nó, cada chamada/import/herança vira uma aresta.
+Isso é extraído localmente via AST (sem enviar código pra nenhuma API),
+usando uma ferramenta externa (`graphifyy`) instalada e versionada
+automaticamente na primeira vez que a função é usada — o usuário nunca
+instala nada manualmente.
+
+Quando uma sessão fica complexa o suficiente (score de telemetria acima
+de um limite), o XOCP sugere mapear o projeto. O usuário decide se quer
+— nunca acontece automaticamente.
+
+## Continuidade entre sessões (Handoff)
+
+O agente pode, a qualquer momento significativo (tipicamente perto do
+fim de um trabalho), gravar um resumo do que foi feito, o que falta, e
+decisões tomadas. Uma sessão futura no mesmo projeto recebe um aviso
+discreto de que existe esse resumo, e pode optar por consultá-lo — sem
+nunca ser forçado a ler o conteúdo completo automaticamente.
 
 ---
 
@@ -41,7 +67,7 @@ Recursos planejados no roadmap XOCP (em ordem):
 | Banco local | SQLite (Drizzle ORM) |
 | UI web / desktop | SolidJS, Vite, Tailwind |
 | LLM | Provedores via `@opencode-ai/llm` (OpenAI, Anthropic, etc.) |
-| Graphify (futuro) | Sidecar Python + FastAPI + `graphifyy` |
+| Graphify | CLI externa (`graphifyy`, versão travada), invocada localmente — sem servidor, sem sidecar |
 
 Pacotes principais do monorepo:
 
@@ -136,3 +162,4 @@ Detalhes: `specs/xocp/workflow.md` e `README.md`.
 - `specs/v2/session.md` — especificação SessionV2
 - `AGENTS.md` — regras de desenvolvimento XOCP
 - `specs/xocp/workflow.md` — fluxo local vs Cloud Agent
+- `specs/xocp/architecture.md` — arquitetura técnica completa (público interno/dev)
