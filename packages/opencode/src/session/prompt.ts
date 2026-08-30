@@ -1,4 +1,9 @@
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { Location } from "@opencode-ai/core/location"
+import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/location-services"
+import { AbsolutePath } from "@opencode-ai/core/schema"
+import { SessionTelemetry } from "@opencode-ai/core/telemetry"
+import type { SessionTelemetryEvent } from "@opencode-ai/core/telemetry/event"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import path from "path"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
@@ -141,6 +146,14 @@ const layer = Layer.effect(
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
     const { db } = database
+    const locations = yield* LocationServiceMap.Service
+
+    const observeTelemetry = (directory: string, input: SessionTelemetryEvent.RecordInput): Effect.Effect<void> =>
+      SessionTelemetry.observe(input).pipe(
+        Effect.provide(locations.get(Location.Ref.make({ directory: AbsolutePath.make(directory) }))),
+        Effect.catch(() => Effect.void),
+      )
+
     const ops = Effect.fn("SessionPrompt.ops")(function* () {
       return {
         cancel: (sessionID: SessionID) => cancel(sessionID),
@@ -1067,6 +1080,14 @@ const layer = Layer.effect(
       }
 
       if (input.noReply === true) return message
+      yield* observeTelemetry(session.directory, {
+        sessionID: input.sessionID,
+        event: {
+          _tag: "session.started",
+          agent: message.info.agent,
+          model: `${message.info.model.providerID}/${message.info.model.modelID}`,
+        },
+      })
       return yield* loop({ sessionID: input.sessionID })
     })
 
@@ -1254,6 +1275,7 @@ const layer = Layer.effect(
 
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
+            const turnStartedAt = Date.now()
             const [skills, env, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
               sys.skills(agent),
               sys.environment(model),
@@ -1283,6 +1305,25 @@ const layer = Layer.effect(
               tools,
               model,
               toolChoice: format.type === "json_schema" ? "required" : undefined,
+            })
+
+            const turnParts = yield* MessageV2.parts(handle.message.id).pipe(
+              Effect.provideService(Database.Service, database),
+            )
+            for (const part of turnParts) {
+              if (part.type !== "tool" || part.metadata?.providerExecuted || part.state.status === "pending") continue
+              yield* observeTelemetry(ctx.directory, {
+                sessionID,
+                event: { _tag: "session.tool_used", tool: part.tool, turn: step },
+              })
+            }
+            yield* observeTelemetry(ctx.directory, {
+              sessionID,
+              event: {
+                _tag: "session.turn",
+                turn: step,
+                duration_ms: Date.now() - turnStartedAt,
+              },
             })
 
             if (structured !== undefined) {
@@ -1335,6 +1376,10 @@ const layer = Layer.effect(
           continue
         }
 
+        yield* observeTelemetry(ctx.directory, {
+          sessionID,
+          event: { _tag: "session.ended", reason: "idle" },
+        })
         yield* compaction.prune({ sessionID }).pipe(Effect.ignore, Effect.forkIn(scope))
         return yield* lastAssistant(sessionID)
       },
@@ -1595,6 +1640,12 @@ const argsRegex = /(?:\[Image\s+\d+\]|"[^"]*"|'[^']*'|[^\s"']+)/gi
 const placeholderRegex = /\$(\d+)/g
 const quoteTrimRegex = /^["']|["']$/g
 
+const locationServiceMapNode = LayerNode.make({
+  service: LocationServiceMap.Service,
+  layer: locationServiceMapLayer,
+  deps: [],
+})
+
 export const node = LayerNode.make({
   service: Service,
   layer: layer,
@@ -1625,6 +1676,7 @@ export const node = LayerNode.make({
     EventV2Bridge.node,
     RuntimeFlags.node,
     Database.node,
+    locationServiceMapNode,
   ],
 })
 
