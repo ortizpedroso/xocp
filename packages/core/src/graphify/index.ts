@@ -29,11 +29,7 @@ const make = Effect.gen(function* () {
 
   const graphifyEnabled = Effect.fn("Graphify.graphifyEnabled")(function* () {
     const entries = yield* config.entries()
-    for (const entry of entries) {
-      if (entry.type !== "document") continue
-      if (entry.info.experimental?.graphify === true) return true
-    }
-    return false
+    return Config.latest(entries, "experimental")?.graphify === true
   })
 
   const available = Effect.fn("Graphify.available")(function* () {

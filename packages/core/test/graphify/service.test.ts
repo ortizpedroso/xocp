@@ -35,6 +35,25 @@ const graphifyOn = Layer.succeed(
   }),
 )
 
+const graphifyOverriddenOff = Layer.succeed(
+  Config.Service,
+  Config.Service.of({
+    entries: () =>
+      Effect.succeed([
+        {
+          type: "document" as const,
+          path: "/global/.opencode/opencode.json",
+          info: { experimental: { graphify: true } },
+        },
+        {
+          type: "document" as const,
+          path: "/project/.opencode/opencode.json",
+          info: { experimental: { graphify: false } },
+        },
+      ]),
+  }),
+)
+
 const graphifyOff = Layer.succeed(
   Config.Service,
   Config.Service.of({
@@ -69,11 +88,37 @@ const offLayer = AppNodeBuilder.build(LayerNode.group([BackgroundJob.node, Graph
   [AppProcess.node, fakeProc(0)],
 ])
 
+const overriddenOffLayer = AppNodeBuilder.build(LayerNode.group([BackgroundJob.node, Graphify.node]), [
+  [Config.node, graphifyOverriddenOff],
+  [AppProcess.node, fakeProc(0)],
+])
+
 const directory = AbsolutePath.make("/project")
 
 describe("Graphify service", () => {
   const itOn = testEffect(layerFor(fakeProc(0)))
   const itOff = testEffect(offLayer)
+  const itOverriddenOff = testEffect(overriddenOffLayer)
+
+  itOverriddenOff.effect("available is false when higher-priority config disables graphify", () =>
+    Effect.gen(function* () {
+      uvPresent = true
+      const graphify = yield* Graphify.Service
+      expect(yield* graphify.available()).toBe(false)
+    }),
+  )
+
+  itOverriddenOff.effect("startMap fails GraphifyDisabled when higher-priority config disables graphify", () =>
+    Effect.gen(function* () {
+      uvPresent = true
+      const jobs = yield* BackgroundJob.Service
+      const graphify = yield* Graphify.Service
+      expect(yield* jobs.list()).toHaveLength(0)
+      const error = yield* graphify.startMap({ directory }).pipe(Effect.flip)
+      expect(error._tag).toBe("Graphify.GraphifyDisabled")
+      expect(yield* jobs.list()).toHaveLength(0)
+    }),
+  )
 
   itOff.effect("available is false when graphify flag is off", () =>
     Effect.gen(function* () {
