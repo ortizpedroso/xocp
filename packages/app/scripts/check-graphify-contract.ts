@@ -1,5 +1,5 @@
 import type { GraphifyMapJob, GraphifyMapStart, GraphifySuggestion } from "@opencode-ai/protocol/groups/graphify"
-import type { GraphifyMapJobStatus, GraphifySuggestionState } from "./graphify-suggestion"
+import type { GraphifyMapJobStatus, GraphifySuggestionState } from "../src/pages/session/graphify-suggestion"
 
 type AssertExact<A, B> = A extends B ? (B extends A ? true : false) : false
 
