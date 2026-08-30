@@ -22,19 +22,20 @@ No `feat/` or `fix/` prefixes on Cloud Agent branches.
 
 Track audited status in `specs/xocp/implementation-checklist.md`.
 
-1. **Telemetry** — session score, event log, feature flags (`experimental.graphify`) — **done** (PR [#9](https://github.com/ortizpedroso/xocp/pull/9), pending merge to `dev`)
-2. **Graphify** — local CLI via `uv tool run --from graphifyy==<pinned>`; map jobs via `BackgroundJob`; no HTTP sidecar — **done** (PR #9)
-3. **UI** — opt-in suggestion, “Map” button, toast when ready — **done** (PR #9)
-4. **Handoff** — durable ≤2000 chars (port or reimplement; not UI LRU in `packages/app/src/pages/session/handoff.ts`) — **done** (PR #9)
+1. **Telemetry** — session score, event log, feature flags (`experimental.graphify`) — **done** (merged to `dev` via PRs [#11](https://github.com/ortizpedroso/xocp/pull/11), [#13](https://github.com/ortizpedroso/xocp/pull/13))
+2. **Graphify** — local CLI via `uv tool run --from graphifyy==<pinned>`; map jobs via `BackgroundJob`; no HTTP — **done** (merged to `dev` via PRs [#9](https://github.com/ortizpedroso/xocp/pull/9), [#11](https://github.com/ortizpedroso/xocp/pull/11))
+3. **UI** — opt-in suggestion, “Map” button, toast when ready — **done** (merged to `dev` via PR [#19](https://github.com/ortizpedroso/xocp/pull/19))
+4. **Handoff** — durable ≤2000 chars + agent tools (`handoff-write`/`handoff-read`; not UI LRU in `packages/app/src/pages/session/handoff.ts`) — **done** (merged to `dev` via PRs [#9](https://github.com/ortizpedroso/xocp/pull/9), [#11](https://github.com/ortizpedroso/xocp/pull/11), [#14](https://github.com/ortizpedroso/xocp/pull/14))
 5. **Clusters** — FE / BE / Core routing + `work-map.json` — **deferred** (needs hypothesis validation; see checklist)
 6. **Prefetch** — background map only if telemetry proves value — **deferred**
 
 ## XOCP constraints
 
 - Keep OpenCode session core (SessionV2) behavior unless a spec says otherwise.
-- Graphify is an external sidecar — do not vendor the Graphify repo into the monorepo.
+- Graphify is an external CLI tool (`graphifyy`, pinned version, invoked via `uv tool run`) — not a sidecar or HTTP server. Do not vendor the Graphify repo into the monorepo.
+- XOCP orchestrates Graphify from TypeScript (`AppProcess` + `BackgroundJob`), spawning the external binary as a subprocess; there is no Python orchestration code in this repo.
 - No auto-activation of map/clusters; user opt-in only.
-- Python for Graphify orchestration; TypeScript for session, UI, and API.
+- Surface UI uses the **XOCP** product name (titles, i18n, desktop window labels). Package names, env vars, `.opencode/`, and the `opencode` CLI binary keep upstream naming by design for sync with OpenCode.
 - Preserve MIT license and upstream copyright notice.
 - When changing XOCP architecture, session flow, stack, or roadmap, update `specs/xocp/documentacao.md` and run `bun run generate:xocp-docs` (CI enforces this via `xocp-ci`).
 
