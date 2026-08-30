@@ -1,19 +1,22 @@
-import { Context, Effect, Layer } from "effect"
+import path from "path"
+import { ChildProcess } from "effect/unstable/process"
+import { Context, Duration, Effect, Layer } from "effect"
 import { BackgroundJob } from "../background-job"
 import { Config } from "../config"
 import { makeLocationNode } from "../effect/app-node"
+import { AppProcess } from "../process"
 import type { SessionSchema } from "../session/schema"
 import { AbsolutePath } from "../schema"
-import { health, MapInput, requestMap, type HealthStatus } from "./client"
-import { GraphifyConfig } from "./config"
-import type { Error } from "./error"
+import { which } from "../util/which"
+import { GraphifyDisabled, UvNotFound, UpdateFailed } from "./error"
+import { GRAPHIFY_PINNED_VERSION } from "./version"
 
 export interface Interface {
-  readonly checkSidecarHealth: () => Effect.Effect<HealthStatus, Error>
+  readonly available: () => Effect.Effect<boolean>
   readonly startMap: (input: {
     sessionID?: SessionSchema.ID
     directory: AbsolutePath
-  }) => Effect.Effect<BackgroundJob.Info, Error>
+  }) => Effect.Effect<BackgroundJob.Info, GraphifyDisabled | UvNotFound>
   readonly getMap: (id: string) => Effect.Effect<BackgroundJob.Info | undefined>
 }
 
@@ -22,31 +25,41 @@ export class Service extends Context.Service<Service, Interface>()("@opencode/Gr
 const make = Effect.gen(function* () {
   const config = yield* Config.Service
   const jobs = yield* BackgroundJob.Service
+  const proc = yield* AppProcess.Service
 
-  const readSidecarConfig = Effect.fn("Graphify.readSidecarConfig")(function* () {
+  const graphifyEnabled = Effect.fn("Graphify.graphifyEnabled")(function* () {
     const entries = yield* config.entries()
     for (const entry of entries) {
       if (entry.type !== "document") continue
-      if (entry.info.experimental?.graphify_sidecar) return entry.info.experimental.graphify_sidecar
+      if (entry.info.experimental?.graphify === true) return true
     }
-    return undefined
+    return false
   })
 
-  const resolveConfig = Effect.fn("Graphify.resolveConfig")(function* () {
-    const sidecar = yield* readSidecarConfig()
-    return yield* GraphifyConfig.resolve(sidecar)
-  })
-
-  const checkSidecarHealth = Effect.fn("Graphify.checkSidecarHealth")(function* () {
-    const resolved = yield* resolveConfig()
-    return yield* health(resolved)
+  const available = Effect.fn("Graphify.available")(function* () {
+    if (!(yield* graphifyEnabled())) return false
+    return which("uv") !== null
   })
 
   const startMap = Effect.fn("Graphify.startMap")(function* (input: {
     sessionID?: SessionSchema.ID
     directory: AbsolutePath
   }) {
-    const resolved = yield* resolveConfig()
+    if (!(yield* graphifyEnabled())) return yield* new GraphifyDisabled({})
+    if (which("uv") === null) return yield* new UvNotFound({})
+    const command = ChildProcess.make(
+      "uv",
+      [
+        "tool",
+        "run",
+        "--from",
+        `graphifyy==${GRAPHIFY_PINNED_VERSION}`,
+        "graphify",
+        "update",
+        input.directory,
+      ],
+      { cwd: input.directory, extendEnv: true },
+    )
     return yield* jobs.start({
       type: "graphify.map",
       title: "Graphify project map",
@@ -54,8 +67,12 @@ const make = Effect.gen(function* () {
         ...(input.sessionID ? { sessionID: input.sessionID } : {}),
         directory: input.directory,
       },
-      run: requestMap(resolved, MapInput.make({ directory: input.directory })).pipe(
-        Effect.flatMap((result) => Effect.succeed(JSON.stringify(result))),
+      run: proc.run(command, { timeout: Duration.minutes(10) }).pipe(
+        Effect.flatMap(AppProcess.requireSuccess),
+        Effect.map((result) => result.stdout.toString("utf8").trim() || "completed"),
+        Effect.mapError(
+          (error) => new UpdateFailed({ exitCode: error.exitCode, stderr: error.stderr }),
+        ),
       ),
     })
   })
@@ -64,15 +81,15 @@ const make = Effect.gen(function* () {
     return yield* jobs.get(id)
   })
 
-  return Service.of({ checkSidecarHealth, startMap, getMap })
+  return Service.of({ available, startMap, getMap })
 })
 
 const layer = Layer.effect(Service, make)
 
-// Location-scoped: sidecar URL is per-project config (like MCP). BackgroundJob is
-// process-global; jobs started here are not durable across process restart.
+// Location-scoped: reads per-project config flag. BackgroundJob and AppProcess are
+// process-global; map jobs are not durable across process restart.
 export const node = makeLocationNode({
   service: Service,
   layer,
-  deps: [Config.node, BackgroundJob.node],
+  deps: [Config.node, BackgroundJob.node, AppProcess.node],
 })
