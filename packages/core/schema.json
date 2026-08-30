@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "39ff4583-f844-428e-bdf8-ab04724e83ae",
+  "id": "b64a3be2-8762-4797-b33e-36508afa3672",
   "prevIds": [
-    "f14a9b18-8207-487e-a3d3-227e629ba9ad"
+    "39ff4583-f844-428e-bdf8-ab04724e83ae"
   ],
   "ddl": [
     {
@@ -567,6 +567,16 @@
       "default": null,
       "generated": null,
       "name": "session_id",
+      "entityType": "columns",
+      "table": "session_handoff"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "directory",
       "entityType": "columns",
       "table": "session_handoff"
     },
@@ -2048,6 +2058,20 @@
       "where": null,
       "origin": "manual",
       "name": "session_handoff_session_idx",
+      "entityType": "indexes",
+      "table": "session_handoff"
+    },
+    {
+      "columns": [
+        {
+          "value": "directory",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "session_handoff_directory_idx",
       "entityType": "indexes",
       "table": "session_handoff"
     },

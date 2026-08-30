@@ -28,6 +28,10 @@ Isso **não é código** — é teste manual, feito por você/equipe, usando o q
 - [ ] Avaliar: os pedaços ficaram realmente sem conflito? o resumo que o `task` devolve foi suficiente pro agente principal continuar sem re-ler tudo?
 - [ ] Decisão registrada: vale construir roteamento automático por comunidade, ou os dados não sustentam isso?
 
+## Dívida técnica conhecida (baixa prioridade)
+
+- [ ] Telemetria: `session.started` duplica no pai quando `TaskTool.injectBackgroundResult` reentra via `ops.prompt()` (`packages/opencode/src/tool/task.ts` → `SessionPrompt.prompt()` em `packages/opencode/src/session/prompt.ts`). Não afeta score; só polui o log de eventos.
+
 ## Adiado por decisão — não construir sem evidência
 
 - [ ] Item 5 — Roteamento automático por comunidade / `work-map.json`

@@ -60,6 +60,7 @@ function forkStderrDrain(stream: ReadableStream<Uint8Array>, into: string[]) {
 }
 
 function isolatedEnv(home: string, configJson: string): Record<string, string> {
+  const dataDir = path.join(home, ".local/share/opencode")
   return {
     OPENCODE_TEST_HOME: home,
     HOME: home,
@@ -74,6 +75,11 @@ function isolatedEnv(home: string, configJson: string): Record<string, string> {
     OPENCODE_DISABLE_AUTOCOMPACT: "1",
     OPENCODE_DISABLE_MODELS_FETCH: "1",
     OPENCODE_AUTH_CONTENT: "{}",
+  // Subprocess CLI tests must persist SQLite to disk across separate `opencode run`
+  // invocations. The package test preload sets OPENCODE_DB=:memory: for in-process
+  // tests, and extendEnv would otherwise leak that into every child process.
+    OPENCODE_DB: path.join(dataDir, "opencode.db"),
+    OPENCODE_DISABLE_CHANNEL_DB: "1",
   }
 }
 

@@ -1,0 +1,16 @@
+Write a durable handoff summary for the next session working in this project.
+
+## When to use
+Use near the end of significant work, before the session ends, when future sessions may need to continue the same effort. This is optional guidance, not a requirement on every turn.
+
+## What to include (priority order)
+When space is tight inside the 2000-character limit, keep the most important information first:
+1. Next step — what should happen next
+2. Blockers — what is stuck or waiting
+3. Decisions made — choices already settled
+4. Files touched — paths that matter for continuation
+
+## Rules
+- You provide the full summary text; the tool stores it as-is.
+- Maximum length is 2000 characters. If the summary is too long, shorten it and call again.
+- Do not rely on automatic capture — only an explicit `handoff_write` call stores a handoff.

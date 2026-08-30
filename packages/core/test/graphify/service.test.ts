@@ -230,6 +230,7 @@ describe("location services", () => {
       const handoff = yield* Handoff.Service
       expect(typeof handoff.write).toBe("function")
       expect(typeof handoff.latest).toBe("function")
+      expect(typeof handoff.latestForDirectory).toBe("function")
     }),
   )
 })

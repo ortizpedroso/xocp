@@ -2,6 +2,8 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { Location } from "@opencode-ai/core/location"
 import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/location-services"
 import { AbsolutePath } from "@opencode-ai/core/schema"
+import { Handoff } from "@opencode-ai/core/handoff"
+import { HANDOFF_NOTICE } from "@opencode-ai/core/handoff/notice"
 import { SessionTelemetry } from "@opencode-ai/core/telemetry"
 import type { SessionTelemetryEvent } from "@opencode-ai/core/telemetry/event"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
@@ -153,6 +155,17 @@ const layer = Layer.effect(
         Effect.provide(locations.get(Location.Ref.make({ directory: AbsolutePath.make(directory) }))),
         Effect.catch(() => Effect.void),
       )
+
+    const handoffNotice = (directory: string): Effect.Effect<string | undefined> =>
+      Effect.gen(function* () {
+        const path = AbsolutePath.make(directory)
+        const row = yield* Handoff.Service.pipe(
+          Effect.provide(locations.get(Location.Ref.make({ directory: path }))),
+          Effect.flatMap((handoff) => handoff.latestForDirectory(path)),
+        )
+        if (!row) return undefined
+        return HANDOFF_NOTICE
+      })
 
     const ops = Effect.fn("SessionPrompt.ops")(function* () {
       return {
@@ -1276,15 +1289,18 @@ const layer = Layer.effect(
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
             const turnStartedAt = Date.now()
-            const [skills, env, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
+            const ctx = yield* InstanceState.context
+            const [skills, env, notice, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
               sys.skills(agent),
               sys.environment(model),
+              step === 1 ? handoffNotice(ctx.directory) : Effect.succeed(undefined),
               instruction.system().pipe(Effect.orDie),
               sys.mcp(agent, session.permission),
               MessageV2.toModelMessagesEffect(msgs, model),
             ])
             const system = [
               ...env,
+              ...(notice ? [notice] : []),
               ...instructions,
               ...(mcpInstructions ? [mcpInstructions] : []),
               ...(skills ? [skills] : []),
