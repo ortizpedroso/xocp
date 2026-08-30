@@ -94,20 +94,16 @@ export type QuestionNotFoundError = {
 export const isQuestionNotFoundError = (value: unknown): value is QuestionNotFoundError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "QuestionNotFoundError"
 
-export type GraphifyNotConfiguredError = {
-  readonly _tag: "GraphifyNotConfiguredError"
-  readonly code: "graphify_not_configured"
-}
-export const isGraphifyNotConfiguredError = (value: unknown): value is GraphifyNotConfiguredError =>
-  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "GraphifyNotConfiguredError"
+export type GraphifyDisabledError = { readonly _tag: "GraphifyDisabledError"; readonly code: "graphify_disabled" }
+export const isGraphifyDisabledError = (value: unknown): value is GraphifyDisabledError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "GraphifyDisabledError"
 
-export type GraphifySidecarError = {
-  readonly _tag: "GraphifySidecarError"
-  readonly code: "graphify_sidecar_error"
-  readonly message: string
+export type GraphifyUvNotFoundError = {
+  readonly _tag: "GraphifyUvNotFoundError"
+  readonly code: "graphify_uv_not_found"
 }
-export const isGraphifySidecarError = (value: unknown): value is GraphifySidecarError =>
-  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "GraphifySidecarError"
+export const isGraphifyUvNotFoundError = (value: unknown): value is GraphifyUvNotFoundError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "GraphifyUvNotFoundError"
 
 export type GraphifyMapNotFoundError = {
   readonly _tag: "GraphifyMapNotFoundError"
@@ -2774,7 +2770,7 @@ export type ServerGraphifySuggestionOutput = {
   readonly eligible: boolean
   readonly score: number
   readonly threshold: number
-  readonly sidecarConfigured: boolean
+  readonly available: boolean
 }
 
 export type ServerGraphifyMapInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }

@@ -12,28 +12,36 @@ export class GraphifyMapNotFoundError extends Schema.TaggedErrorClass<GraphifyMa
   { httpApiStatus: 404 },
 ) {}
 
-export class GraphifyNotConfiguredError extends Schema.TaggedErrorClass<GraphifyNotConfiguredError>()(
-  "GraphifyNotConfiguredError",
+export class GraphifyDisabledError extends Schema.TaggedErrorClass<GraphifyDisabledError>()(
+  "GraphifyDisabledError",
   {
-    code: Schema.Literal("graphify_not_configured"),
+    code: Schema.Literal("graphify_disabled"),
   },
   { httpApiStatus: 409 },
 ) {}
 
-export class GraphifySidecarError extends Schema.TaggedErrorClass<GraphifySidecarError>()(
-  "GraphifySidecarError",
+export class GraphifyUvNotFoundError extends Schema.TaggedErrorClass<GraphifyUvNotFoundError>()(
+  "GraphifyUvNotFoundError",
   {
-    code: Schema.Literal("graphify_sidecar_error"),
+    code: Schema.Literal("graphify_uv_not_found"),
+  },
+  { httpApiStatus: 409 },
+) {}
+
+export class GraphifyUpdateFailedError extends Schema.TaggedErrorClass<GraphifyUpdateFailedError>()(
+  "GraphifyUpdateFailedError",
+  {
+    code: Schema.Literal("graphify_update_failed"),
     message: Schema.String,
   },
-  { httpApiStatus: 502 },
+  { httpApiStatus: 500 },
 ) {}
 
 export const GraphifySuggestion = Schema.Struct({
   eligible: Schema.Boolean,
   score: Schema.Number,
   threshold: Schema.Number,
-  sidecarConfigured: Schema.Boolean,
+  available: Schema.Boolean,
 }).annotate({ identifier: "GraphifySuggestion" })
 
 export const GraphifyMapStart = Schema.Struct({
@@ -64,7 +72,7 @@ export const makeGraphifyGroup = <SessionLocationId extends HttpApiMiddleware.An
             identifier: "v2.session.graphify.suggestion",
             summary: "Get Graphify map suggestion",
             description:
-              "Return whether a session is eligible for an opt-in Graphify project map based on local telemetry and sidecar configuration.",
+              "Return whether a session is eligible for an opt-in Graphify project map based on local telemetry and CLI availability.",
           }),
         ),
     )
@@ -72,7 +80,7 @@ export const makeGraphifyGroup = <SessionLocationId extends HttpApiMiddleware.An
       HttpApiEndpoint.post("session.graphify.map", "/api/session/:sessionID/graphify-map", {
         params: { sessionID: Session.ID },
         success: GraphifyMapStart,
-        error: [SessionNotFoundError, GraphifyNotConfiguredError, GraphifySidecarError],
+        error: [SessionNotFoundError, GraphifyDisabledError, GraphifyUvNotFoundError],
       })
         .middleware(sessionLocationMiddleware)
         .annotateMerge(

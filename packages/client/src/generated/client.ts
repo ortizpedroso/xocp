@@ -957,7 +957,7 @@ export function make(options: ClientOptions) {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/graphify-map`,
             successStatus: 200,
-            declaredStatuses: [404, 409, 502, 400, 401],
+            declaredStatuses: [404, 409, 400, 401],
             empty: false,
           },
           requestOptions,
