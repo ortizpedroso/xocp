@@ -267,7 +267,7 @@ const layer = Layer.effect(
               ? { model: `${input.model.providerID}/${ModelV2.ID.make(input.model.id)}` }
               : {}),
           },
-        }).pipe(Effect.provide(locations.get(input.location)))
+        }).pipe(Effect.provide(locations.get(input.location)), Effect.option, Effect.asVoid)
         // TODO: Restore recorded sessions onto replacement synchronized workspaces in a future API slice.
         return yield* result.get(sessionID).pipe(Effect.orDie)
       }),
