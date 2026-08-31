@@ -20,6 +20,7 @@
     "package:mac": "electron-builder --mac --config electron-builder.config.ts",
     "package:win": "electron-builder --win --config electron-builder.config.ts",
     "package:linux": "electron-builder --linux --config electron-builder.config.ts",
+    "generate-icons": "bun ./scripts/generate-icons.ts",
     "native:build": "bun install --cwd native"
   },
   "main": "./out/main/index.js",
