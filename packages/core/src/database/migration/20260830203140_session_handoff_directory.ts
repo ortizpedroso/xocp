@@ -5,6 +5,16 @@ export default {
   id: "20260830203140_session_handoff_directory",
   up(tx) {
     return Effect.gen(function* () {
+      const columns = yield* tx.all<{ name: string }>(`PRAGMA table_info(\`session_handoff\`)`)
+      if (columns.some((column) => column.name === "directory")) {
+        yield* tx.run(
+          `CREATE INDEX IF NOT EXISTS \`session_handoff_session_idx\` ON \`session_handoff\` (\`session_id\`);`,
+        )
+        yield* tx.run(
+          `CREATE INDEX IF NOT EXISTS \`session_handoff_directory_idx\` ON \`session_handoff\` (\`directory\`);`,
+        )
+        return
+      }
       yield* tx.run(`ALTER TABLE \`session_handoff\` ADD \`directory\` text;`)
       yield* tx.run(
         `UPDATE \`session_handoff\` SET \`directory\` = (SELECT \`directory\` FROM \`session\` WHERE \`session\`.\`id\` = \`session_handoff\`.\`session_id\`);`,

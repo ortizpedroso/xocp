@@ -25,6 +25,8 @@ import { AbsolutePath } from "@opencode-ai/core/schema"
 import { SessionSchema } from "@opencode-ai/core/session/schema"
 import { SessionTable } from "@opencode-ai/core/session/sql"
 import sessionMetadataMigration from "@opencode-ai/core/database/migration/20260511173437_session-metadata"
+import sessionHandoffMigration from "@opencode-ai/core/database/migration/20260829203000_session_handoff"
+import sessionHandoffDirectoryMigration from "@opencode-ai/core/database/migration/20260830203140_session_handoff_directory"
 import type { SqlClient as SqlClientService } from "effect/unstable/sql/SqlClient"
 import { Database } from "@opencode-ai/core/database/database"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
@@ -701,6 +703,31 @@ describe("DatabaseMigration", () => {
         yield* DatabaseMigration.applyOnly(db, [])
 
         expect(yield* db.all(sql`SELECT id FROM migration ORDER BY id`)).toEqual([{ id: "existing" }])
+      }),
+    )
+  })
+
+  test("skips session_handoff creation when the table already exists", async () => {
+    await run(
+      Effect.gen(function* () {
+        const db = yield* makeDb
+        yield* db.run(sql`CREATE TABLE session (id text PRIMARY KEY)`)
+        yield* db.run(sql`
+          CREATE TABLE session_handoff (
+            id text PRIMARY KEY,
+            session_id text NOT NULL,
+            directory text NOT NULL,
+            content text NOT NULL,
+            created_at integer NOT NULL
+          )
+        `)
+
+        yield* DatabaseMigration.applyOnly(db, [sessionHandoffMigration, sessionHandoffDirectoryMigration])
+
+        expect(yield* db.all(sql`SELECT id FROM migration ORDER BY id`)).toEqual([
+          { id: "20260829203000_session_handoff" },
+          { id: "20260830203140_session_handoff_directory" },
+        ])
       }),
     )
   })
