@@ -164,6 +164,20 @@ export function resumeStreamAfterPageShow(event: PageTransitionEvent, start: () 
   start()
 }
 
+export function resumeStreamIfStopped(isStarted: boolean, start: () => unknown) {
+  if (isStarted) return
+  start()
+}
+
+export function resumeStreamOnVisibilityChange(
+  visibilityState: DocumentVisibilityState,
+  isStarted: boolean,
+  start: () => unknown,
+) {
+  if (visibilityState !== "visible") return
+  resumeStreamIfStopped(isStarted, start)
+}
+
 type ServerEventEmitter = ReturnType<typeof createGlobalEmitter<{ [key: string]: ServerEvent }>>
 type ServerSDKBase = {
   server: ServerConnection.Any
@@ -325,6 +339,10 @@ function createServerSdkContextBase(server: ServerConnection.Any, scope: ServerS
   onMount(() => {
     makeEventListener(window, "pagehide", stop)
     makeEventListener(window, "pageshow", (event) => resumeStreamAfterPageShow(event, start))
+    makeEventListener(document, "visibilitychange", () =>
+      resumeStreamOnVisibilityChange(document.visibilityState, started, start),
+    )
+    makeEventListener(window, "online", () => resumeStreamIfStopped(started, start))
   })
 
   onCleanup(() => {
