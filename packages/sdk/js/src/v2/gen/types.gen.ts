@@ -314,6 +314,13 @@ export type ContentFilterError = {
   }
 }
 
+export type DegenerateOutputError = {
+  name: "DegenerateOutputError"
+  data: {
+    message: string
+  }
+}
+
 export type ApiError = {
   name: "APIError"
   data: {
@@ -346,6 +353,7 @@ export type AssistantMessage = {
     | StructuredOutputError
     | ContextOverflowError
     | ContentFilterError
+    | DegenerateOutputError
     | ApiError
   parentID: string
   modelID: string
@@ -1222,6 +1230,7 @@ export type GlobalEvent = {
             | StructuredOutputError
             | ContextOverflowError
             | ContentFilterError
+            | DegenerateOutputError
             | ApiError
         }
       }
@@ -2026,6 +2035,7 @@ export type Config = {
     continue_loop_on_deny?: boolean
     mcp_timeout?: number
     policies?: Array<ConfigV2ExperimentalPolicy>
+    degenerate_fallback_model?: string
   }
 }
 
@@ -2946,6 +2956,41 @@ export type V2EventStream = string
 
 export type ForbiddenError = {
   _tag: "ForbiddenError"
+  message: string
+}
+
+export type GraphifySuggestion = {
+  eligible: boolean
+  score: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  threshold: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  available: boolean
+}
+
+export type GraphifyMapStart = {
+  jobID: string
+  status: "running"
+}
+
+export type GraphifyDisabledError = {
+  _tag: "GraphifyDisabledError"
+  code: "graphify_disabled"
+}
+
+export type GraphifyUvNotFoundError = {
+  _tag: "GraphifyUvNotFoundError"
+  code: "graphify_uv_not_found"
+}
+
+export type GraphifyMapJob = {
+  id: string
+  status: "running" | "completed" | "error" | "cancelled"
+  output?: string
+  error?: string
+}
+
+export type GraphifyMapNotFoundError = {
+  _tag: "GraphifyMapNotFoundError"
+  jobID: string
   message: string
 }
 
@@ -5361,6 +5406,7 @@ export type SessionError = {
       | StructuredOutputError
       | ContextOverflowError
       | ContentFilterError
+      | DegenerateOutputError
       | ApiError
   }
 }
@@ -6686,6 +6732,7 @@ export type EventSessionError = {
       | StructuredOutputError
       | ContextOverflowError
       | ContentFilterError
+      | DegenerateOutputError
       | ApiError
   }
 }
@@ -13444,6 +13491,118 @@ export type V2SessionQuestionRejectResponses = {
 }
 
 export type V2SessionQuestionRejectResponse = V2SessionQuestionRejectResponses[keyof V2SessionQuestionRejectResponses]
+
+export type V2SessionGraphifySuggestionData = {
+  body?: never
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/graphify-suggestion"
+}
+
+export type V2SessionGraphifySuggestionErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+}
+
+export type V2SessionGraphifySuggestionError =
+  V2SessionGraphifySuggestionErrors[keyof V2SessionGraphifySuggestionErrors]
+
+export type V2SessionGraphifySuggestionResponses = {
+  /**
+   * GraphifySuggestion
+   */
+  200: GraphifySuggestion
+}
+
+export type V2SessionGraphifySuggestionResponse =
+  V2SessionGraphifySuggestionResponses[keyof V2SessionGraphifySuggestionResponses]
+
+export type V2SessionGraphifyMapData = {
+  body?: never
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/graphify-map"
+}
+
+export type V2SessionGraphifyMapErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+  /**
+   * GraphifyDisabledError | GraphifyUvNotFoundError
+   */
+  409: GraphifyDisabledError | GraphifyUvNotFoundError
+}
+
+export type V2SessionGraphifyMapError = V2SessionGraphifyMapErrors[keyof V2SessionGraphifyMapErrors]
+
+export type V2SessionGraphifyMapResponses = {
+  /**
+   * GraphifyMapStart
+   */
+  200: GraphifyMapStart
+}
+
+export type V2SessionGraphifyMapResponse = V2SessionGraphifyMapResponses[keyof V2SessionGraphifyMapResponses]
+
+export type V2SessionGraphifyMapGetData = {
+  body?: never
+  path: {
+    sessionID: string
+    jobID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/graphify-map/{jobID}"
+}
+
+export type V2SessionGraphifyMapGetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError | GraphifyMapNotFoundError
+   */
+  404: GraphifyMapNotFoundError | SessionNotFoundError
+}
+
+export type V2SessionGraphifyMapGetError = V2SessionGraphifyMapGetErrors[keyof V2SessionGraphifyMapGetErrors]
+
+export type V2SessionGraphifyMapGetResponses = {
+  /**
+   * GraphifyMapJob
+   */
+  200: GraphifyMapJob
+}
+
+export type V2SessionGraphifyMapGetResponse = V2SessionGraphifyMapGetResponses[keyof V2SessionGraphifyMapGetResponses]
 
 export type V2ReferenceListData = {
   body?: never

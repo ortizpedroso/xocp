@@ -345,6 +345,12 @@ import type {
   V2SessionEventsResponses,
   V2SessionGetErrors,
   V2SessionGetResponses,
+  V2SessionGraphifyMapErrors,
+  V2SessionGraphifyMapGetErrors,
+  V2SessionGraphifyMapGetResponses,
+  V2SessionGraphifyMapResponses,
+  V2SessionGraphifySuggestionErrors,
+  V2SessionGraphifySuggestionResponses,
   V2SessionHistoryErrors,
   V2SessionHistoryResponses,
   V2SessionInterruptErrors,
@@ -5423,6 +5429,95 @@ export class Question2 extends HeyApiClient {
   }
 }
 
+export class Map_ extends HeyApiClient {
+  /**
+   * Get Graphify map job status
+   *
+   * Return the current status of a Graphify map background job.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      jobID: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "jobID" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2SessionGraphifyMapGetResponses,
+      V2SessionGraphifyMapGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/session/{sessionID}/graphify-map/{jobID}",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Graphify extends HeyApiClient {
+  /**
+   * Get Graphify map suggestion
+   *
+   * Return whether a session is eligible for an opt-in Graphify project map based on local telemetry and CLI availability.
+   */
+  public suggestion<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "sessionID" }] }])
+    return (options?.client ?? this.client).get<
+      V2SessionGraphifySuggestionResponses,
+      V2SessionGraphifySuggestionErrors,
+      ThrowOnError
+    >({
+      url: "/api/session/{sessionID}/graphify-suggestion",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Start Graphify project map
+   *
+   * Start a background Graphify map job for the session project directory.
+   */
+  public map<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "sessionID" }] }])
+    return (options?.client ?? this.client).post<
+      V2SessionGraphifyMapResponses,
+      V2SessionGraphifyMapErrors,
+      ThrowOnError
+    >({
+      url: "/api/session/{sessionID}/graphify-map",
+      ...options,
+      ...params,
+    })
+  }
+
+  private _map?: Map_
+  get map2(): Map_ {
+    return (this._map ??= new Map_({ client: this.client }))
+  }
+}
+
 export class Session3 extends HeyApiClient {
   /**
    * List sessions
@@ -5870,6 +5965,11 @@ export class Session3 extends HeyApiClient {
   private _question?: Question2
   get question(): Question2 {
     return (this._question ??= new Question2({ client: this.client }))
+  }
+
+  private _graphify?: Graphify
+  get graphify(): Graphify {
+    return (this._graphify ??= new Graphify({ client: this.client }))
   }
 }
 

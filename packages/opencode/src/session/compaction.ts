@@ -447,6 +447,8 @@ const layer = Layer.effect(
         model,
       })
 
+      if (result === "degenerate") return "stop"
+
       if (result === "compact") {
         processor.message.error = new SessionV1.ContextOverflowError({
           message: replay
