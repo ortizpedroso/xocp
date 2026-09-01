@@ -28,7 +28,11 @@ export function SessionRetry(props: { status: SessionStatus; show?: boolean }) {
   const message = createMemo(() => {
     const current = retry()
     if (!current) return ""
-    if (current.message.includes("exceeded your current quota") && current.message.includes("gemini")) {
+    if (
+      current.message.toLowerCase().includes("gemini") &&
+      (/quota|excedeu sua cota|exceeded your current quota|free_tier/i.test(current.message) ||
+        /verifique seu plano/i.test(current.message))
+    ) {
       return i18n.t("ui.sessionTurn.retry.geminiHot")
     }
     if (current.message.length > 80) return current.message.slice(0, 80) + "..."
