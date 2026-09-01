@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import { adaptServerEvent, coalesceServerEvents, enqueueServerEvent, resumeStreamAfterPageShow } from "./server-sdk"
+import {
+  adaptServerEvent,
+  coalesceServerEvents,
+  enqueueServerEvent,
+  resumeStreamAfterPageShow,
+  resumeStreamIfStopped,
+  resumeStreamOnVisibilityChange,
+} from "./server-sdk"
 import type { OpenCodeEvent } from "@opencode-ai/client/promise"
 import type { Event } from "@opencode-ai/sdk/v2/client"
 
@@ -10,6 +17,31 @@ describe("resumeStreamAfterPageShow", () => {
 
     resumeStreamAfterPageShow({ persisted: false } as PageTransitionEvent, start)
     resumeStreamAfterPageShow({ persisted: true } as PageTransitionEvent, start)
+
+    expect(starts).toBe(1)
+  })
+})
+
+describe("resumeStreamIfStopped", () => {
+  test("restarts a stream only when it is not already started", () => {
+    let starts = 0
+    const start = () => starts++
+
+    resumeStreamIfStopped(true, start)
+    resumeStreamIfStopped(false, start)
+
+    expect(starts).toBe(1)
+  })
+})
+
+describe("resumeStreamOnVisibilityChange", () => {
+  test("restarts a stopped stream when the document becomes visible", () => {
+    let starts = 0
+    const start = () => starts++
+
+    resumeStreamOnVisibilityChange("hidden", false, start)
+    resumeStreamOnVisibilityChange("visible", true, start)
+    resumeStreamOnVisibilityChange("visible", false, start)
 
     expect(starts).toBe(1)
   })
