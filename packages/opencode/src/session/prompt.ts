@@ -38,6 +38,12 @@ import { ConfigMarkdown } from "@/config/markdown"
 import { SessionSummary } from "./summary"
 import { NamedError } from "@opencode-ai/core/util/error"
 import { SessionProcessor } from "./processor"
+import {
+  degenerateFallbackFailedMessage,
+  degenerateFallbackNotice,
+  degenerateNoFallbackMessage,
+  resolveDegenerateFallbackModel,
+} from "./degenerate"
 import { Tool } from "@/tool/tool"
 import { Permission } from "@/permission"
 import { SessionStatus } from "./status"
@@ -1244,84 +1250,138 @@ const layer = Layer.effect(
             yield* sessions.updateMessage(msg)
           })
 
-          const handle = yield* processor
-            .create({
-              assistantMessage: msg,
-              sessionID,
-              model,
-            })
-            .pipe(Effect.onInterrupt(() => finalizeInterruptedAssistant))
-
           const outcome: "break" | "continue" = yield* Effect.gen(function* () {
             const lastUserMsg = msgs.findLast((m) => m.info.role === "user")
             const bypassAgentCheck = lastUserMsg?.parts.some((p) => p.type === "agent") ?? false
             const promptOps = yield* ops()
-
-            const tools = yield* SessionTools.resolve({
-              agent,
-              session,
-              model,
-              processor: handle,
-              bypassAgentCheck,
-              messages: msgs,
-              promptOps,
-            }).pipe(
-              Effect.provideService(Plugin.Service, plugin),
-              Effect.provideService(Permission.Service, permission),
-              Effect.provideService(ToolRegistry.Service, registry),
-              Effect.provideService(MCP.Service, mcp),
-              Effect.provideService(Truncate.Service, truncate),
-              Effect.provideService(RuntimeFlags.Service, flags),
-            )
-
-            if (lastUser.format?.type === "json_schema") {
-              tools["StructuredOutput"] = createStructuredOutputTool({
-                schema: lastUser.format.schema,
-                onSuccess(output) {
-                  structured = output
-                },
-              })
-            }
-
-            if (step === 1)
-              yield* summary.summarize({ sessionID, messageID: lastUser.id }).pipe(Effect.ignore, Effect.forkIn(scope))
-
-            yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
-
+            let turnModel = model
+            let degenerateFallbackAttempted = false
+            let handle!: SessionProcessor.Handle
+            let result: SessionProcessor.Result = "continue"
+            const format = lastUser.format ?? { type: "text" as const }
             const turnStartedAt = Date.now()
             const ctx = yield* InstanceState.context
-            const [skills, env, notice, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
-              sys.skills(agent),
-              sys.environment(model),
-              step === 1 ? handoffNotice(ctx.directory) : Effect.succeed(undefined),
-              instruction.system().pipe(Effect.orDie),
-              sys.mcp(agent, session.permission),
-              MessageV2.toModelMessagesEffect(msgs, model),
-            ])
-            const system = [
-              ...env,
-              ...(notice ? [notice] : []),
-              ...instructions,
-              ...(mcpInstructions ? [mcpInstructions] : []),
-              ...(skills ? [skills] : []),
-            ]
-            const format = lastUser.format ?? { type: "text" as const }
-            if (format.type === "json_schema") system.push(STRUCTURED_OUTPUT_SYSTEM_PROMPT)
-            const result = yield* handle.process({
-              user: lastUser,
-              agent,
-              permission: session.permission,
-              sessionID,
-              parentSessionID: session.parentID,
-              system,
-              messages: [
-                ...modelMsgs,
-                ...(isLastStep ? [{ role: "assistant" as const, content: MAX_STEPS_PROMPT }] : []),
-              ],
-              tools,
-              model,
-              toolChoice: format.type === "json_schema" ? "required" : undefined,
-            })
+
+            for (;;) {
+              handle = yield* processor
+                .create({
+                  assistantMessage: msg,
+                  sessionID,
+                  model: turnModel,
+                })
+                .pipe(Effect.onInterrupt(() => finalizeInterruptedAssistant))
+
+              const tools = yield* SessionTools.resolve({
+                agent,
+                session,
+                model: turnModel,
+                processor: handle,
+                bypassAgentCheck,
+                messages: msgs,
+                promptOps,
+              }).pipe(
+                Effect.provideService(Plugin.Service, plugin),
+                Effect.provideService(Permission.Service, permission),
+                Effect.provideService(ToolRegistry.Service, registry),
+                Effect.provideService(MCP.Service, mcp),
+                Effect.provideService(Truncate.Service, truncate),
+                Effect.provideService(RuntimeFlags.Service, flags),
+              )
+
+              if (lastUser.format?.type === "json_schema") {
+                tools["StructuredOutput"] = createStructuredOutputTool({
+                  schema: lastUser.format.schema,
+                  onSuccess(output) {
+                    structured = output
+                  },
+                })
+              }
+
+              if (step === 1 && !degenerateFallbackAttempted)
+                yield* summary.summarize({ sessionID, messageID: lastUser.id }).pipe(Effect.ignore, Effect.forkIn(scope))
+
+              yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
+
+              const [skills, env, notice, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
+                sys.skills(agent),
+                sys.environment(turnModel),
+                step === 1 ? handoffNotice(ctx.directory) : Effect.succeed(undefined),
+                instruction.system().pipe(Effect.orDie),
+                sys.mcp(agent, session.permission),
+                MessageV2.toModelMessagesEffect(msgs, turnModel),
+              ])
+              const system = [
+                ...env,
+                ...(notice ? [notice] : []),
+                ...instructions,
+                ...(mcpInstructions ? [mcpInstructions] : []),
+                ...(skills ? [skills] : []),
+              ]
+              if (format.type === "json_schema") system.push(STRUCTURED_OUTPUT_SYSTEM_PROMPT)
+              result = yield* handle.process({
+                user: lastUser,
+                agent,
+                permission: session.permission,
+                sessionID,
+                parentSessionID: session.parentID,
+                system,
+                messages: [
+                  ...modelMsgs,
+                  ...(isLastStep ? [{ role: "assistant" as const, content: MAX_STEPS_PROMPT }] : []),
+                ],
+                tools,
+                model: turnModel,
+                toolChoice: format.type === "json_schema" ? "required" : undefined,
+              })
+
+              if (result !== "degenerate") break
+
+              const fromModel = turnModel
+              if (degenerateFallbackAttempted) {
+                msg.error = new SessionV1.DegenerateOutputError({
+                  message: degenerateFallbackFailedMessage(),
+                }).toObject()
+                msg.finish = "error"
+                msg.time.completed = Date.now()
+                yield* sessions.updateMessage(msg)
+                yield* events.publish(Session.Event.Error, { sessionID, error: msg.error })
+                result = "stop"
+                break
+              }
+
+              const cfg = yield* config.get()
+              const providers = yield* provider.list()
+              const fallbackRef = resolveDegenerateFallbackModel({
+                providers,
+                current: turnModel,
+                configured: cfg.experimental?.degenerate_fallback_model,
+              })
+              if (!fallbackRef) {
+                msg.error = new SessionV1.DegenerateOutputError({
+                  message: degenerateNoFallbackMessage(),
+                }).toObject()
+                msg.finish = "error"
+                msg.time.completed = Date.now()
+                yield* sessions.updateMessage(msg)
+                yield* events.publish(Session.Event.Error, { sessionID, error: msg.error })
+                result = "stop"
+                break
+              }
+
+              degenerateFallbackAttempted = true
+              turnModel = yield* getModel(fallbackRef.providerID, fallbackRef.modelID, sessionID)
+              yield* sessions.updatePart({
+                id: PartID.ascending(),
+                messageID: msg.id,
+                sessionID,
+                type: "text",
+                text: degenerateFallbackNotice(fromModel, turnModel),
+                time: { start: Date.now(), end: Date.now() },
+              } satisfies SessionV1.TextPart)
+              msg.modelID = turnModel.id
+              msg.providerID = turnModel.providerID
+              yield* sessions.updateMessage(msg)
+            }
 
             const turnParts = yield* MessageV2.parts(handle.message.id).pipe(
               Effect.provideService(Database.Service, database),
@@ -1385,7 +1445,7 @@ const layer = Layer.effect(
             }
             return "continue" as const
           }).pipe(
-            Effect.ensuring(instruction.clear(handle.message.id)),
+            Effect.ensuring(instruction.clear(msg.id)),
             Effect.onInterrupt(() => finalizeInterruptedAssistant),
           )
           if (outcome === "break") break

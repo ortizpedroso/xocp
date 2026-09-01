@@ -25,9 +25,14 @@ import { isRecord } from "@/util/record"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Database } from "@opencode-ai/core/database/database"
 import { Usage, type LLMEvent } from "@opencode-ai/llm"
+import {
+  detectDegenerateText,
+  initialDegenerateDeltaState,
+  trackDegenerateDelta,
+} from "./degenerate"
 
 const DOOM_LOOP_THRESHOLD = 3
-export type Result = "compact" | "stop" | "continue"
+export type Result = "compact" | "stop" | "continue" | "degenerate"
 
 export interface Handle {
   readonly message: SessionV1.Assistant
@@ -72,6 +77,8 @@ interface ProcessorContext extends Input {
   needsCompaction: boolean
   currentText: SessionV1.TextPart | undefined
   reasoningMap: Record<string, SessionV1.ReasoningPart>
+  degenerateDelta: ReturnType<typeof initialDegenerateDeltaState>
+  degenerateDetected: boolean
 }
 
 type StreamEvent = LLMEvent
@@ -111,6 +118,8 @@ const layer = Layer.effect(
         needsCompaction: false,
         currentText: undefined,
         reasoningMap: {},
+        degenerateDelta: initialDegenerateDeltaState(),
+        degenerateDetected: false,
       }
       let aborted = false
 
@@ -275,6 +284,24 @@ const layer = Layer.effect(
         }
       }
 
+      const resetDegenerateTracking = () => {
+        ctx.degenerateDelta = initialDegenerateDeltaState()
+      }
+
+      const markDegenerate = () => {
+        ctx.degenerateDetected = true
+      }
+
+      const checkDegenerateText = (text: string) => {
+        if (detectDegenerateText(text)) markDegenerate()
+      }
+
+      const trackDegenerate = (delta: string) => {
+        const tracked = trackDegenerateDelta(ctx.degenerateDelta, delta)
+        ctx.degenerateDelta = tracked.state
+        if (tracked.detected) markDegenerate()
+      }
+
       const handleEvent = Effect.fnUntraced(function* (value: StreamEvent) {
         switch (value.type) {
           case "reasoning-start":
@@ -316,6 +343,7 @@ const layer = Layer.effect(
             if (ctx.assistantMessage.summary) {
               throw new Error(`Tool call not allowed while generating summary: ${value.name}`)
             }
+            resetDegenerateTracking()
             yield* ensureToolCall(value)
             return
 
@@ -410,6 +438,7 @@ const layer = Layer.effect(
               attachments: attachments.length ? attachments : undefined,
             }
             yield* completeToolCall(value.id, output)
+            resetDegenerateTracking()
             return
           }
 
@@ -423,6 +452,7 @@ const layer = Layer.effect(
 
           case "step-start":
             if (!ctx.snapshot) ctx.snapshot = yield* snapshot.track()
+            resetDegenerateTracking()
             yield* session.updatePart({
               id: PartID.ascending(),
               messageID: ctx.assistantMessage.id,
@@ -484,6 +514,7 @@ const layer = Layer.effect(
           }
 
           case "text-start":
+            resetDegenerateTracking()
             ctx.currentText = {
               id: PartID.ascending(),
               messageID: ctx.assistantMessage.id,
@@ -499,6 +530,8 @@ const layer = Layer.effect(
           case "text-delta":
             if (!ctx.currentText) return
             ctx.currentText.text += value.text
+            trackDegenerate(value.text)
+            checkDegenerateText(ctx.currentText.text)
             if (value.providerMetadata) ctx.currentText.metadata = value.providerMetadata
             yield* session.updatePartDelta({
               sessionID: ctx.currentText.sessionID,
@@ -630,6 +663,7 @@ const layer = Layer.effect(
           messageID: input.assistantMessage.id,
         })
         ctx.needsCompaction = false
+        ctx.degenerateDetected = false
         ctx.shouldBreak = (yield* config.get()).experimental?.continue_loop_on_deny !== true
 
         return yield* Effect.gen(function* () {
@@ -641,7 +675,7 @@ const layer = Layer.effect(
 
             yield* stream.pipe(
               Stream.tap((event) => handleEvent(event)),
-              Stream.takeUntil(() => ctx.needsCompaction),
+              Stream.takeUntil(() => ctx.needsCompaction || ctx.degenerateDetected),
               Stream.runDrain,
             )
           }).pipe(
@@ -677,6 +711,7 @@ const layer = Layer.effect(
           )
 
           if (ctx.needsCompaction) return "compact"
+          if (ctx.degenerateDetected) return "degenerate"
           if (ctx.blocked || ctx.assistantMessage.error) return "stop"
           return "continue"
         })
