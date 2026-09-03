@@ -81,6 +81,7 @@ import {
   type WorkspaceSidebarContext,
 } from "./layout/sidebar-workspace"
 import { ProjectDragOverlay, SortableProject, type ProjectSidebarContext } from "./layout/sidebar-project"
+import { SidebarProjectTree, type SidebarProjectTreeContext } from "./layout/sidebar-project-tree"
 import { SidebarContent } from "./layout/sidebar-shell"
 
 export default function LegacyLayout(props: ParentProps) {
@@ -1708,7 +1709,7 @@ export default function LegacyLayout(props: ParentProps) {
   })
 
   const side = createMemo(() => Math.max(layout.sidebar.width(), 244))
-  const panel = createMemo(() => Math.max(side() - 64, 0))
+  const panel = createMemo(() => (layout.sidebar.opened() ? side() : Math.max(side() - 64, 0)))
 
   const loadedSessionDirs = new Set<string>()
 
@@ -2218,6 +2219,40 @@ export default function LegacyLayout(props: ParentProps) {
 
   const projects = () => layout.projects.list()
   const projectOverlay = () => <ProjectDragOverlay projects={projects} activeProject={() => store.activeProject} />
+  const sidebarTreeCtx: SidebarProjectTreeContext = {
+    projects,
+    currentProject,
+    projectSidebar: projectSidebarCtx,
+    workspaceSidebar: workspaceSidebarCtx,
+    workspaceIds,
+    workspaceLabel,
+    sortNow,
+    homedir: () => serverSync().data.path.home,
+    chooseProject,
+    connectProvider,
+    gettingStartedDismissed: () => store.gettingStartedDismissed,
+    dismissGettingStarted: () => setStore("gettingStartedDismissed", true),
+    showPaidUpsell: () => providers.all().size > 0 && providers.paid().length === 0,
+    handleWorkspaceDragStart,
+    handleWorkspaceDragEnd,
+    handleWorkspaceDragOver,
+    handleProjectDragStart: handleDragStart,
+    handleProjectDragEnd: handleDragEnd,
+    handleProjectDragOver: handleDragOver,
+    renderProjectOverlay: projectOverlay,
+    activeWorkspace: () => store.activeWorkspace,
+    sidebarProject,
+    createWorkspace,
+    navigateWithSidebarReset,
+    openProjectLabel: language.t("command.project.open"),
+    openProjectKeybind: () => command.keybind("project.open"),
+    onOpenProject: chooseProject,
+    settingsLabel: () => language.t("sidebar.settings"),
+    settingsKeybind: () => command.keybind("settings.open"),
+    onOpenSettings: openSettings,
+    helpLabel: () => language.t("sidebar.help"),
+    onOpenHelp: () => platform.openExternal("https://opencode.ai/desktop-feedback"),
+  }
   const sidebarContent = (mobile?: boolean) => (
     <SidebarContent
       mobile={mobile}
@@ -2239,9 +2274,7 @@ export default function LegacyLayout(props: ParentProps) {
       onOpenSettings={openSettings}
       helpLabel={() => language.t("sidebar.help")}
       onOpenHelp={() => platform.openExternal("https://opencode.ai/desktop-feedback")}
-      renderPanel={() =>
-        mobile ? <SidebarPanel project={currentProject} mobile /> : <SidebarPanel project={currentProject} merged />
-      }
+      renderPanel={() => <SidebarProjectTree ctx={{ ...sidebarTreeCtx, mobile, sortNow }} />}
     />
   )
 
