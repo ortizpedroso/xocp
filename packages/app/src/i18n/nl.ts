@@ -706,6 +706,7 @@ export const dict = {
   "home.sessions.group.today": "Vandaag",
   "home.sessions.group.yesterday": "Gisteren",
   "home.sessions.group.older": "Ouder",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Maak verbinding met meer dan 75 providers om andere modellen te gebruiken, waaronder Claude, GPT, Gemini, enz.",
   "session.tab.session": "Sessie",
@@ -884,6 +885,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Maak verbinding met een aanbieder om modellen te gebruiken, waaronder Claude, GPT en Gemini.",
   "sidebar.project.recentSessions": "Recente sessies",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Bekijk alle sessies",
   "sidebar.project.clearNotifications": "Meldingen wissen",
   "sidebar.empty.title": "Geen projecten geopend",

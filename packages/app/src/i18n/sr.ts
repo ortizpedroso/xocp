@@ -700,6 +700,7 @@ export const dict = {
   "home.sessions.group.today": "Данас",
   "home.sessions.group.yesterday": "јуче",
   "home.sessions.group.older": "старији",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Повежите се са 75+ провајдера да бисте користили друге моделе, укључујући Claude, GPT, Gemini итд",
   "session.tab.session": "Сесија",
@@ -878,6 +879,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Повежите било ког провајдера да бисте користили моделе, вк. Claude, GPT, Gemini итд.",
   "sidebar.project.recentSessions": "Недавне сесије",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Погледајте све сесије",
   "sidebar.project.clearNotifications": "Обришите обавештења",
   "sidebar.empty.title": "Нема отворених пројеката",

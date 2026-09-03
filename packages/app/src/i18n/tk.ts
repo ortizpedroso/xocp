@@ -699,6 +699,7 @@ export const dict = {
   "home.sessions.group.today": "Bu gün",
   "home.sessions.group.yesterday": "Düýn",
   "home.sessions.group.older": "Köne",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip": "Claude, GPT, Gemini we ş.m. ýaly beýleki modelleri ulanmak üçin 75+ üpjün edijä birikdiriň.",
   "session.tab.session": "Sessiýa",
   "session.tab.review": "Syn",
@@ -875,6 +876,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Modelleri ulanmak üçin islendik üpjün edijini birikdiriň. Claude, GPT, Gemini we ş.m.",
   "sidebar.project.recentSessions": "Soňky sessiýalar",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Allhli sessiýalary görüň",
   "sidebar.project.clearNotifications": "Duýduryşlary arassalaň",
   "sidebar.empty.title": "Taslama açylmaýar",

@@ -705,6 +705,7 @@ export const dict = {
   "home.sessions.group.today": "Šiandien",
   "home.sessions.group.yesterday": "vakar",
   "home.sessions.group.older": "Vyresni",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Prisijunkite prie 75 ir daugiau tiekėjų, kad galėtumėte naudoti kitus modelius, įskaitant Claude, GPT, Gemini ir kt.",
   "session.tab.session": "Seansas",
@@ -888,6 +889,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Prijunkite bet kurį teikėją, kad galėtumėte naudoti modelius, įskaitant. Claude, GPT, Gemini ir kt.",
   "sidebar.project.recentSessions": "Naujausi seansai",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Peržiūrėkite visas sesijas",
   "sidebar.project.clearNotifications": "Išvalyti pranešimus",
   "sidebar.empty.title": "Jokių atvirų projektų",

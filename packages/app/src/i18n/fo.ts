@@ -699,6 +699,7 @@ export const dict = {
   "home.sessions.group.today": "Í dag",
   "home.sessions.group.yesterday": "Í gjár",
   "home.sessions.group.older": "Eldri",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Set teg í samband við 75+ veitarar fyri at brúka onnur modell, eitt nú Claude, GPT, Gemini, osfr.",
   "session.tab.session": "Seta",
@@ -875,6 +876,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Set ein og hvønn veitara í samband við at brúka modellir, inc. Claude, GPT, Gemini o.s.fr.",
   "sidebar.project.recentSessions": "Seinastu fundir",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Vís allar setur",
   "sidebar.project.clearNotifications": "Rudda fráboðanir",
   "sidebar.empty.title": "Ongar verkætlanir lata upp",

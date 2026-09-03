@@ -1,8 +1,13 @@
 import type { HomeProjectsController } from "./home-projects-controller"
 import { HomeProjectsView } from "./home-projects-view"
 import type { HomeScrollController } from "./home-scroll-controller"
+import type { HomeSessionsController } from "./home-sessions-controller"
 
-export function HomeProjects(props: { projects: HomeProjectsController; scroll: HomeScrollController }) {
+export function HomeProjects(props: {
+  projects: HomeProjectsController
+  sessions: HomeSessionsController
+  scroll: HomeScrollController
+}) {
   return (
     <HomeProjectsView
       language={props.projects.copy.language}
@@ -36,6 +41,13 @@ export function HomeProjects(props: { projects: HomeProjectsController; scroll: 
       onOpenSettings={props.projects.utility.settings}
       onOpenDocumentation={props.projects.utility.documentation}
       onOpenHelp={props.projects.utility.help}
+      projectExpanded={props.projects.server.projectExpanded}
+      onToggleProjectExpanded={props.projects.server.toggleProjectExpanded}
+      onExpandProject={props.projects.server.expandProject}
+      groupsForProject={props.sessions.data.groupsForProject}
+      sessionServer={props.sessions.session.server}
+      isOpenTab={props.sessions.tab.isOpen}
+      onOpenSession={props.sessions.session.open}
     />
   )
 }

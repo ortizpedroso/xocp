@@ -705,6 +705,7 @@ export const dict = {
   "home.sessions.group.today": "Σήμερα",
   "home.sessions.group.yesterday": "Χθες",
   "home.sessions.group.older": "Παλαιότερο",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Συνδεθείτε σε 75+ παρόχους για να χρησιμοποιήσετε άλλα μοντέλα, συμπεριλαμβανομένων των Claude, GPT, Gemini, κ.λπ.",
   "session.tab.session": "Συνεδρία",
@@ -883,6 +884,8 @@ export const dict = {
   "sidebar.gettingStarted.line1": "XOCP περιλαμβάνει δωρεάν μοντέλα, ώστε να μπορείτε να ξεκινήσετε αμέσως.",
   "sidebar.gettingStarted.line2": "Συνδέστε οποιονδήποτε πάροχο για χρήση μοντέλων, inc. Claude, GPT, Gemini κ.λπ.",
   "sidebar.project.recentSessions": "Πρόσφατες συνεδρίες",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Προβολή όλων των συνεδριών",
   "sidebar.project.clearNotifications": "Διαγραφή ειδοποιήσεων",
   "sidebar.empty.title": "Δεν υπάρχουν ανοιχτά έργα",

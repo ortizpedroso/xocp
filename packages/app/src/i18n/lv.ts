@@ -700,6 +700,7 @@ export const dict = {
   "home.sessions.group.today": "Šodien",
   "home.sessions.group.yesterday": "Vakar",
   "home.sessions.group.older": "Vecākas",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Pievienojiet vairāk nekā 75 pakalpojumu sniedzējus, lai izmantotu citus modeļus, tostarp Claude, GPT, Gemini u.c.",
   "session.tab.session": "Sesija",
@@ -880,6 +881,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Pievienojiet jebkuru nodrošinātāju, lai izmantotu modeļus, t.sk. Claude, GPT, Gemini u.c.",
   "sidebar.project.recentSessions": "Nesenās sesijas",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Skatīt visas sesijas",
   "sidebar.project.clearNotifications": "Notīrīt paziņojumus",
   "sidebar.empty.title": "Nav atvērts neviens projekts",

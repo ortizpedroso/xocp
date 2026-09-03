@@ -701,6 +701,7 @@ export const dict = {
   "home.sessions.group.today": "Имруз",
   "home.sessions.group.yesterday": "Дируз",
   "home.sessions.group.older": "калонсолтар",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Барои истифодаи моделҳои дигар, аз ҷумла Claude, GPT, Gemini ва ғайра ба 75+ провайдерҳо пайваст шавед",
   "session.tab.session": "Сессия",
@@ -878,6 +879,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Ҳар як провайдерро барои истифодаи моделҳо пайваст кунед, Inc. Claude, GPT, Gemini ва гайра.",
   "sidebar.project.recentSessions": "Сеансхои охирин",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Ҳама сессияҳоро бинед",
   "sidebar.project.clearNotifications": "Огоҳиҳоро тоза кунед",
   "sidebar.empty.title": "Ягон лоиҳа кушода нест",

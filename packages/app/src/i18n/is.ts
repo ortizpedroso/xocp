@@ -702,6 +702,7 @@ export const dict = {
   "home.sessions.group.today": "Í dag",
   "home.sessions.group.yesterday": "Í gær",
   "home.sessions.group.older": "Eldri",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip": "Tengstu við 75+ veitendur til að nota aðrar gerðir, þar á meðal Claude, GPT, Gemini, osfrv",
   "session.tab.session": "Lota",
   "session.tab.review": "Upprifjun",
@@ -878,6 +879,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Tengdu hvaða þjónustuaðila sem er til að nota módel, inc. Claude, GPT, Gemini osfrv.",
   "sidebar.project.recentSessions": "Nýlegar setur",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Skoða allar lotur",
   "sidebar.project.clearNotifications": "Hreinsaðu tilkynningar",
   "sidebar.empty.title": "Engin verkefni opin",

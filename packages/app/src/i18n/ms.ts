@@ -697,6 +697,7 @@ export const dict = {
   "home.sessions.group.today": "Hari ini",
   "home.sessions.group.yesterday": "Semalam",
   "home.sessions.group.older": "Lama",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Sambung ke lebih 75 penyedia untuk menggunakan model lain, termasuk Claude, GPT, Gemini dan lain-lain",
   "session.tab.session": "Sesi",
@@ -874,6 +875,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Sambungkan mana-mana penyedia untuk menggunakan model, termasuk Claude, GPT, Gemini dan lain-lain.",
   "sidebar.project.recentSessions": "Sesi terkini",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Lihat semua sesi",
   "sidebar.project.clearNotifications": "Kosongkan notifikasi",
   "sidebar.empty.title": "Tiada projek dibuka",

@@ -597,6 +597,7 @@ export const dict = {
   "home.sessions.group.today": "Tänään",
   "home.sessions.group.yesterday": "Eilen",
   "home.sessions.group.older": "Vanhemmat",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip": "Yhdistä yli 75 palveluntarjoajaan käyttääksesi muita malleja, kuten Claude, GPT, Gemini jne",
   "session.tab.session": "Istunto",
   "session.tab.review": "Tarkistus",
@@ -774,6 +775,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Yhdistä mikä tahansa palveluntarjoaja käyttääksesi malleja, mm. Claude, GPT, Gemini jne.",
   "sidebar.project.recentSessions": "Viimeaikaiset istunnot",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Näytä kaikki istunnot",
   "sidebar.project.clearNotifications": "Tyhjennä ilmoitukset",
   "sidebar.empty.title": "Ei avoimia projekteja",

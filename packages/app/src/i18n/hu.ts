@@ -704,6 +704,7 @@ export const dict = {
   "home.sessions.group.today": "Ma",
   "home.sessions.group.yesterday": "Tegnap",
   "home.sessions.group.older": "Régebbi",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Csatlakozzon 75+ szolgáltatóhoz más modellek használatához, beleértve a Claude, GPT, Gemini stb.",
   "session.tab.session": "Munkamenet",
@@ -882,6 +883,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Csatlakozzon bármely szolgáltatóhoz a modellek használatához, pl. Claude, GPT, Gemini stb.",
   "sidebar.project.recentSessions": "Legutóbbi munkamenetek",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Az összes munkamenet megtekintése",
   "sidebar.project.clearNotifications": "Értesítések törlése",
   "sidebar.empty.title": "Nincs nyitott projekt",

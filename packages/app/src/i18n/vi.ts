@@ -709,6 +709,7 @@ export const dict = {
   "home.sessions.group.today": "Hôm nay",
   "home.sessions.group.yesterday": "Hôm qua",
   "home.sessions.group.older": "Cũ hơn",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip": "Kết nối với hơn 75 nhà cung cấp để sử dụng các mô hình khác, bao gồm Claude, GPT, Gemini, v.v.",
   "session.tab.session": "Phiên",
   "session.tab.review": "Xem lại",
@@ -886,6 +887,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Kết nối với bất kỳ nhà cung cấp nào để sử dụng các mô hình như Claude, GPT, Gemini, v.v.",
   "sidebar.project.recentSessions": "Phiên gần đây",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Xem tất cả các phiên",
   "sidebar.project.clearNotifications": "Xóa thông báo",
   "sidebar.empty.title": "Không có dự án nào mở",

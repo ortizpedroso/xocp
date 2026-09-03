@@ -697,6 +697,7 @@ export const dict = {
   "home.sessions.group.today": "Dnes",
   "home.sessions.group.yesterday": "Včera",
   "home.sessions.group.older": "Staršie",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Pripojte sa k viac ako 75 poskytovateľom a používajte ďalšie modely, vrátane Claude, GPT, Gemini a ďalších",
   "session.tab.session": "Relácia",
@@ -878,6 +879,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Pripojte ľubovoľného poskytovateľa na používanie modelov, vrátane Claude, GPT, Gemini a ďalších.",
   "sidebar.project.recentSessions": "Nedávne relácie",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Zobraziť všetky relácie",
   "sidebar.project.clearNotifications": "Vymazať oznámenia",
   "sidebar.empty.title": "Nie sú otvorené žiadne projekty",

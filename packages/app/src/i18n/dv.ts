@@ -710,6 +710,7 @@ export const dict = {
   "home.sessions.group.today": "މިއަދު",
   "home.sessions.group.yesterday": "އިއްޔެ",
   "home.sessions.group.older": "އުމުރުން ދުވަސްވީއެވެ",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "75+ ޕްރޮވައިޑަރުންނާ ގުޅިގެން އެހެން މޮޑެލްތައް ބޭނުންކުރުން، އޭގެ ތެރޭގައި Claude، GPT، Gemini ފަދަ މޮޑެލްތައް ހިމެނެއެވެ",
   "session.tab.session": "ސެޝަން",
@@ -888,6 +889,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "މޮޑެލްތައް ބޭނުން ކުރުމަށް އެއްވެސް ޕްރޮވައިޑަރެއް ގުޅުވާލުން، inc. Claude، GPT، Gemini ފަދަ ކަންކަމެވެ.",
   "sidebar.project.recentSessions": "ފަހުގެ ސެޝަންތަކެވެ",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "ހުރިހާ ސެޝަންތަކެއް ބަލާށެވެ",
   "sidebar.project.clearNotifications": "ނޮޓިފިކޭޝަންތައް ސާފުކުރުން",
   "sidebar.empty.title": "އެއްވެސް މަޝްރޫއެއް ނުހުޅުވޭ",

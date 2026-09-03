@@ -706,6 +706,7 @@ export const dict = {
   "home.sessions.group.today": "Danas",
   "home.sessions.group.yesterday": "Jučer",
   "home.sessions.group.older": "Starije",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Povežite se s više od 75 pružatelja usluga za korištenje drugih modela, uključujući Claude, GPT, Gemini itd.",
   "session.tab.session": "Sesija",
@@ -883,6 +884,8 @@ export const dict = {
   "sidebar.gettingStarted.line1": "XOCP uključuje besplatne modele tako da možete odmah početi.",
   "sidebar.gettingStarted.line2": "Povežite bilo kojeg pružatelja za korištenje modela, uklj. Claude, GPT, Gemini itd.",
   "sidebar.project.recentSessions": "Nedavne sesije",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Pogledajte sve sesije",
   "sidebar.project.clearNotifications": "Očistite obavijesti",
   "sidebar.empty.title": "Nema otvorenih projekata",

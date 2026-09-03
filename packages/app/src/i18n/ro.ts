@@ -699,6 +699,7 @@ export const dict = {
   "home.sessions.group.today": "Astăzi",
   "home.sessions.group.yesterday": "Ieri",
   "home.sessions.group.older": "Mai vechi",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Conectează-te la peste 75 de furnizori pentru a folosi alte modele, inclusiv Claude, GPT, Gemini etc.",
   "session.tab.session": "Sesiune",
@@ -879,6 +880,8 @@ export const dict = {
   "sidebar.gettingStarted.line1": "XOCP include modele gratuite ca să poți începe imediat.",
   "sidebar.gettingStarted.line2": "Conectează orice furnizor pentru a folosi modele, inclusiv Claude, GPT, Gemini etc.",
   "sidebar.project.recentSessions": "Sesiuni recente",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Vezi toate sesiunile",
   "sidebar.project.clearNotifications": "Șterge notificările",
   "sidebar.empty.title": "Niciun proiect deschis",

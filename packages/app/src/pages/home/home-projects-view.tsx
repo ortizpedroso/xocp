@@ -1,4 +1,5 @@
-import { type Accessor, createMemo, For, type JSX, onCleanup, Show, splitProps } from "solid-js"
+import type { Session } from "@opencode-ai/sdk/v2/client"
+import { type Accessor, createEffect, createMemo, For, type JSX, onCleanup, Show, splitProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { DragDropProvider, PointerSensor } from "@dnd-kit/solid"
 import { isSortable, useSortable } from "@dnd-kit/solid/sortable"
@@ -20,6 +21,8 @@ import { ServerRowMenuView, serverMenuLabels } from "@/components/server/server-
 import { ServerHealthIndicator } from "@/components/server/server-row"
 import { type ServerHealth } from "@/utils/server-health"
 import { fileManagerApp } from "@/utils/file-manager"
+import type { HomeSessionGroup, HomeSessionRecord, OpenSessionOptions } from "./home-sessions-controller"
+import { HomeProjectSessions, HomeProjectSessionsEmpty } from "./home-project-sessions"
 
 const HOME_PROJECT_NAV_LABEL = "min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
 
@@ -59,6 +62,13 @@ export type HomeProjectsViewProps = {
   onOpenSettings: () => void
   onOpenDocumentation: () => void
   onOpenHelp: () => void
+  projectExpanded: (worktree: string) => boolean
+  onToggleProjectExpanded: (worktree: string) => void
+  onExpandProject: (worktree: string) => void
+  groupsForProject: (worktree: string) => HomeSessionGroup[]
+  sessionServer: Accessor<ServerConnection.Key>
+  isOpenTab: (record: HomeSessionRecord) => boolean
+  onOpenSession: (session: Session, options?: OpenSessionOptions) => void
 }
 
 export function HomeProjectsView(props: HomeProjectsViewProps) {
@@ -467,6 +477,9 @@ function HomeProjectRow(
 ) {
   const platform = usePlatform()
   const serverUnreachable = () => props.serverHealth(props.server)?.healthy === false
+  const expanded = () => props.projectExpanded(props.project.worktree)
+  const sessionGroups = createMemo(() => props.groupsForProject(props.project.worktree))
+  const canToggle = () => !serverUnreachable()
   const sortable = useSortable({
     get id() {
       return props.project.worktree
@@ -481,27 +494,33 @@ function HomeProjectRow(
     const id = contextMenuID()
     if (props.contextMenuOpen(id)) props.onSetContextMenuOpen(id, false)
   })
+  createEffect(() => {
+    if (!props.selected) return
+    if (expanded()) return
+    props.onExpandProject(props.project.worktree)
+  })
   return (
-    <div
-      ref={sortable.ref}
-      class="group/project relative flex h-7 min-w-0 items-center rounded-[6px]"
-      classList={{ "z-10": sortable.isDragSource() }}
-      onContextMenu={(event) => {
-        event.preventDefault()
-        props.onSetContextMenuOpen(contextMenuID(), true)
-      }}
-    >
-      <HomeProjectNavButton
-        type="button"
-        data-component="home-project-row"
-        class="pr-16 disabled:opacity-60"
-        classList={{
-          "bg-v2-background-bg-layer-01 text-v2-text-text-base": sortable.isDragSource(),
+    <div class="flex min-w-0 flex-col gap-0.5">
+      <div
+        ref={sortable.ref}
+        class="group/project relative flex h-7 min-w-0 items-center rounded-[6px]"
+        classList={{ "z-10": sortable.isDragSource() }}
+        onContextMenu={(event) => {
+          event.preventDefault()
+          props.onSetContextMenuOpen(contextMenuID(), true)
         }}
-        data-selected={props.selected ? "" : undefined}
-        aria-current={props.selected ? "page" : undefined}
-        disabled={serverUnreachable()}
-        onPointerDown={(event) => {
+      >
+        <HomeProjectNavButton
+          type="button"
+          data-component="home-project-row"
+          class="pr-16 disabled:opacity-60"
+          classList={{
+            "bg-v2-background-bg-layer-01 text-v2-text-text-base": sortable.isDragSource(),
+          }}
+          data-selected={props.selected ? "" : undefined}
+          aria-current={props.selected ? "page" : undefined}
+          disabled={serverUnreachable()}
+          onPointerDown={(event) => {
           // Same-server mouse selection happens on pointerdown (like tabs),
           // but only ever selects; selectProject toggles, and deselecting here
           // would fire on every drag before the threshold is met. Cross-server
@@ -529,6 +548,36 @@ function HomeProjectRow(
           pointerDownSelected = undefined
         }}
       >
+        <span
+          data-action="home-project-collapse"
+          class={`
+            -ml-0.5 -mr-1 inline-flex size-5 shrink-0 items-center justify-center
+            rounded-[4px] text-v2-icon-icon-muted
+          `}
+          classList={{
+            "hover:bg-v2-overlay-simple-overlay-hover": canToggle(),
+            "cursor-default opacity-40": !canToggle(),
+          }}
+          aria-label={
+            expanded() ? props.language.t("sidebar.project.collapse") : props.language.t("sidebar.project.expand")
+          }
+          aria-disabled={!canToggle()}
+          aria-expanded={canToggle() ? expanded() : undefined}
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            if (!canToggle()) return
+            props.onToggleProjectExpanded(props.project.worktree)
+          }}
+          onPointerDown={(event) => event.preventDefault()}
+        >
+          <IconV2
+            name="chevron-down"
+            size="small"
+            class="transition-transform duration-150 ease-in-out"
+            style={{ transform: `rotate(${expanded() ? 0 : -90}deg)` }}
+          />
+        </span>
         <HomeProjectAvatar project={props.project} />
         <span class={HOME_PROJECT_NAV_LABEL}>{displayName(props.project)}</span>
       </HomeProjectNavButton>
@@ -592,6 +641,20 @@ function HomeProjectRow(
           onClick={() => props.onOpenProjectNewSession(props.server, props.project.worktree)}
         />
       </div>
+      </div>
+      <Show when={expanded() && !serverUnreachable()}>
+        <Show
+          when={sessionGroups().length > 0}
+          fallback={<HomeProjectSessionsEmpty />}
+        >
+          <HomeProjectSessions
+            groups={sessionGroups()}
+            server={props.sessionServer()}
+            isOpenTab={props.isOpenTab}
+            onOpenSession={props.onOpenSession}
+          />
+        </Show>
+      </Show>
     </div>
   )
 }

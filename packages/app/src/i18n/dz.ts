@@ -711,6 +711,7 @@ export const dict: Record<string, string> = {
   "home.sessions.group.today": "ད་རེས",
   "home.sessions.group.yesterday": "ཁ༌ཙ",
   "home.sessions.group.older": "རྒས་ཤོས།",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip": "Claude, GPT, Gemini, ལ་སོགས་པ་ཚུ་རྩིས་ཏེ་ དཔེ་ཚད་གཞན་ལག་ལེན་འཐབ་ནི་ལུ་ ༧༥+ བྱིན་མི་ལུ་མཐུད།",
   "session.tab.session": "ལཱ་ཡུན།",
   "session.tab.review": "བསྐྱར་ཞིབ",
@@ -889,6 +890,8 @@ export const dict: Record<string, string> = {
   "sidebar.gettingStarted.line2":
     "དཔེ་ཚད་ཚུ་ལག་ལེན་འཐབ་ནི་ལུ་ བྱིན་མི་གང་རུང་ཅིག་མཐུད།, inc. Claude དང་ GPT Gemini སོགས།",
   "sidebar.project.recentSessions": "འཕྲལ་གྱི་ལཱ་ཡུན་ཚུ།",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "ལཱ་ཡུན་ཆ་མཉམ་བལྟ།",
   "sidebar.project.clearNotifications": "བརྡ་བསྐུལ་ཚུ་གསལ་བཟོ།",
   "sidebar.empty.title": "ལས་འགུལ་ཁ་ཕྱེ་མེད།",

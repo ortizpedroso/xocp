@@ -703,6 +703,7 @@ export const dict = {
   "home.sessions.group.today": "Այսօր",
   "home.sessions.group.yesterday": "Երեկ",
   "home.sessions.group.older": "Հին",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Միացեք 75+ մատակարարների՝ այլ մոդելներ օգտագործելու համար, այդ թվում՝ Claude, GPT, Gemini և այլն",
   "session.tab.session": "Նիստ",
@@ -881,6 +882,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Միացրեք ցանկացած մատակարարի՝ մոդելներ օգտագործելու համար, inc. Claude, GPT, Gemini և այլն",
   "sidebar.project.recentSessions": "Վերջին նիստերը",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Դիտել բոլոր նիստերը",
   "sidebar.project.clearNotifications": "Մաքրել ծանուցումները",
   "sidebar.empty.title": "Ոչ մի նախագիծ բաց",

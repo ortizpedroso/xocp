@@ -38,6 +38,7 @@ function isBackgroundOpen(event: MouseEvent) {
 
 export type HomeSessionsViewProps = {
   language: ReturnType<typeof useLanguage>
+  variant?: "full" | "search-only"
   groups: Accessor<HomeSessionGroup[]>
   showProjectName: Accessor<boolean>
   server: Accessor<ServerConnection.Key>
@@ -72,6 +73,7 @@ export type HomeSessionsViewProps = {
 }
 
 export function HomeSessionsView(props: HomeSessionsViewProps) {
+  const searchOnly = () => props.variant === "search-only"
   return (
     <section
       ref={props.onSetHoverTarget}
@@ -81,7 +83,7 @@ export function HomeSessionsView(props: HomeSessionsViewProps) {
       <div class="sticky top-0 z-30 shrink-0 bg-v2-background-bg-base pb-3 pt-6 lg:pt-12" onWheel={props.onWheel}>
         <HomeSessionSearch {...props} />
         <Suspense>
-          <Show when={props.groups().length > 0 && props.canCreateSession()}>
+          <Show when={!searchOnly() && props.groups().length > 0 && props.canCreateSession()}>
             <div class="pointer-events-none absolute right-0 top-[84px] z-20 flex lg:top-[108px]">
               <ButtonV2
                 data-action="home-new-session"
@@ -97,7 +99,8 @@ export function HomeSessionsView(props: HomeSessionsViewProps) {
           </Show>
         </Suspense>
       </div>
-      <div class="pointer-events-none sticky top-[84px] z-40 h-0 -mr-3 lg:top-[108px]">
+      <Show when={!searchOnly()}>
+        <div class="pointer-events-none sticky top-[84px] z-40 h-0 -mr-3 lg:top-[108px]">
         <div
           ref={props.onSetThumbTrack}
           data-component="home-session-scroll-track"
@@ -143,6 +146,14 @@ export function HomeSessionsView(props: HomeSessionsViewProps) {
           </Show>
         </Suspense>
       </div>
+      </Show>
+      <Show when={searchOnly()}>
+        <div class="flex min-h-[calc(100cqh-120px)] flex-col items-center justify-center px-6 pt-8 text-center lg:min-h-[calc(100cqh-144px)]">
+          <p class="max-w-sm text-[13px] leading-5 text-v2-text-text-muted [font-weight:440]">
+            {props.language.t("home.sessions.tree.hint")}
+          </p>
+        </div>
+      </Show>
     </section>
   )
 }

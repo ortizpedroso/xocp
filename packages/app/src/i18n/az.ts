@@ -708,6 +708,7 @@ export const dict = {
   "home.sessions.group.today": "Bu gün",
   "home.sessions.group.yesterday": "Dünən",
   "home.sessions.group.older": "Daha əvvəl",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Claude, GPT, Gemini və s. daxil olmaqla, digər modellərdən istifadə etmək üçün 75+ provayderə qoşulun",
   "session.tab.session": "Sessiya",
@@ -884,6 +885,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Claude, GPT, Gemini və s. kimi modellərdən istifadə etmək üçün istənilən provayderi qoşun.",
   "sidebar.project.recentSessions": "Son sessiyalar",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Bütün sessiyalara bax",
   "sidebar.project.clearNotifications": "Bildirişləri təmizlə",
   "sidebar.empty.title": "Heç bir layihə açılmayıb",

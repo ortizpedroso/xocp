@@ -699,6 +699,7 @@ export const dict: Record<string, string> = {
   "home.sessions.group.today": "আজ",
   "home.sessions.group.yesterday": "গতকাল",
   "home.sessions.group.older": "বয়স্ক",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip": "Claude, GPT, Gemini, ইত্যাদি সহ অন্যান্য মডেল ব্যবহার করতে 75+ প্রদানকারীর সাথে সংযোগ করুন",
   "session.tab.session": "সেশন",
   "session.tab.review": "পর্যালোচনা",
@@ -874,6 +875,8 @@ export const dict: Record<string, string> = {
   "sidebar.gettingStarted.line2":
     "মডেল, inc ব্যবহার করতে যেকোনো প্রদানকারীকে সংযুক্ত করুন। Claude, GPT, Gemini ইত্যাদি।",
   "sidebar.project.recentSessions": "সাম্প্রতিক সেশন",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "সব সেশন দেখুন",
   "sidebar.project.clearNotifications": "বিজ্ঞপ্তিগুলি সাফ করুন",
   "sidebar.empty.title": "কোনো প্রকল্প খোলা নেই",

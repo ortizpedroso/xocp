@@ -706,6 +706,7 @@ export const dict = {
   "home.sessions.group.today": "ယနေ့",
   "home.sessions.group.yesterday": "မနေ့က",
   "home.sessions.group.older": "အသက်ကြီးသည်။",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Claude၊ GPT၊ Gemini စသည်တို့အပါအဝင် အခြားမော်ဒယ်များကို အသုံးပြုရန် 75+ ဝန်ဆောင်မှုပေးသူများထံ ချိတ်ဆက်ပါ။",
   "session.tab.session": "အပိုင်း",
@@ -884,6 +885,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "မော်ဒယ်များ၊ inc ကိုအသုံးပြုရန် မည်သည့်ပံ့ပိုးသူကိုမဆို ချိတ်ဆက်ပါ။ Claude၊ GPT၊ Gemini စသဖြင့်",
   "sidebar.project.recentSessions": "လတ်တလော စက်ရှင်များ",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "ဆက်ရှင်များအားလုံးကို ကြည့်ရှုပါ။",
   "sidebar.project.clearNotifications": "အကြောင်းကြားချက်များကို ရှင်းလင်းပါ။",
   "sidebar.empty.title": "မည်သည့်ပရောဂျက်မှ ဖွင့်ထားခြင်းမရှိပါ။",

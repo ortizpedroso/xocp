@@ -27,7 +27,10 @@ export function createHomeProjectsController(home: HomeController) {
   const serverManagement = useServerManagementController({ navigateOnAdd: false })
   const [_state, setState, _, ready] = persisted(
     Persist.global("home.servers", ["home.servers.v1"]),
-    createStore({ collapsed: {} as Record<string, boolean> }),
+    createStore({
+      collapsed: {} as Record<string, boolean>,
+      projectExpanded: {} as Record<string, boolean>,
+    }),
   )
   const [state] = createResource(
     () => ready.promise ?? Promise.resolve(),
@@ -57,6 +60,13 @@ export function createHomeProjectsController(home: HomeController) {
       toggleCollapsed: (conn: ServerConnection.Any) => {
         const key = ServerConnection.key(conn)
         setState("collapsed", key, !state().collapsed[key])
+      },
+      projectExpanded: (worktree: string) => state().projectExpanded[worktree] ?? false,
+      expandProject: (worktree: string) => {
+        setState("projectExpanded", worktree, true)
+      },
+      toggleProjectExpanded: (worktree: string) => {
+        setState("projectExpanded", worktree, !state().projectExpanded[worktree])
       },
       canDefault: serverManagement.canDefault,
       defaultKey: serverManagement.defaultKey,

@@ -43,11 +43,7 @@ export function createHomeSessionsController(home: HomeController) {
   const command = useCommand()
   const dialog = useDialog()
   const language = useLanguage()
-  const projectDirectories = createMemo(() => {
-    const project = home.project.selected()
-    if (!project) return home.project.list().flatMap(directories)
-    return directories(project)
-  })
+  const allProjectDirectories = createMemo(() => home.project.list().flatMap(directories))
   const projectByID = createMemo(
     () => new Map(home.project.list().flatMap((project) => (project.id ? [[project.id, project] as const] : []))),
   )
@@ -89,13 +85,31 @@ export function createHomeSessionsController(home: HomeController) {
   const allRecords = createMemo(() =>
     buildHomeSessionRecords({
       sessions: indexedSessions,
-      projectDirectories,
+      projectDirectories: allProjectDirectories,
       projects: home.project.list,
       projectByID,
     }),
   )
-  const records = createMemo(() => allRecords().slice(0, HOME_SESSION_LIMIT))
+  const records = createMemo(() => {
+    const project = home.project.selected()
+    const scoped = project
+      ? allRecords().filter((record) => record.project.worktree === project.worktree)
+      : allRecords()
+    return scoped.slice(0, HOME_SESSION_LIMIT)
+  })
   const groups = createMemo(() => groupSessions(records(), language))
+  const groupsByProject = createMemo(() => {
+    const map = new Map<string, HomeSessionRecord[]>()
+    allRecords().forEach((record) => {
+      const key = record.project.worktree
+      const list = map.get(key)
+      if (list) list.push(record)
+      else map.set(key, [record])
+    })
+    return map
+  })
+  const groupsForProject = (worktree: string) =>
+    groupSessions(groupsByProject().get(worktree) ?? [], language)
   const prefetched = new Set<string>()
 
   createEffect(() => {
@@ -170,6 +184,7 @@ export function createHomeSessionsController(home: HomeController) {
     data: {
       records,
       groups,
+      groupsForProject,
       loading: () => sessionLoad.isLoading,
       searchRecords: allRecords,
     },

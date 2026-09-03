@@ -697,6 +697,7 @@ export const dict: Record<string, string> = {
   "home.sessions.group.today": "අද",
   "home.sessions.group.yesterday": "ඊයේ",
   "home.sessions.group.older": "වැඩිහිටි",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip": "Claude, GPT, Gemini, ආදිය ඇතුළුව අනෙකුත් මාදිලි භාවිතා කිරීමට 75+ සපයන්නන් වෙත සම්බන්ධ වන්න",
   "session.tab.session": "සැසිය",
   "session.tab.review": "සමාලෝචනය කරන්න",
@@ -872,6 +873,8 @@ export const dict: Record<string, string> = {
   "sidebar.gettingStarted.line2":
     "ආකෘති භාවිතා කිරීමට ඕනෑම සැපයුම්කරුවෙකු සම්බන්ධ කරන්න, inc. Claude, GPT, Gemini ආදිය.",
   "sidebar.project.recentSessions": "මෑත සැසි",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "සියලුම සැසි බලන්න",
   "sidebar.project.clearNotifications": "දැනුම්දීම් හිස් කරන්න",
   "sidebar.empty.title": "ව්‍යාපෘති විවෘත නැත",

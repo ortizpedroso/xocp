@@ -699,6 +699,7 @@ export const dict = {
   "home.sessions.group.today": "დღეს",
   "home.sessions.group.yesterday": "გუშინ",
   "home.sessions.group.older": "ძველი",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "დაკავშირება 75+ პროვაიდერთან სხვა მოდელების გამოსაყენებლად, მათ შორის, Claude, GPT, Gemini და ა.შ.",
   "session.tab.session": "სესია",
@@ -874,6 +875,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "დააკავშირეთ ნებისმიერი პროვაიდერი მოდელების გამოსაყენებლად, inc. Claude, GPT, Gemini და სხვ.",
   "sidebar.project.recentSessions": "ბოლო სესიები",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "ყველა სესიის ნახვა",
   "sidebar.project.clearNotifications": "შეტყობინებების გასუფთავება",
   "sidebar.empty.title": "პროექტები არ არის გახსნილი",

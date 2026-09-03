@@ -698,6 +698,7 @@ export const dict = {
   "home.sessions.group.today": "امروز",
   "home.sessions.group.yesterday": "دیروز",
   "home.sessions.group.older": "قدیمی تر",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "برای استفاده از مدل‌های دیگر، از جمله Claude، GPT، Gemini و غیره به بیش از 75 ارائه‌دهنده متصل شوید.",
   "session.tab.session": "جلسه",
@@ -873,6 +874,8 @@ export const dict = {
   "sidebar.gettingStarted.line1": "XOCP شامل مدل های رایگان است، بنابراین می توانید بلافاصله شروع کنید.",
   "sidebar.gettingStarted.line2": "هر ارائه دهنده ای را برای استفاده از مدل ها وصل کنید. Claude، GPT، Gemini و غیره",
   "sidebar.project.recentSessions": "جلسات اخیر",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "مشاهده تمام جلسات",
   "sidebar.project.clearNotifications": "پرامپت ها را پاک کنید",
   "sidebar.empty.title": "هیچ پروژه ای باز نشده است",

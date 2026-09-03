@@ -704,6 +704,7 @@ export const dict = {
   "home.sessions.group.today": "Өнөөдөр",
   "home.sessions.group.yesterday": "Өчигдөр",
   "home.sessions.group.older": "Хуучин",
+  "home.sessions.tree.hint": "Expand a project on the left to browse its sessions by section.",
   "home.providerTip":
     "Claude, GPT, Gemini гэх мэт бусад загваруудыг ашиглахын тулд 75+ үйлчилгээ үзүүлэгчтэй холбогдоно уу.",
   "session.tab.session": "Сесс",
@@ -882,6 +883,8 @@ export const dict = {
   "sidebar.gettingStarted.line2":
     "Models, inc ашиглахын тулд дурын үйлчилгээ үзүүлэгчийг холбоно уу. Claude, GPT, Gemini гэх мэт.",
   "sidebar.project.recentSessions": "Сүүлийн хуралдаанууд",
+  "sidebar.project.expand": "Expand project sections",
+  "sidebar.project.collapse": "Collapse project sections",
   "sidebar.project.viewAllSessions": "Бүх сешнүүдийг үзэх",
   "sidebar.project.clearNotifications": "Мэдэгдлийг арилгах",
   "sidebar.empty.title": "Нээлттэй төсөл байхгүй",
