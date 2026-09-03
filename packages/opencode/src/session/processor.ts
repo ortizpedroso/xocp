@@ -18,7 +18,18 @@ import type { SessionID } from "./schema"
 import { SessionRetry } from "./retry"
 import { SessionStatus } from "./status"
 import { SessionSummary } from "./summary"
+import {
+  checkDegenerateStreamingText,
+  checkDegenerateText,
+  createDegenerateTracker,
+  degenerateFailure,
+  degenerateNotice,
+  onDegenerateToolCompleted,
+  resolveFallbackModel,
+  type DegenerateTracker,
+} from "./degenerate"
 import type { Provider } from "@/provider/provider"
+import { Provider as ProviderService } from "@/provider/provider"
 import { Question } from "@/question"
 import { errorMessage } from "@/util/error"
 import { isRecord } from "@/util/record"
@@ -72,6 +83,8 @@ interface ProcessorContext extends Input {
   needsCompaction: boolean
   currentText: SessionV1.TextPart | undefined
   reasoningMap: Record<string, SessionV1.ReasoningPart>
+  degenerateTracker: DegenerateTracker
+  degenerateAbort: boolean
 }
 
 type StreamEvent = LLMEvent
@@ -94,6 +107,13 @@ const layer = Layer.effect(
     const image = yield* Image.Service
     const events = yield* EventV2Bridge.Service
     const database = yield* Database.Service
+    const providerSvc = yield* ProviderService.Service
+
+    const pickFallbackModel = (current: Provider.Model) =>
+      resolveFallbackModel(current).pipe(
+        Effect.provideService(Config.Service, config),
+        Effect.provideService(ProviderService.Service, providerSvc),
+      )
 
     const create = Effect.fn("SessionProcessor.create")(function* (input: Input) {
       // Pre-capture snapshot before the LLM stream starts. The AI SDK
@@ -111,6 +131,8 @@ const layer = Layer.effect(
         needsCompaction: false,
         currentText: undefined,
         reasoningMap: {},
+        degenerateTracker: createDegenerateTracker(),
+        degenerateAbort: false,
       }
       let aborted = false
 
@@ -410,6 +432,7 @@ const layer = Layer.effect(
               attachments: attachments.length ? attachments : undefined,
             }
             yield* completeToolCall(value.id, output)
+            onDegenerateToolCompleted(ctx.degenerateTracker)
             return
           }
 
@@ -500,6 +523,10 @@ const layer = Layer.effect(
             if (!ctx.currentText) return
             ctx.currentText.text += value.text
             if (value.providerMetadata) ctx.currentText.metadata = value.providerMetadata
+            if (checkDegenerateStreamingText(ctx.currentText.text)) {
+              ctx.degenerateAbort = true
+              return
+            }
             yield* session.updatePartDelta({
               sessionID: ctx.currentText.sessionID,
               messageID: ctx.currentText.messageID,
@@ -522,6 +549,9 @@ const layer = Layer.effect(
               },
               { text: ctx.currentText.text },
             )).text
+            if (checkDegenerateText(ctx.degenerateTracker, ctx.currentText.text)) {
+              ctx.degenerateAbort = true
+            }
             {
               const end = Date.now()
               ctx.currentText.time = { start: ctx.currentText.time?.start ?? end, end }
@@ -624,6 +654,34 @@ const layer = Layer.effect(
         yield* status.set(ctx.sessionID, { type: "idle" })
       })
 
+      const reportDegenerateNotice = Effect.fn("SessionProcessor.reportDegenerateNotice")(function* (
+        from: Provider.Model,
+        to: Provider.Model,
+      ) {
+        yield* session.updatePart({
+          id: PartID.ascending(),
+          messageID: ctx.assistantMessage.id,
+          sessionID: ctx.assistantMessage.sessionID,
+          type: "text",
+          text: degenerateNotice(from, to),
+          time: { start: Date.now(), end: Date.now() },
+        })
+      })
+
+      const runStream = Effect.fn("SessionProcessor.runStream")(function* (streamInput: LLM.StreamInput) {
+        ctx.currentText = undefined
+        ctx.reasoningMap = {}
+        ctx.degenerateTracker = createDegenerateTracker()
+        ctx.degenerateAbort = false
+        yield* status.set(ctx.sessionID, { type: "busy" })
+        const stream = llm.stream(streamInput)
+        yield* stream.pipe(
+          Stream.tap((event) => handleEvent(event)),
+          Stream.takeUntil(() => ctx.needsCompaction || ctx.degenerateAbort),
+          Stream.runDrain,
+        )
+      })
+
       const process = Effect.fn("SessionProcessor.process")(function* (streamInput: LLM.StreamInput) {
         yield* Effect.logInfo("process", {
           "session.id": input.sessionID,
@@ -632,49 +690,82 @@ const layer = Layer.effect(
         ctx.needsCompaction = false
         ctx.shouldBreak = (yield* config.get()).experimental?.continue_loop_on_deny !== true
 
-        return yield* Effect.gen(function* () {
-          yield* Effect.gen(function* () {
-            ctx.currentText = undefined
-            ctx.reasoningMap = {}
-            yield* status.set(ctx.sessionID, { type: "busy" })
-            const stream = llm.stream(streamInput)
+        let currentInput = streamInput
+        let sourceModel = streamInput.model
+        let usedFallback = false
 
-            yield* stream.pipe(
-              Stream.tap((event) => handleEvent(event)),
-              Stream.takeUntil(() => ctx.needsCompaction),
-              Stream.runDrain,
+        return yield* Effect.gen(function* () {
+          while (true) {
+            yield* Effect.gen(function* () {
+              yield* runStream(currentInput)
+            }).pipe(
+              Effect.onInterrupt(() =>
+                Effect.gen(function* () {
+                  aborted = true
+                  if (!ctx.assistantMessage.error) {
+                    yield* halt(new DOMException("Aborted", "AbortError"))
+                  }
+                }),
+              ),
+              Effect.catchCauseIf(
+                (cause) => !Cause.hasInterruptsOnly(cause),
+                (cause) => Effect.fail(Cause.squash(cause)),
+              ),
+              Effect.retry(
+                SessionRetry.policy({
+                  provider: currentInput.model.providerID,
+                  parse,
+                  set: (info) => {
+                    return status.set(ctx.sessionID, {
+                      type: "retry",
+                      attempt: info.attempt,
+                      message: info.message,
+                      action: info.action,
+                      next: info.next,
+                    })
+                  },
+                }),
+              ),
+              Effect.catch(halt),
+              Effect.ensuring(cleanup()),
             )
-          }).pipe(
-            Effect.onInterrupt(() =>
-              Effect.gen(function* () {
-                aborted = true
-                if (!ctx.assistantMessage.error) {
-                  yield* halt(new DOMException("Aborted", "AbortError"))
-                }
-              }),
-            ),
-            Effect.catchCauseIf(
-              (cause) => !Cause.hasInterruptsOnly(cause),
-              (cause) => Effect.fail(Cause.squash(cause)),
-            ),
-            Effect.retry(
-              SessionRetry.policy({
-                provider: input.model.providerID,
-                parse,
-                set: (info) => {
-                  return status.set(ctx.sessionID, {
-                    type: "retry",
-                    attempt: info.attempt,
-                    message: info.message,
-                    action: info.action,
-                    next: info.next,
-                  })
-                },
-              }),
-            ),
-            Effect.catch(halt),
-            Effect.ensuring(cleanup()),
-          )
+
+            if (!ctx.degenerateAbort) break
+
+            if (usedFallback) {
+              ctx.assistantMessage.error = MessageV2.fromError(new Error(degenerateFailure(currentInput.model)), {
+                providerID: currentInput.model.providerID,
+                aborted: false,
+              })
+              ctx.assistantMessage.finish = "error"
+              yield* events.publish(Session.Event.Error, {
+                sessionID: ctx.assistantMessage.sessionID,
+                error: ctx.assistantMessage.error,
+              })
+              yield* status.set(ctx.sessionID, { type: "idle" })
+              return "stop" as Result
+            }
+
+            const fallback = yield* pickFallbackModel(sourceModel)
+            if (!fallback) {
+              ctx.assistantMessage.error = MessageV2.fromError(new Error(degenerateFailure(sourceModel)), {
+                providerID: sourceModel.providerID,
+                aborted: false,
+              })
+              ctx.assistantMessage.finish = "error"
+              yield* events.publish(Session.Event.Error, {
+                sessionID: ctx.assistantMessage.sessionID,
+                error: ctx.assistantMessage.error,
+              })
+              yield* status.set(ctx.sessionID, { type: "idle" })
+              return "stop" as Result
+            }
+
+            yield* reportDegenerateNotice(sourceModel, fallback)
+            currentInput = { ...streamInput, model: fallback }
+            ctx.model = fallback
+            usedFallback = true
+          }
 
           if (ctx.needsCompaction) return "compact"
           if (ctx.blocked || ctx.assistantMessage.error) return "stop"
@@ -702,6 +793,7 @@ export const node = LayerNode.make({
   deps: [
     Session.node,
     Config.node,
+    ProviderService.node,
     Snapshot.node,
     Agent.node,
     LLM.node,
