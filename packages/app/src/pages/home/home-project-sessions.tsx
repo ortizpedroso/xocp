@@ -1,6 +1,7 @@
 import type { Session } from "@opencode-ai/sdk/v2/client"
 import { For, Show, createMemo } from "solid-js"
 import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
+import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { SessionTabAvatarView } from "@/pages/layout/session-tab-avatar"
 import { sessionTitle } from "@/utils/session-title"
@@ -109,9 +110,10 @@ function HomeProjectSessionRow(props: {
 }
 
 export function HomeProjectSessionsEmpty() {
+  const language = useLanguage()
   return (
     <div class="ml-3 border-l border-v2-border-border-base pl-3 py-1 text-[11px] text-v2-text-text-faint [font-weight:440]">
-      —
+      {language.t("home.sessions.empty")}
     </div>
   )
 }
