@@ -33,7 +33,7 @@ const fakeProc = Layer.succeed(
         command._tag === "StandardCommand"
           ? `${command.command} ${command.args.join(" ")}`
           : String(command)
-      if (label.includes(" headroom proxy ")) headroomRunning = true
+      if (label.includes(" headroom proxy ") && proxyExitCode === 0) headroomRunning = true
       return Effect.succeed({
         command: label,
         exitCode: proxyExitCode,
