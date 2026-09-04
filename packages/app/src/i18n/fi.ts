@@ -981,6 +981,8 @@ export const dict = {
   "settings.providers.section.popular": "Suositut palveluntarjoajat",
   "settings.providers.custom.description":
     "Lisää OpenAI-yhteensopiva palveluntarjoaja perus-URL-osoitteen perusteella.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Ympäristö",
   "settings.providers.tag.config": "Määritys",
   "settings.providers.tag.custom": "Mukautettu",

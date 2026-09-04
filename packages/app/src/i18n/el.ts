@@ -1094,6 +1094,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Συνδέθηκε από τις μεταβλητές περιβάλλοντος",
   "settings.providers.section.popular": "Δημοφιλείς πάροχοι",
   "settings.providers.custom.description": "Προσθήκη παρόχου συμβατού με OpenAI κατά βάση URL.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Περιβάλλον",
   "settings.providers.tag.config": "Ρύθμιση",
   "settings.providers.tag.custom": "Προσαρμοσμένο",

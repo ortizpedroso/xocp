@@ -1079,6 +1079,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Tengdur frá umhverfisbreytum þínum",
   "settings.providers.section.popular": "Vinsælir veitendur",
   "settings.providers.custom.description": "Bættu við OpenAI-samhæfðum veitanda með grunni URL.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Umhverfi",
   "settings.providers.tag.config": "Uppsetning",
   "settings.providers.tag.custom": "Sérsniðin",

@@ -156,3 +156,28 @@ const nextRow = () => `row-${row++}`
 
 export const modelRow = (): ModelRow => ({ row: nextRow(), id: "", name: "", err: {} })
 export const headerRow = (): HeaderRow => ({ row: nextRow(), key: "", value: "", err: {} })
+
+export const OMNROUTE_DEFAULT_BASE_URL = "http://127.0.0.1:20128/v1"
+
+export function omnirouteProviderInitial(): Omit<FormState, "err"> {
+  return {
+    providerID: "omniroute",
+    name: "OmniRoute",
+    baseURL: OMNROUTE_DEFAULT_BASE_URL,
+    apiKey: "",
+    models: [],
+    headers: [headerRow()],
+  }
+}
+
+export function createCustomProviderFormState(initial?: Partial<Omit<FormState, "err">>): FormState {
+  return {
+    providerID: initial?.providerID ?? "",
+    name: initial?.name ?? "",
+    baseURL: initial?.baseURL ?? "",
+    apiKey: initial?.apiKey ?? "",
+    models: initial?.models ?? [modelRow()],
+    headers: initial?.headers ?? [headerRow()],
+    err: {},
+  }
+}

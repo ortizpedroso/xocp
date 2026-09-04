@@ -1078,6 +1078,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "დაკავშირებულია თქვენი გარემოს ცვლადებიდან",
   "settings.providers.section.popular": "პოპულარული პროვაიდერები",
   "settings.providers.custom.description": "დაამატე OpenAI-თავსებადი პროვაიდერი ბაზის მიხედვით: URL.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "გარემო",
   "settings.providers.tag.config": "კონფიგურაცია",
   "settings.providers.tag.custom": "მორგებული",

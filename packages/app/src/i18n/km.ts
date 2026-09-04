@@ -1073,6 +1073,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "បានភ្ជាប់ពីអថេរបរិស្ថានរបស់អ្នក។",
   "settings.providers.section.popular": "អ្នកផ្តល់សេវាពេញនិយម",
   "settings.providers.custom.description": "បន្ថែមអ្នកផ្តល់សេវាដែលត្រូវគ្នាជាមួយ OpenAI ដោយ URL មូលដ្ឋាន។",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "បរិស្ថាន",
   "settings.providers.tag.config": "កំណត់រចនាសម្ព័ន្ធ",
   "settings.providers.tag.custom": "ផ្ទាល់ខ្លួន",

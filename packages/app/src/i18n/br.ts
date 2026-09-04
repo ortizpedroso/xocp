@@ -1094,6 +1094,8 @@ export const dict = {
   "common.time.daysAgo.short": "{{count}}d atrás",
   "settings.providers.connected.environmentDescription": "Conectado a partir de suas variáveis de ambiente",
   "settings.providers.custom.description": "Adicionar um provedor compatível com OpenAI por meio da URL base.",
+  "settings.providers.omniroute.title": "Conectar OmniRoute",
+  "settings.providers.omniroute.description": "Gateway local compatível com OpenAI (porta padrão 20128).",
 
   "app.server.unreachable": "Não foi possível conectar a {{server}}",
   "app.server.retrying": "Tentando novamente automaticamente...",

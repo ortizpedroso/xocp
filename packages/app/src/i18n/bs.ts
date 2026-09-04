@@ -1170,6 +1170,8 @@ export const dict = {
   "common.time.daysAgo.short": "prije {{count}} d",
   "settings.providers.connected.environmentDescription": "Povezano s tvojim varijablama okruženja",
   "settings.providers.custom.description": "Dodaj provajdera kompatibilnog s OpenAI putem baznog URL-a.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
 
   "app.server.unreachable": "Nije moguće pristupiti {{server}}",
   "app.server.retrying": "Automatski ponovni pokušaj...",

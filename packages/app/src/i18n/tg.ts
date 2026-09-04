@@ -1086,6 +1086,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Аз тағирёбандаҳои муҳити шумо пайваст карда шудааст",
   "settings.providers.section.popular": "Провайдерҳои машҳур",
   "settings.providers.custom.description": "Илова кардани провайдери OpenAI-мувофиқ аз рӯи асос URL.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Муҳити зист",
   "settings.providers.tag.config": "Конфигуратсия",
   "settings.providers.tag.custom": "Фармоишгар",

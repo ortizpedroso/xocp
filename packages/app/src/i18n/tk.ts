@@ -1081,6 +1081,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Daşky gurşaw üýtgeýjilerinden birikdirildi",
   "settings.providers.section.popular": "Meşhur üpjün edijiler",
   "settings.providers.custom.description": "URL esasly OpenAI gabat gelýän üpjün edijini goşuň.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Daşky gurşaw",
   "settings.providers.tag.config": "Sazlamak",
   "settings.providers.tag.custom": "Omörite",

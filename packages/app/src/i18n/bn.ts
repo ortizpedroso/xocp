@@ -1074,6 +1074,8 @@ export const dict: Record<string, string> = {
   "settings.providers.connected.environmentDescription": "আপনার পরিবেশ ভেরিয়েবল থেকে সংযুক্ত",
   "settings.providers.section.popular": "জনপ্রিয় প্রদানকারী",
   "settings.providers.custom.description": "বেস URL দ্বারা একটি OpenAI-সামঞ্জস্যপূর্ণ প্রদানকারী যোগ করুন।",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "পরিবেশ",
   "settings.providers.tag.config": "কনফিগার",
   "settings.providers.tag.custom": "কাস্টম",

@@ -1052,6 +1052,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "ከአካባቢዎ ተለዋዋጮች ጋር የተገናኘ",
   "settings.providers.section.popular": "ታዋቂ አቅራቢዎች",
   "settings.providers.custom.description": "OpenAI-ተኳሃኝ አቅራቢን በመሠረት URL ያክሉ።",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "አካባቢ",
   "settings.providers.tag.config": "ውቅር",
   "settings.providers.tag.custom": "ብጁ",

@@ -1168,6 +1168,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Terhubung dari variabel lingkungan Anda",
   "settings.providers.section.popular": "Penyedia populer",
   "settings.providers.custom.description": "Tambahkan penyedia yang kompatibel dengan OpenAI berdasarkan URL dasar.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Lingkungan",
   "settings.providers.tag.config": "Konfigurasi",
   "settings.providers.tag.custom": "Kustom",

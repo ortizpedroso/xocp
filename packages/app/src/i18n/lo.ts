@@ -1070,6 +1070,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "ເຊື່ອມຕໍ່ຈາກຕົວແປສະພາບແວດລ້ອມຂອງທ່ານ",
   "settings.providers.section.popular": "ຜູ້ໃຫ້ບໍລິການທີ່ນິຍົມ",
   "settings.providers.custom.description": "ເພີ່ມຜູ້ໃຫ້ບໍລິການທີ່ເຂົ້າກັນໄດ້ກັບ OpenAI ໂດຍ URL ພື້ນຖານ.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "ສະພາບແວດລ້ອມ",
   "settings.providers.tag.config": "ການຕັ້ງຄ່າ",
   "settings.providers.tag.custom": "ກຳນົດເອງ",

@@ -1091,6 +1091,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Đã kết nối từ các biến môi trường của bạn",
   "settings.providers.section.popular": "Nhà cung cấp phổ biến",
   "settings.providers.custom.description": "Thêm nhà cung cấp tương thích OpenAI bằng URL cơ sở.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Môi trường",
   "settings.providers.tag.config": "Cấu hình",
   "settings.providers.tag.custom": "Tùy chỉnh",

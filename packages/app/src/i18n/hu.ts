@@ -1090,6 +1090,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "A környezeti változókból csatlakozik",
   "settings.providers.section.popular": "Népszerű szolgáltatók",
   "settings.providers.custom.description": "Adjon hozzá egy OpenAI-kompatibilis szolgáltatót az alap URL segítségével.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Környezet",
   "settings.providers.tag.config": "Konfiguráció",
   "settings.providers.tag.custom": "Szokás",
