@@ -30,6 +30,24 @@ Guidelines:
 
 Complete the user's search request efficiently and report your findings clearly.`
 
+const PROMPT_GRAPHIFY_EXPLORER = `You are a code-structure specialist. You answer questions about how this project's code connects using the real Graphify graph (calls, imports, inheritance, and dependency paths) — not text similarity alone.
+
+Your strengths:
+- Tracing how modules, classes, and functions relate through the project graph
+- Explaining dependency chains and structural neighborhoods
+- Reporting source locations cited by the graph
+
+Guidelines:
+- Always use graphify_query for structural questions about how code connects
+- Do not guess connections from filenames or grep alone when the graph can answer
+- If Graphify is disabled or unavailable, explain what the user must enable or install
+- If mapping is still running, ask the user to retry shortly
+- Return absolute file paths when the graph cites them
+- Do not create files or run commands that modify the user's system
+- For clear communication, avoid using emojis
+
+Complete the caller's structural question and report findings clearly from graph evidence.`
+
 import PROMPT_ELICITADOR from "./elicitador.txt"
 
 const PROMPT_COMPACTION = `You are a context summarization agent. You are given a conversation between a user and an agent. Your goal is to produce a structured summary matching the format specified so another coding agent can continue the work.
@@ -128,6 +146,7 @@ export const Plugin = define({
           ...PermissionV2.merge(defaults, [
             { action: "question", resource: "*", effect: "allow" },
             { action: "plan_enter", resource: "*", effect: "allow" },
+            { action: "graphify_query", resource: "*", effect: "deny" },
           ]),
         )
       })
@@ -139,6 +158,7 @@ export const Plugin = define({
           ...PermissionV2.merge(defaults, [
             { action: "question", resource: "*", effect: "allow" },
             { action: "plan_exit", resource: "*", effect: "allow" },
+            { action: "graphify_query", resource: "*", effect: "deny" },
             { action: "external_directory", resource: path.join(Global.Path.data, "plans", "*"), effect: "allow" },
             { action: "edit", resource: "*", effect: "deny" },
             { action: "edit", resource: path.join(".opencode", "plans", "*.md"), effect: "allow" },
@@ -160,8 +180,10 @@ export const Plugin = define({
           ...PermissionV2.merge(defaults, [
             { action: "question", resource: "*", effect: "allow" },
             { action: "bash", resource: "*", effect: "deny" },
+            { action: "graphify_query", resource: "*", effect: "deny" },
             { action: "task", resource: "general", effect: "deny" },
             { action: "task", resource: "explore", effect: "allow" },
+            { action: "task", resource: "graphify-explorer", effect: "allow" },
             { action: "edit", resource: "*", effect: "deny" },
             { action: "edit", resource: path.join(".opencode", "specs", "*.md"), effect: "allow" },
           ]),
@@ -190,6 +212,28 @@ export const Plugin = define({
               { action: "webfetch", resource: "*", effect: "allow" },
               { action: "websearch", resource: "*", effect: "allow" },
               { action: "read", resource: "*", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("graphify-explorer"), (item) => {
+        item.description =
+          "Subagent specialized in answering structural code questions via Graphify. Use when you need to know how code connects (calls, imports, inheritance, dependency paths) rather than text search alone. Specify the structural question clearly."
+        item.system = PROMPT_GRAPHIFY_EXPLORER
+        item.mode = "subagent"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "webfetch", resource: "*", effect: "allow" },
+              { action: "websearch", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+              { action: "graphify_query", resource: "*", effect: "allow" },
             ],
             readonlyExternalDirectory,
           ),

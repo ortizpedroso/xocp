@@ -13,5 +13,10 @@ export class GraphReadFailed extends Schema.TaggedErrorClass<GraphReadFailed>()(
   path: Schema.String,
 }) {}
 
-export const Error = Schema.Union([UvNotFound, GraphifyDisabled, UpdateFailed, GraphReadFailed])
+export class QueryFailed extends Schema.TaggedErrorClass<QueryFailed>()("Graphify.QueryFailed", {
+  exitCode: Schema.optional(Schema.Number),
+  stderr: Schema.optional(Schema.String),
+}) {}
+
+export const Error = Schema.Union([UvNotFound, GraphifyDisabled, UpdateFailed, GraphReadFailed, QueryFailed])
 export type Error = typeof Error.Type
