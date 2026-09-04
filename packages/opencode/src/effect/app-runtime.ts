@@ -50,6 +50,7 @@ import { Npm } from "@opencode-ai/core/npm"
 import { memoMap } from "@opencode-ai/core/effect/memo-map"
 import { BackgroundJob } from "@/background/job"
 import { Headroom } from "@opencode-ai/core/headroom"
+import { OmniRoute } from "@opencode-ai/core/omniroute"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
@@ -82,6 +83,7 @@ export const AppLayer = AppNodeBuilderV1.build(
     SessionStatus.node,
     BackgroundJob.node,
     Headroom.node,
+    OmniRoute.node,
     RuntimeFlags.node,
     EventV2Bridge.node,
     SessionRunState.node,

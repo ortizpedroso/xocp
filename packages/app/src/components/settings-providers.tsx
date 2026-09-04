@@ -11,6 +11,7 @@ import { useServerSync } from "@/context/server-sync"
 import { DialogConnectProvider, useProviderConnectController } from "./dialog-connect-provider"
 import { DialogCustomProvider } from "./dialog-custom-provider"
 import { omnirouteProviderInitial, headroomProviderInitial } from "./dialog-custom-provider-form"
+import { OmniRouteActivateButton } from "./omniroute-activate-ui"
 import { HeadroomActivateButton } from "./headroom-activate-ui"
 import { SettingsList } from "./settings-list"
 import { SettingsServerPicker, SettingsServerScope } from "./settings-server-picker"
@@ -238,18 +239,21 @@ const SettingsProvidersContent: Component<{ onBack?: () => void }> = (props) => 
                     {language.t("settings.providers.omniroute.description")}
                   </span>
                 </div>
-                <Button
-                  size="large"
-                  variant="secondary"
-                  icon="plus-small"
-                  onClick={() => {
-                    dialog.show(() => (
-                      <DialogCustomProvider onBack={dialog.close} initial={omnirouteProviderInitial()} />
-                    ))
-                  }}
-                >
-                  {language.t("common.connect")}
-                </Button>
+                <div class="flex flex-col items-end gap-2">
+                  <OmniRouteActivateButton />
+                  <Button
+                    size="large"
+                    variant="secondary"
+                    icon="plus-small"
+                    onClick={() => {
+                      dialog.show(() => (
+                        <DialogCustomProvider onBack={dialog.close} initial={omnirouteProviderInitial()} />
+                      ))
+                    }}
+                  >
+                    {language.t("common.connect")}
+                  </Button>
+                </div>
               </div>
 
               <div
