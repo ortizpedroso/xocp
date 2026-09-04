@@ -16,6 +16,7 @@ import { WebFetchTool } from "./webfetch"
 import { WriteTool } from "./write"
 import { HandoffWriteTool } from "./handoff-write"
 import { HandoffReadTool } from "./handoff-read"
+import { GraphifyQueryTool } from "./graphify-query"
 import { InvalidTool } from "./invalid"
 import { SkillTool } from "./skill"
 import * as Tool from "./tool"
@@ -103,6 +104,7 @@ const layer = Layer.effect(
 
     const handoffWrite = yield* HandoffWriteTool
     const handoffRead = yield* HandoffReadTool
+    const graphifyQuery = yield* GraphifyQueryTool
     const invalid = yield* InvalidTool
     const task = yield* TaskTool
     const read = yield* ReadTool
@@ -224,6 +226,7 @@ const layer = Layer.effect(
           todo: Tool.init(todo),
           handoffWrite: Tool.init(handoffWrite),
           handoffRead: Tool.init(handoffRead),
+          graphifyQuery: Tool.init(graphifyQuery),
           search: Tool.init(websearch),
           skill: Tool.init(skilltool),
           patch: Tool.init(patchtool),
@@ -249,6 +252,7 @@ const layer = Layer.effect(
             tool.todo,
             tool.handoffWrite,
             tool.handoffRead,
+            tool.graphifyQuery,
             tool.search,
             tool.skill,
             tool.patch,

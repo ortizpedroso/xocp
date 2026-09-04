@@ -27,6 +27,7 @@ const AVAILABLE_PERMISSIONS = [
   "todowrite",
   "handoff_write",
   "handoff_read",
+  "graphify_query",
   "websearch",
   "lsp",
   "skill",
