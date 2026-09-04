@@ -10,7 +10,8 @@ import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { DialogConnectProvider, useProviderConnectController } from "../dialog-connect-provider"
 import { DialogCustomProvider } from "../dialog-custom-provider"
-import { omnirouteProviderInitial } from "../dialog-custom-provider-form"
+import { omnirouteProviderInitial, headroomProviderInitial } from "../dialog-custom-provider-form"
+import { HeadroomActivateButton } from "../headroom-activate-ui"
 import { SettingsListV2 } from "./parts/list"
 import "./settings-v2.css"
 
@@ -256,6 +257,41 @@ export const SettingsProvidersV2: Component<{
                 >
                   {language.t("common.connect")}
                 </ButtonV2>
+              </div>
+
+              <div class="settings-v2-provider-row" data-component="headroom-provider-section">
+                <div class="settings-v2-provider-lead">
+                  <ProviderIcon
+                    id="synthetic"
+                    width={PROVIDER_ICON_SIZE}
+                    height={PROVIDER_ICON_SIZE}
+                    class="settings-v2-provider-icon shrink-0"
+                  />
+                  <div class="settings-v2-provider-copy">
+                    <div class="settings-v2-provider-main">
+                      <span class="settings-v2-provider-name">{language.t("settings.providers.headroom.title")}</span>
+                      <Tag>{language.t("settings.providers.tag.custom")}</Tag>
+                    </div>
+                    <p class="settings-v2-provider-description">
+                      {language.t("settings.providers.headroom.description")}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  <HeadroomActivateButton />
+                  <ButtonV2
+                    size="normal"
+                    variant="neutral"
+                    icon="plus"
+                    onClick={() => {
+                      dialog.show(() => (
+                        <DialogCustomProvider onBack={dialog.close} initial={headroomProviderInitial()} />
+                      ))
+                    }}
+                  >
+                    {language.t("common.connect")}
+                  </ButtonV2>
+                </div>
               </div>
 
               <div class="settings-v2-provider-row" data-component="custom-provider-section">

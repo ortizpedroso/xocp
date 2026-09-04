@@ -159,11 +159,24 @@ export const headerRow = (): HeaderRow => ({ row: nextRow(), key: "", value: "",
 
 export const OMNROUTE_DEFAULT_BASE_URL = "http://127.0.0.1:20128/v1"
 
+export const HEADROOM_DEFAULT_BASE_URL = "http://127.0.0.1:8787/v1"
+
 export function omnirouteProviderInitial(): Omit<FormState, "err"> {
   return {
     providerID: "omniroute",
     name: "OmniRoute",
     baseURL: OMNROUTE_DEFAULT_BASE_URL,
+    apiKey: "",
+    models: [],
+    headers: [headerRow()],
+  }
+}
+
+export function headroomProviderInitial(): Omit<FormState, "err"> {
+  return {
+    providerID: "headroom",
+    name: "Headroom",
+    baseURL: HEADROOM_DEFAULT_BASE_URL,
     apiKey: "",
     models: [],
     headers: [headerRow()],
