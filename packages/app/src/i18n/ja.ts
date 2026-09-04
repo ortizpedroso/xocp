@@ -1076,6 +1076,8 @@ export const dict = {
   "common.time.daysAgo.short": "{{count}} 日前",
   "settings.providers.connected.environmentDescription": "環境変数から接続されました",
   "settings.providers.custom.description": "ベース URL を指定して OpenAI 互換のプロバイダーを追加します。",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
 
   "app.server.unreachable": "{{server}} に到達できませんでした",
   "app.server.retrying": "自動的に再試行中...",

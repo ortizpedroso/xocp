@@ -1094,6 +1094,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Connectat des de les vostres variables d'entorn",
   "settings.providers.section.popular": "Proveïdors populars",
   "settings.providers.custom.description": "Afegiu un proveïdor compatible amb OpenAI per base URL.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Medi ambient",
   "settings.providers.tag.config": "Config",
   "settings.providers.tag.custom": "Personalitzat",

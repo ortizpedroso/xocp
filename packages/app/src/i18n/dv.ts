@@ -1097,6 +1097,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "ތިބާގެ މާހައުލުގެ ވެރިއޭބަލްތަކުން ގުޅިފައިވެއެވެ",
   "settings.providers.section.popular": "މަޝްހޫރު ޕްރޮވައިޑަރުންނެވެ",
   "settings.providers.custom.description": "ބޭސް URL އިން OpenAI އާއި އެއްގޮތްވާ ޕްރޮވައިޑަރެއް އިތުރުކުރުން.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "މާޙައުލު",
   "settings.providers.tag.config": "ކޮންފިގް",
   "settings.providers.tag.custom": "ސަޤާފަތް",

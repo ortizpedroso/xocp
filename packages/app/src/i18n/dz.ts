@@ -1100,6 +1100,8 @@ export const dict: Record<string, string> = {
   "settings.providers.connected.environmentDescription": "ཁྱོད་ཀྱི་མཐའ་འཁོར་འགྱུར་ཅན་ཚུ་ལས་མཐུད་ཡོདཔ།",
   "settings.providers.section.popular": "ཡོངས་གྲགས་ཅན་གྱི་བྱིན་མི་ཚུ།",
   "settings.providers.custom.description": "གཞི་རྟེན་ URLགིས་ OpenAI-མཐུན་འགྱུར་བྱིན་མི་ཅིག་ཁ་སྐོང་བརྐྱབ།",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "མཐའ་འཁོར",
   "settings.providers.tag.config": "རིམ་སྒྲིག།",
   "settings.providers.tag.custom": "ལུགས་སྲོལ",

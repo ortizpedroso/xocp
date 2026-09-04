@@ -1084,6 +1084,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Pievienots no jūsu vides mainīgajiem",
   "settings.providers.section.popular": "Populāri pakalpojumi",
   "settings.providers.custom.description": "Pievienojiet OpenAI saderīgu pakalpojumu, norādot bāzes URL.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Vide",
   "settings.providers.tag.config": "Konfigurācija",
   "settings.providers.tag.custom": "Pielāgots",

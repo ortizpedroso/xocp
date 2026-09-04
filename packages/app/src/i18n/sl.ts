@@ -1085,6 +1085,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Povezano iz spremenljivk vašega okolja",
   "settings.providers.section.popular": "Priljubljeni ponudniki",
   "settings.providers.custom.description": "Dodajte ponudnika, združljivega z OpenAI, po osnovi URL.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "okolje",
   "settings.providers.tag.config": "Konfiguracija",
   "settings.providers.tag.custom": "Po meri",

@@ -1005,6 +1005,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Connesso tramite le variabili di ambiente",
   "settings.providers.section.popular": "Provider più diffusi",
   "settings.providers.custom.description": "Aggiungi un provider compatibile con OpenAI tramite l'URL di base.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Ambiente",
   "settings.providers.tag.config": "Configurazione",
   "settings.providers.tag.custom": "Personalizzato",

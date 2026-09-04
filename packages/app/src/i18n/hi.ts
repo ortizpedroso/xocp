@@ -1086,6 +1086,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "आपके एनवायरनमेंट वेरिएबल से कनेक्ट किया गया",
   "settings.providers.section.popular": "लोकप्रिय प्रोवाइडर",
   "settings.providers.custom.description": "आधार URL द्वारा एक OpenAI-संगत प्रोवाइडर जोड़ें।",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "एनवायरनमेंट",
   "settings.providers.tag.config": "कॉन्फ़िगरेशन",
   "settings.providers.tag.custom": "कस्टम",

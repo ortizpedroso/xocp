@@ -1083,6 +1083,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Anslutna via dina miljövariabler",
   "settings.providers.section.popular": "Populära leverantörer",
   "settings.providers.custom.description": "Lägg till en OpenAI-kompatibel leverantör genom bas-URL.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Miljö",
   "settings.providers.tag.config": "Konfiguration",
   "settings.providers.tag.custom": "Anpassad",

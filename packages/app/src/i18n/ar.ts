@@ -1086,6 +1086,8 @@ export const dict = {
   "common.time.daysAgo.short": "قبل {{count}} ي",
   "settings.providers.connected.environmentDescription": "متصل من متغيرات البيئة الخاصة بك",
   "settings.providers.custom.description": "أضف موفرًا متوافقًا مع OpenAI باستخدام عنوان URL الأساسي.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
 
   "app.server.unreachable": "تعذر الوصول إلى {{server}}",
   "app.server.retrying": "جارٍ إعادة المحاولة تلقائيًا...",

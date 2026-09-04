@@ -1079,6 +1079,8 @@ export const dict: Record<string, string> = {
   "settings.providers.connected.environmentDescription": "तपाईंको वातावरण चरबाट जडान गरिएको",
   "settings.providers.section.popular": "लोकप्रिय प्रदायकहरू",
   "settings.providers.custom.description": "आधार URL द्वारा एक OpenAI-कम्प्याटिबल प्रदायक थप्नुहोस्।",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "वातावरण",
   "settings.providers.tag.config": "कन्फिग",
   "settings.providers.tag.custom": "अनुकूलन",

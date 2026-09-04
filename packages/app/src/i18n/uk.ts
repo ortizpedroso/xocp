@@ -1184,6 +1184,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Підключено зі змінних середовища",
   "settings.providers.section.popular": "Популярні провайдери",
   "settings.providers.custom.description": "Додайте провайдера, сумісного з OpenAI, за базовим URL.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Середовище",
   "settings.providers.tag.config": "Конфігурація",
   "settings.providers.tag.custom": "Користувацький",

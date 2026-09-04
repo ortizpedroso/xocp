@@ -1092,6 +1092,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Atrof-muhit o'zgaruvchilaringizdan ulangan",
   "settings.providers.section.popular": "Mashhur provayderlar",
   "settings.providers.custom.description": "URL bazasi bo'yicha OpenAI-mos provayderni qo'shing.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Atrof-muhit",
   "settings.providers.tag.config": "Konfiguratsiya",
   "settings.providers.tag.custom": "Maxsus",

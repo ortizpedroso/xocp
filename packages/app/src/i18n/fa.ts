@@ -1077,6 +1077,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "از متغیرهای محیط شما متصل شده است",
   "settings.providers.section.popular": "ارائه دهندگان محبوب",
   "settings.providers.custom.description": "یک ارائه دهنده سازگار با OpenAI توسط پایه URL اضافه کنید.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "محیط زیست",
   "settings.providers.tag.config": "پیکربندی",
   "settings.providers.tag.custom": "سفارشی",

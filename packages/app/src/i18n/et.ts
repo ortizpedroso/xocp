@@ -1073,6 +1073,8 @@ export const dict = {
   "settings.providers.connected.environmentDescription": "Ühendatud teie keskkonnamuutujatega",
   "settings.providers.section.popular": "Populaarsed pakkujad",
   "settings.providers.custom.description": "Lisage OpenAI-ga ühilduv pakkuja baasi URL alusel.",
+  "settings.providers.omniroute.title": "Connect OmniRoute",
+  "settings.providers.omniroute.description": "Local OpenAI-compatible gateway (default port 20128).",
   "settings.providers.tag.environment": "Keskkond",
   "settings.providers.tag.config": "Konfig",
   "settings.providers.tag.custom": "Kohandatud",
