@@ -9,6 +9,7 @@ import { Agent } from "@/agent/agent"
 import { Auth } from "@/auth"
 import { BackgroundJob } from "@/background/job"
 import { Headroom } from "@opencode-ai/core/headroom"
+import { OmniRoute } from "@opencode-ai/core/omniroute"
 import { Command } from "@/command"
 import { Config } from "@/config/config"
 import { Workspace } from "@/control-plane/workspace"
@@ -238,6 +239,7 @@ const app = LayerNode.group([
   SessionStatus.node,
   BackgroundJob.node,
   Headroom.node,
+  OmniRoute.node,
   RuntimeFlags.node,
   EventV2Bridge.node,
   SessionRunState.node,
