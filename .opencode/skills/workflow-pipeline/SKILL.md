@@ -43,6 +43,14 @@ Executor ←── REPROVADO (máx 3 tentativas, detectar estagnação)
 
 ## Gates de aprovação (todos binários, 100%)
 
+**Quando há Spec no projeto** (sistema `elicitador-spec`), o Avaliador
+checa **antes** de qualquer critério de brief/aceite:
+
+1. **GATE Spec atualizada** — Changelog + DoD refletem o que foi implementado
+2. **GATE Norma com fonte** — toda lei/norma tem URL oficial ou `⚠️ NÃO VERIFICADO`
+
+Depois, os gates normais do brief:
+
 - `cd packages/<pacote> && bun typecheck` (nunca da raiz)
 - Testes do brief passando
 - Escopo respeitado (`scope.excluded` intocado)
