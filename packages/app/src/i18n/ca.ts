@@ -704,6 +704,13 @@ export const dict = {
   "home.sessions.group.today": "Avui",
   "home.sessions.group.yesterday": "Ahir",
   "home.sessions.group.older": "Més vell",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip":
     "Connecteu-vos a més de 75 proveïdors per utilitzar altres models, inclosos Claude, GPT, Gemini, etc.",
   "session.tab.session": "Sessió",

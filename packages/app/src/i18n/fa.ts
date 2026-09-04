@@ -698,6 +698,13 @@ export const dict = {
   "home.sessions.group.today": "امروز",
   "home.sessions.group.yesterday": "دیروز",
   "home.sessions.group.older": "قدیمی تر",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip":
     "برای استفاده از مدل‌های دیگر، از جمله Claude، GPT، Gemini و غیره به بیش از 75 ارائه‌دهنده متصل شوید.",
   "session.tab.session": "جلسه",

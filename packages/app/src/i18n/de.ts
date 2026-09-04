@@ -584,6 +584,13 @@ export const dict = {
   "home.sessions.group.today": "Heute",
   "home.sessions.group.yesterday": "Gestern",
   "home.sessions.group.older": "Älter",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip":
     "XOCP mit über 75 Anbietern verbinden, um weitere Modelle wie Claude, GPT, Gemini und andere zu nutzen",
   "session.tab.session": "Sitzung",

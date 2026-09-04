@@ -733,6 +733,13 @@ export const dict = {
   "home.sessions.group.today": "今天",
   "home.sessions.group.yesterday": "昨天",
   "home.sessions.group.older": "更早",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip": "連線 75 個以上的提供者，使用 Claude、GPT、Gemini 等其他模型",
 
   "session.tab.session": "工作階段",

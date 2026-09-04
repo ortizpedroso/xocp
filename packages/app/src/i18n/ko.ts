@@ -996,6 +996,13 @@ export const dict = {
   "home.sessions.group.today": "오늘",
   "home.sessions.group.yesterday": "어제",
   "home.sessions.group.older": "이전",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip": "75개 이상의 공급자에 연결하여 Claude, GPT, Gemini 등의 다른 모델을 사용하세요",
 
   "session.tab.unknown": "알 수 없는 세션",

@@ -737,6 +737,13 @@ export const dict = {
   "home.sessions.group.today": "วันนี้",
   "home.sessions.group.yesterday": "เมื่อวาน",
   "home.sessions.group.older": "ก่อนหน้านี้",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip": "เชื่อมต่อกับผู้ให้บริการกว่า 75 รายเพื่อใช้โมเดลอื่น ๆ รวมถึง Claude, GPT, Gemini และอีกมากมาย",
 
   "session.tab.session": "เซสชัน",

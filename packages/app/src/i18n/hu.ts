@@ -704,6 +704,13 @@ export const dict = {
   "home.sessions.group.today": "Ma",
   "home.sessions.group.yesterday": "Tegnap",
   "home.sessions.group.older": "Régebbi",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip":
     "Csatlakozzon 75+ szolgáltatóhoz más modellek használatához, beleértve a Claude, GPT, Gemini stb.",
   "session.tab.session": "Munkamenet",

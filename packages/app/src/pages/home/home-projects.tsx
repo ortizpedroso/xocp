@@ -26,6 +26,10 @@ export function HomeProjects(props: { projects: HomeProjectsController; scroll: 
       onSetDefaultServer={props.projects.server.setDefault}
       onRemoveServer={props.projects.server.remove}
       onMoveProject={props.projects.project.move}
+      onToggleProjectExpanded={props.projects.project.toggleExpanded}
+      sidebar={props.projects.sidebar}
+      pins={props.projects.pins}
+      sessions={props.projects.sessions}
       onSelectProject={props.projects.project.select}
       onAddProjects={props.projects.project.add}
       onOpenProjectNewSession={props.projects.project.openNewSession}

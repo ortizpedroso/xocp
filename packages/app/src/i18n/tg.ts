@@ -701,6 +701,13 @@ export const dict = {
   "home.sessions.group.today": "Имруз",
   "home.sessions.group.yesterday": "Дируз",
   "home.sessions.group.older": "калонсолтар",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip":
     "Барои истифодаи моделҳои дигар, аз ҷумла Claude, GPT, Gemini ва ғайра ба 75+ провайдерҳо пайваст шавед",
   "session.tab.session": "Сессия",

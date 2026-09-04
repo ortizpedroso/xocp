@@ -1,5 +1,6 @@
 import { type Accessor, createMemo, For, type JSX, onCleanup, Show, splitProps } from "solid-js"
 import { createStore } from "solid-js/store"
+import type { Session } from "@opencode-ai/sdk/v2/client"
 import { DragDropProvider, PointerSensor } from "@dnd-kit/solid"
 import { isSortable, useSortable } from "@dnd-kit/solid/sortable"
 import { AutoScroller, Feedback, PointerActivationConstraints } from "@dnd-kit/dom"
@@ -20,6 +21,17 @@ import { ServerRowMenuView, serverMenuLabels } from "@/components/server/server-
 import { ServerHealthIndicator } from "@/components/server/server-row"
 import { type ServerHealth } from "@/utils/server-health"
 import { fileManagerApp } from "@/utils/file-manager"
+import { sessionTitle } from "@/utils/session-title"
+import { shouldOpenSessionInBackground } from "../home-session-open"
+import type { HomePinsController } from "./home-pins"
+import { homeSessionPinKey } from "./home-pins"
+import type { HomeSidebarTree } from "./home-sidebar-tree"
+import {
+  HomeSessionStatusController,
+  type HomeSessionRecord,
+  type OpenSessionOptions,
+} from "./home-sessions-controller"
+import { SessionTabAvatarView } from "@/pages/layout/session-tab-avatar"
 
 const HOME_PROJECT_NAV_LABEL = "min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
 
@@ -59,6 +71,26 @@ export type HomeProjectsViewProps = {
   onOpenSettings: () => void
   onOpenDocumentation: () => void
   onOpenHelp: () => void
+  onToggleProjectExpanded: (server: ServerConnection.Any, directory: string) => void
+  sidebar?: Accessor<HomeSidebarTree | undefined>
+  pins?: HomePinsController
+  sessions?: {
+    open: (session: Session, options?: OpenSessionOptions) => void
+    create: () => void
+    isOpenTab: (record: HomeSessionRecord) => boolean
+    server: () => ServerConnection.Key
+  }
+}
+
+function isBackgroundOpen(event: MouseEvent) {
+  return shouldOpenSessionInBackground({
+    button: event.button,
+    mac: typeof navigator === "object" && /(Mac|iPod|iPhone|iPad)/.test(navigator.platform),
+    meta: event.metaKey,
+    ctrl: event.ctrlKey,
+    shift: event.shiftKey,
+    alt: event.altKey,
+  })
 }
 
 export function HomeProjectsView(props: HomeProjectsViewProps) {
@@ -352,6 +384,9 @@ function HomeProjectList(props: HomeProjectListProps) {
       }}
     >
       <div class="flex min-w-0 flex-col gap-1" ref={listRef}>
+        <Show when={props.sidebar?.()?.looseSessions.length}>
+          <HomeLooseSessionsSection {...props} records={props.sidebar!()!.looseSessions} />
+        </Show>
         {/* Keyed on worktree strings: the enriched project objects are
             recreated on every store or sync update, so iterating them directly
             remounts all rows — killing any in-flight drag activation (the
@@ -377,6 +412,7 @@ function HomeProjectSlot(
     (previous) => props.items.find((item) => item.worktree === props.worktree) ?? previous,
     initial,
   )
+  const node = createMemo(() => props.sidebar?.()?.projects.find((item) => item.project.worktree === props.worktree))
 
   return (
     <HomeProjectRow
@@ -390,6 +426,8 @@ function HomeProjectSlot(
         props.selection().directory === props.worktree
       }
       unseen={props.unseenCount(props.server, project())}
+      nestedSessions={() => node()?.sessions ?? []}
+      pinned={() => node()?.pinned ?? false}
     />
   )
 }
@@ -463,10 +501,14 @@ function HomeProjectRow(
       serverSelected: boolean
       selected: boolean
       unseen: number
+      nestedSessions: Accessor<HomeSessionRecord[]>
+      pinned: Accessor<boolean>
     },
 ) {
   const platform = usePlatform()
   const serverUnreachable = () => props.serverHealth(props.server)?.healthy === false
+  const hasSessions = () => props.nestedSessions().length > 0
+  const expanded = () => props.project.expanded
   const sortable = useSortable({
     get id() {
       return props.project.worktree
@@ -482,64 +524,95 @@ function HomeProjectRow(
     if (props.contextMenuOpen(id)) props.onSetContextMenuOpen(id, false)
   })
   return (
-    <div
-      ref={sortable.ref}
-      class="group/project relative flex h-7 min-w-0 items-center rounded-[6px]"
-      classList={{ "z-10": sortable.isDragSource() }}
-      onContextMenu={(event) => {
-        event.preventDefault()
-        props.onSetContextMenuOpen(contextMenuID(), true)
-      }}
-    >
-      <HomeProjectNavButton
-        type="button"
-        data-component="home-project-row"
-        class="pr-16 disabled:opacity-60"
-        classList={{
-          "bg-v2-background-bg-layer-01 text-v2-text-text-base": sortable.isDragSource(),
-        }}
-        data-selected={props.selected ? "" : undefined}
-        aria-current={props.selected ? "page" : undefined}
-        disabled={serverUnreachable()}
-        onPointerDown={(event) => {
-          // Same-server mouse selection happens on pointerdown (like tabs),
-          // but only ever selects; selectProject toggles, and deselecting here
-          // would fire on every drag before the threshold is met. Cross-server
-          // selection waits for click so reordering a remote server's projects
-          // does not focus that server and load its session index. Touch is
-          // excluded so flick-scrolling the list cannot select rows.
-          pointerDownSelected = undefined
-          if (event.button !== 0 || event.pointerType === "touch") return
-          if (!props.serverSelected) return
-          pointerDownSelected = props.selected
-          if (!props.selected) props.onSelectProject(props.server, props.project.worktree)
-        }}
-        onClick={(event) => {
-          // The drag sensor calls preventDefault on post-drag clicks; never
-          // toggle selection as part of a reorder.
-          if (event.defaultPrevented) return
-          // Keyboard activation and touch taps keep the original toggle.
-          if (event.detail === 0 || pointerDownSelected === undefined) {
-            props.onSelectProject(props.server, props.project.worktree)
-            return
-          }
-          // Mouse: pointerdown already selected unselected rows; a plain click
-          // on an already-selected row toggles it off.
-          if (pointerDownSelected) props.onSelectProject(props.server, props.project.worktree)
-          pointerDownSelected = undefined
-        }}
-      >
-        <HomeProjectAvatar project={props.project} />
-        <span class={HOME_PROJECT_NAV_LABEL}>{displayName(props.project)}</span>
-      </HomeProjectNavButton>
+    <div class="flex min-w-0 flex-col gap-px">
       <div
-        class={`
-          hover-reveal absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1
-          group-hover/project:opacity-100 focus-within:opacity-100 data-[menu=true]:opacity-100
-        `}
-        data-menu={props.contextMenuOpen(contextMenuID())}
+        ref={sortable.ref}
+        class="group/project relative flex h-7 min-w-0 items-center rounded-[6px]"
+        classList={{ "z-10": sortable.isDragSource() }}
+        onContextMenu={(event) => {
+          event.preventDefault()
+          props.onSetContextMenuOpen(contextMenuID(), true)
+        }}
       >
-        <MenuV2
+        <HomeProjectNavButton
+          type="button"
+          data-component="home-project-row"
+          class="pr-24 disabled:opacity-60"
+          classList={{
+            "bg-v2-background-bg-layer-01 text-v2-text-text-base": sortable.isDragSource(),
+          }}
+          data-selected={props.selected ? "" : undefined}
+          aria-current={props.selected ? "page" : undefined}
+          disabled={serverUnreachable()}
+          onPointerDown={(event) => {
+            pointerDownSelected = undefined
+            if (event.button !== 0 || event.pointerType === "touch") return
+            if (!props.serverSelected) return
+            pointerDownSelected = props.selected
+            if (!props.selected) props.onSelectProject(props.server, props.project.worktree)
+          }}
+          onClick={(event) => {
+            if (event.defaultPrevented) return
+            if (event.detail === 0 || pointerDownSelected === undefined) {
+              props.onSelectProject(props.server, props.project.worktree)
+              return
+            }
+            if (pointerDownSelected) props.onSelectProject(props.server, props.project.worktree)
+            pointerDownSelected = undefined
+          }}
+        >
+          <span
+            data-action="home-project-expand"
+            class={`
+              -ml-0.5 -mr-1 inline-flex size-5 shrink-0 items-center justify-center
+              rounded-[4px] text-v2-icon-icon-muted
+            `}
+            classList={{
+              "hover:bg-v2-overlay-simple-overlay-hover": hasSessions(),
+              "cursor-default opacity-40": !hasSessions(),
+            }}
+            aria-label={
+              expanded() ? props.language.t("home.server.collapse") : props.language.t("home.server.expand")
+            }
+            aria-disabled={!hasSessions()}
+            aria-expanded={hasSessions() ? expanded() : undefined}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              if (!hasSessions()) return
+              props.onToggleProjectExpanded(props.server, props.project.worktree)
+            }}
+            onPointerDown={(event) => event.preventDefault()}
+          >
+            <IconV2
+              name="chevron-down"
+              size="small"
+              class="transition-transform duration-150 ease-in-out"
+              style={{ transform: `rotate(${expanded() || !hasSessions() ? 0 : -90}deg)` }}
+            />
+          </span>
+          <HomeProjectAvatar project={props.project} />
+          <span class={HOME_PROJECT_NAV_LABEL}>{displayName(props.project)}</span>
+        </HomeProjectNavButton>
+        <div
+          class={`
+            hover-reveal absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1
+            group-hover/project:opacity-100 focus-within:opacity-100 data-[menu=true]:opacity-100
+          `}
+          data-menu={props.contextMenuOpen(contextMenuID())}
+        >
+          <Show when={props.pins}>
+            <HomePinButton
+              pinned={props.pinned()}
+              label={
+                props.pinned()
+                  ? props.language.t("home.unpin.project")
+                  : props.language.t("home.pin.project")
+              }
+              onClick={() => props.pins!.toggleProject(props.project.worktree)}
+            />
+          </Show>
+          <MenuV2
           gutter={6}
           modal={false}
           placement="bottom-end"
@@ -592,6 +665,14 @@ function HomeProjectRow(
           onClick={() => props.onOpenProjectNewSession(props.server, props.project.worktree)}
         />
       </div>
+      </div>
+      <Show when={expanded() && hasSessions()}>
+        <div class="ml-4 flex min-w-0 flex-col gap-px border-l border-v2-border-border-base pl-1">
+          <For each={props.nestedSessions()}>
+            {(record) => <HomeSidebarSessionRow {...props} record={record} nested />}
+          </For>
+        </div>
+      </Show>
     </div>
   )
 }
@@ -626,5 +707,110 @@ function HomeProjectAvatar(props: { project: LocalProject; outline?: boolean }) 
       src={props.outline ? undefined : getProjectAvatarSource(props.project.id, props.project.icon)}
       variant={props.outline ? "outline" : getProjectAvatarVariant(props.project.icon?.color)}
     />
+  )
+}
+
+function HomeLooseSessionsSection(
+  props: HomeProjectsViewProps & {
+    records: HomeSessionRecord[]
+  },
+) {
+  return (
+    <div class="mb-2 flex min-w-0 flex-col gap-1">
+      <div class="flex h-7 min-w-0 shrink-0 items-center pl-1.5 pr-3">
+        <div class="text-v2-text-text-faint [font-weight:530]">{props.language.t("home.sections.loose")}</div>
+      </div>
+      <For each={props.records}>
+        {(record) => <HomeSidebarSessionRow {...props} record={record} />}
+      </For>
+    </div>
+  )
+}
+
+function HomeSidebarSessionRow(
+  props: HomeProjectsViewProps & {
+    record: HomeSessionRecord
+    nested?: boolean
+  },
+) {
+  const title = createMemo(() => sessionTitle(props.record.session.title) || props.record.session.id)
+  const sessionKey = () => homeSessionPinKey(props.record)
+  const pinned = () => props.pins?.isSessionPinned(sessionKey()) ?? false
+  const sessions = () => props.sessions
+  return (
+    <div class="group/session relative flex h-8 min-w-0 items-center rounded-[6px]">
+      <HomeProjectNavButton
+        type="button"
+        data-component="home-sidebar-session-row"
+        class="pr-16"
+        onMouseDown={(event) => {
+          if (event.button === 1) event.preventDefault()
+        }}
+        onClick={(event) => {
+          if (!sessions()) return
+          sessions()!.open(props.record.session, { background: isBackgroundOpen(event) })
+        }}
+        onAuxClick={(event) => {
+          if (!sessions() || !isBackgroundOpen(event)) return
+          event.preventDefault()
+          sessions()!.open(props.record.session, { background: true })
+        }}
+      >
+        <Show when={sessions()}>
+          {(value) => (
+            <HomeSessionStatusController
+              server={value().server}
+              record={props.record}
+              isOpenTab={value().isOpenTab}
+              render={(state) => (
+                <SessionTabAvatarView
+                  project={props.record.project}
+                  directory={props.record.session.directory}
+                  revealProjectOnHover={!props.nested}
+                  unread={state.unread()}
+                  loading={state.loading()}
+                />
+              )}
+            />
+          )}
+        </Show>
+        <span class="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{title()}</span>
+      </HomeProjectNavButton>
+      <Show when={props.pins}>
+        <div
+          class={`
+            hover-reveal absolute right-1 top-1/2 flex -translate-y-1/2 items-center
+            group-hover/session:opacity-100 focus-within:opacity-100
+          `}
+        >
+          <HomePinButton
+            pinned={pinned()}
+            label={pinned() ? props.language.t("home.unpin.session") : props.language.t("home.pin.session")}
+            onClick={() => props.pins!.toggleSession(sessionKey())}
+          />
+        </div>
+      </Show>
+    </div>
+  )
+}
+
+function HomePinButton(props: { pinned: boolean; label: string; onClick: () => void }) {
+  return (
+    <TooltipV2 placement="bottom" value={props.label}>
+      <IconButtonV2
+        data-action="home-pin-toggle"
+        variant="ghost-muted"
+        size="small"
+        class={props.pinned ? "text-v2-text-text-base" : ""}
+        icon={<IconV2 name="pin" class={props.pinned ? "fill-current" : ""} />}
+        aria-label={props.label}
+        aria-pressed={props.pinned}
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          props.onClick()
+        }}
+      />
+    </TooltipV2>
   )
 }

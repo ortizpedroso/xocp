@@ -16,6 +16,7 @@ import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { sessionHasOpenTab, useTabs } from "@/context/tabs"
 import { compareSessionTime, displayName, errorMessage, projectForSession } from "@/pages/layout/helpers"
+import { buildAllHomeSessionRecords } from "./home-sidebar-tree"
 import { useSessionTabAvatarState } from "@/pages/layout/project-avatar-state"
 import { pathKey } from "@/utils/path-key"
 import { showToast } from "@/utils/toast"
@@ -90,6 +91,13 @@ export function createHomeSessionsController(home: HomeController) {
     buildHomeSessionRecords({
       sessions: indexedSessions,
       projectDirectories,
+      projects: home.project.list,
+      projectByID,
+    }),
+  )
+  const sidebarRecords = createMemo(() =>
+    buildAllHomeSessionRecords({
+      sessions: indexedSessions,
       projects: home.project.list,
       projectByID,
     }),
@@ -170,6 +178,7 @@ export function createHomeSessionsController(home: HomeController) {
     data: {
       records,
       groups,
+      sidebarRecords,
       loading: () => sessionLoad.isLoading,
       searchRecords: allRecords,
     },

@@ -699,6 +699,13 @@ export const dict = {
   "home.sessions.group.today": "dnes",
   "home.sessions.group.yesterday": "včera",
   "home.sessions.group.older": "Starší",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip":
     "Připojte se k více než 75 poskytovatelům a použijte další modely, včetně Claude, GPT, Gemini atd",
   "session.tab.session": "Relace",

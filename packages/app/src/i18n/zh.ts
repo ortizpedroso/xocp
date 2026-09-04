@@ -738,6 +738,13 @@ export const dict = {
   "home.sessions.group.today": "今天",
   "home.sessions.group.yesterday": "昨天",
   "home.sessions.group.older": "更早",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip": "连接 75 个以上的提供商，使用包括 Claude、GPT、Gemini 在内的更多模型",
 
   "session.tab.session": "会话",

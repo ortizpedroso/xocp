@@ -699,6 +699,13 @@ export const dict = {
   "home.sessions.group.today": "Í dag",
   "home.sessions.group.yesterday": "Í gjár",
   "home.sessions.group.older": "Eldri",
+  "home.sections.loose": "Unassigned sessions",
+  "home.pin.project": "Pin project",
+  "home.unpin.project": "Unpin project",
+  "home.pin.session": "Pin session",
+  "home.unpin.session": "Unpin session",
+  "home.sessions.browseHint.title": "Browse from the sidebar",
+  "home.sessions.browseHint.description": "Projects and sessions now live in the left sidebar. Use search above to jump to any session.",
   "home.providerTip":
     "Set teg í samband við 75+ veitarar fyri at brúka onnur modell, eitt nú Claude, GPT, Gemini, osfr.",
   "session.tab.session": "Seta",
