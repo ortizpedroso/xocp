@@ -185,6 +185,10 @@ export const Info = Schema.Struct({
       policies: Schema.optional(Schema.mutable(Schema.Array(ConfigExperimental.Policy))).annotate({
         description: "Policy statements applied to supported resources, such as provider access",
       }),
+      degenerate_fallback_model: Schema.optional(Schema.String).annotate({
+        description:
+          "Model to use when repetitive degenerate output is detected, in provider/model format. Falls back to another available model when unset.",
+      }),
     }),
   ),
 }).annotate({ identifier: "Config" })
