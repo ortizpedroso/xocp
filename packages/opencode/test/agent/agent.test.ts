@@ -50,6 +50,7 @@ it.instance("returns default native agents when no config", () =>
     const names = agents.map((a) => a.name)
     expect(names).toContain("build")
     expect(names).toContain("plan")
+    expect(names).toContain("elicitador")
     expect(names).toContain("general")
     expect(names).toContain("explore")
     expect(names).toContain("compaction")
@@ -87,6 +88,38 @@ it.instance("plan agent denies the general subagent by default", () =>
     expect(Permission.evaluate("task", "general", plan!.permission).action).toBe("deny")
     expect(Permission.evaluate("task", "explore", plan!.permission).action).toBe("allow")
     expect(Permission.evaluate("task", "custom", plan!.permission).action).toBe("allow")
+  }),
+)
+
+it.instance("elicitador agent has correct default properties", () =>
+  Effect.gen(function* () {
+    const elicitador = yield* load((svc) => svc.get("elicitador"))
+    expect(elicitador).toBeDefined()
+    expect(elicitador?.mode).toBe("primary")
+    expect(elicitador?.native).toBe(true)
+    expect(elicitador?.prompt).toBeDefined()
+    expect(elicitador?.description).toContain("elicitação")
+  }),
+)
+
+it.instance("elicitador agent denies edits except .opencode/specs/*", () =>
+  Effect.gen(function* () {
+    const elicitador = yield* load((svc) => svc.get("elicitador"))
+    expect(elicitador).toBeDefined()
+    expect(evalPerm(elicitador, "edit")).toBe("deny")
+    expect(Permission.evaluate("edit", ".opencode/specs/foo.md", elicitador!.permission).action).toBe("allow")
+    expect(Permission.evaluate("edit", "src/main.ts", elicitador!.permission).action).toBe("deny")
+    expect(Permission.evaluate("edit", ".opencode/plans/foo.md", elicitador!.permission).action).toBe("deny")
+  }),
+)
+
+it.instance("elicitador agent denies bash and allows explore subagent", () =>
+  Effect.gen(function* () {
+    const elicitador = yield* load((svc) => svc.get("elicitador"))
+    expect(elicitador).toBeDefined()
+    expect(evalPerm(elicitador, "bash")).toBe("deny")
+    expect(Permission.evaluate("task", "explore", elicitador!.permission).action).toBe("allow")
+    expect(Permission.evaluate("task", "general", elicitador!.permission).action).toBe("deny")
   }),
 )
 
@@ -749,6 +782,7 @@ it.instance(
       agent: {
         build: { disable: true },
         plan: { disable: true },
+        elicitador: { disable: true },
       },
     },
   },

@@ -11,6 +11,7 @@ import { ProviderTransform } from "@/provider/transform"
 
 import PROMPT_GENERATE from "./generate.txt"
 import PROMPT_COMPACTION from "./prompt/compaction.txt"
+import PROMPT_ELICITADOR from "./prompt/elicitador.txt"
 import PROMPT_EXPLORE from "./prompt/explore.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
@@ -178,6 +179,31 @@ const layer = Layer.effect(
             ),
             mode: "primary",
             native: true,
+          },
+          elicitador: {
+            name: "elicitador",
+            description:
+              "Conduz elicitação de requisitos e gera Spec de sistema completo. Não edita código.",
+            options: {},
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                question: "allow",
+                bash: "deny",
+                task: {
+                  general: "deny",
+                  explore: "allow",
+                },
+                edit: {
+                  "*": "deny",
+                  [path.join(".opencode", "specs", "*.md")]: "allow",
+                },
+              }),
+              user,
+            ),
+            mode: "primary",
+            native: true,
+            prompt: PROMPT_ELICITADOR,
           },
           general: {
             name: "general",
