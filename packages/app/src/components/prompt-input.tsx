@@ -6,6 +6,7 @@ import {
   Component,
   Show,
   onCleanup,
+  onMount,
   createMemo,
   createSignal,
   createResource,
@@ -73,6 +74,7 @@ import {
   type PromptInputSubmission,
 } from "./prompt-input/contracts"
 import { createPromptSubmit } from "./prompt-input/submit"
+import { registerElicitadorSubmitTrigger } from "@/pages/session/elicitador-suggestion-runtime"
 import { PromptPopover, type AtOption, type SlashCommand } from "./prompt-input/slash-popover"
 import { PromptContextItems } from "./prompt-input/context-items"
 import { PromptImageAttachments } from "./prompt-input/image-attachments"
@@ -1228,6 +1230,13 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       onSubmit: props.onSubmit,
       model: props.controls.model.selection,
     })
+
+  onMount(() => {
+    registerElicitadorSubmitTrigger(() => {
+      void handleSubmit(new Event("submit"))
+    })
+    onCleanup(() => registerElicitadorSubmitTrigger(undefined))
+  })
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "u") {
