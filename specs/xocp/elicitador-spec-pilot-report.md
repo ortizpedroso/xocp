@@ -69,9 +69,10 @@ Changelog. Seção "Decisões da auditoria" marcada N/A (spec do zero).
 
 | Onde | Ambiguidade |
 |------|-------------|
-| Seção 3.1 título vs conteúdo | Título diz "5 regras" mas lista **6** itens — implementamos as 6; título do design está inconsistente. |
-| Seção 3.4 vs 3.3 | "Penúltima major estável" (ex.: Next 15 quando 16 é LTS) pode confundir com "Active LTS" da doc oficial — regra seguida literalmente, mas calibrar com piloto real. |
-| Gatilho UI | Documento cita botão "site/app" na UI — **não existe no XOCP ainda**; piloto usou menção espontânea apenas. |
+| Seção 2.2 vs 3.1 | §2.2 fala em "5 regras travadas" mas §3.1 lista **6** itens — não resolvido no texto; implementação segue §3.1 literal (6 regras). |
+| Seção 2.2 vs 3.5 | §2.2 manda verificar norma/lei em "seção 3.4", mas fonte de norma/lei está em **§3.5** (§3.4 é versionamento) — possível typo no design; prompt operacional copia §2.2 literal. |
+| Seção 3.4 (calibrado v2) | Ecossistemas com LTS oficial (ex. Node) usam LTS ativo; sem LTS oficial aplica penúltima major — piloto anterior usou penúltima major para Next.js sem checar se Next tem política LTS própria. |
+| Gatilho UI | Botão "site/app" na UI ainda não existe no XOCP. |
 
 Artefatos do piloto: `/tmp/clinica-piloto-elicitador/PILOTO-ELICITADOR-LOG.md`,
 `/tmp/clinica-piloto-elicitador/specs/clinica-horizonte-agendamento.md`
