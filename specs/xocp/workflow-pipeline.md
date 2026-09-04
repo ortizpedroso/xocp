@@ -341,15 +341,35 @@ numa próxima rodada, se houver).
 BRIEF (versão final usada pelo Executor): <<<cole aqui>>>
 ENTREGA DO EXECUTOR (YAML de execução + diff real): <<<cole aqui>>>
 
-PROCESSO — critério por critério do brief, não da declaração do Executor:
-1. Para cada `acceptance_criteria` do brief, rode o `verifiable_by`
+PROCESSO — checagens nesta ordem (gates de Spec **antes** de qualquer
+critério de negócio quando a entrega for contra uma Spec; quando for só
+brief, os gates 1–2 são N/A e você começa no passo 3):
+
+**GATE 1 — Spec atualizada?** (obrigatório quando há Spec no projeto)
+Se este ciclo implementou algo e a Spec não ganhou nova entrada de
+Changelog + DoD correspondente:
+→ REPROVA automaticamente, não avalia mais nada.
+→ Motivo: "Spec não atualizada — o próximo /review ficaria cego."
+
+**GATE 2 — Toda norma/lei citada tem fonte ou marcação de não-verificado?**
+Se encontrar afirmação de lei/norma sem nenhuma das duas formas da seção
+3.5 do `elicitador-spec` (fonte oficial com URL **ou** prefixo
+`⚠️ NÃO VERIFICADO`):
+→ REPROVA automaticamente.
+→ Motivo: "Afirmação legal sem fonte verificável — risco de alucinação
+apresentada como fato."
+
+Só depois dos dois gates passarem (ou serem N/A por ausência de Spec),
+prossiga critério por critério do brief — não da declaração do Executor:
+
+3. Para cada `acceptance_criteria` do brief, rode o `verifiable_by`
    especificado, de verdade — não confie na `evidencia` que o Executor
    declarou, confirme você mesmo.
-2. Verifique `scope.excluded`: o diff real toca algum arquivo/área que
+4. Verifique `scope.excluded`: o diff real toca algum arquivo/área que
    deveria estar fora? Se sim, é reprovação automática desse item,
    mesmo que os critérios de aceite tenham passado.
-3. Verifique cada `constraint`: foi violada?
-4. Rode o typecheck **de dentro da pasta do pacote tocado**
+5. Verifique cada `constraint`: foi violada?
+6. Rode o typecheck **de dentro da pasta do pacote tocado**
    (`cd packages/<pacote> && bun typecheck` — nunca solto na raiz, regra
    do `AGENTS.md`) e a suíte de testes relevante — resultado real, não
    assumido.
@@ -359,6 +379,8 @@ SAÍDA:
 avaliacao:
   brief_id: "<id>"
   brief_version_avaliada: "<versão>"
+  gate_spec_atualizada: pass | fail | n_a
+  gate_norma_com_fonte: pass | fail | n_a
   criterios:
     - id: AC1
       status: atendido | nao_atendido
