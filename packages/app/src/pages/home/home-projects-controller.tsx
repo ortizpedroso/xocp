@@ -12,11 +12,15 @@ import { Persist, persisted } from "@/utils/persist"
 import { showToast } from "@/utils/toast"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { useNavigate } from "@solidjs/router"
-import { createResource } from "solid-js"
+import { createMemo, createResource } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { HomeController } from "./home-controller"
+import { createHomePinsController, homeSessionPinKey } from "./home-pins"
+import { buildHomeSidebarTree } from "./home-sidebar-tree"
+import type { HomeSessionsController } from "./home-sessions-controller"
+import { pathKey } from "@/utils/path-key"
 
-export function createHomeProjectsController(home: HomeController) {
+export function createHomeProjectsController(home: HomeController, sessions?: HomeSessionsController) {
   const navigate = useNavigate()
   const platform = usePlatform()
   const pickDirectory = useDirectoryPicker()
@@ -25,6 +29,7 @@ export function createHomeProjectsController(home: HomeController) {
   const notification = useNotification()
   const openSettings = useSettingsCommand()
   const serverManagement = useServerManagementController({ navigateOnAdd: false })
+  const pins = createHomePinsController(() => home.selection.value().server)
   const [_state, setState, _, ready] = persisted(
     Persist.global("home.servers", ["home.servers.v1"]),
     createStore({ collapsed: {} as Record<string, boolean> }),
@@ -41,6 +46,17 @@ export function createHomeProjectsController(home: HomeController) {
   function canRevealProject(conn: ServerConnection.Any) {
     return platform.platform === "desktop" && !!platform.openPath && ServerConnection.local(conn)
   }
+
+  const sidebar = createMemo(() => {
+    if (!sessions) return undefined
+    return buildHomeSidebarTree({
+      projects: home.project.list(),
+      records: sessions.data.sidebarRecords(),
+      pinnedProjects: pins.pinnedProjects(),
+      pinnedSessions: pins.pinnedSessions(),
+      hiddenSessions: pins.hiddenSessions(),
+    })
+  })
 
   return {
     copy: {
@@ -109,6 +125,13 @@ export function createHomeProjectsController(home: HomeController) {
       move: (conn: ServerConnection.Any, worktree: string, index: number) => {
         home.server.context(conn).projects.move(worktree, index)
       },
+      toggleExpanded: (conn: ServerConnection.Any, directory: string) => {
+        const ctx = home.server.context(conn)
+        const project = ctx.projects.list().find((item) => item.worktree === directory)
+        if (!project) return
+        if (project.expanded) ctx.projects.collapse(directory)
+        else ctx.projects.expand(directory)
+      },
       canReveal: canRevealProject,
       reveal: (conn: ServerConnection.Any, project: LocalProject) => {
         if (!platform.openPath || !canRevealProject(conn)) return
@@ -125,6 +148,55 @@ export function createHomeProjectsController(home: HomeController) {
       documentation: () => navigate("/documentacao"),
       help: () => platform.openExternal("https://opencode.ai/desktop-feedback"),
     },
+    sidebar,
+    pins,
+    sessions: sessions
+      ? {
+          open: sessions.session.open,
+          create: sessions.session.create,
+          isOpenTab: sessions.tab.isOpen,
+          server: sessions.session.server,
+          showHidden: (worktree: string) => {
+            const project = home.project.list().find((item) => item.worktree === worktree)
+            if (!project) return
+            sessions.data
+              .sidebarRecords()
+              .filter((record) => {
+                const directory = pathKey(record.session.directory)
+                return (
+                  pathKey(project.worktree) === directory ||
+                  project.sandboxes?.some((sandbox) => pathKey(sandbox) === directory) ||
+                  (!!record.session.projectID && project.id === record.session.projectID)
+                )
+              })
+              .forEach((record) => {
+                const key = homeSessionPinKey(record)
+                if (pins.isSessionHidden(key)) pins.toggleSessionHidden(key)
+              })
+          },
+          showLooseHidden: () => {
+            sessions.data
+              .sidebarRecords()
+              .filter(
+                (record) =>
+                  !home
+                    .project.list()
+                    .some((project) => {
+                      const directory = pathKey(record.session.directory)
+                      return (
+                        pathKey(project.worktree) === directory ||
+                        project.sandboxes?.some((sandbox) => pathKey(sandbox) === directory) ||
+                        (!!record.session.projectID && project.id === record.session.projectID)
+                      )
+                    }),
+              )
+              .forEach((record) => {
+                const key = homeSessionPinKey(record)
+                if (pins.isSessionHidden(key)) pins.toggleSessionHidden(key)
+              })
+          },
+        }
+      : undefined,
   }
 }
 

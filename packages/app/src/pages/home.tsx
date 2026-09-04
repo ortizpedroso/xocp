@@ -10,8 +10,8 @@ import { HomeSessions } from "./home/home-sessions"
 
 export function NewHome() {
   const home = createHomeController()
-  const projects = createHomeProjectsController(home)
   const sessions = createHomeSessionsController(home)
+  const projects = createHomeProjectsController(home, sessions)
   const search = createHomeSessionSearchController(home, sessions)
   const scroll = createHomeScrollController(sessions.data.groups)
   return (
@@ -36,7 +36,7 @@ export function NewHome() {
           `}
         >
           <HomeProjects projects={projects} scroll={scroll} />
-          <HomeSessions sessions={sessions} search={search} scroll={scroll} />
+          <HomeSessions sessions={sessions} search={search} scroll={scroll} hideTimeline={() => true} />
           <HomeUtilityNav
             class="flex lg:hidden"
             onOpenSettings={projects.utility.settings}
