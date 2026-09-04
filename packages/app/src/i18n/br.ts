@@ -1189,4 +1189,7 @@ export const dict = {
   "session.graphify.error.uvNotFound": "Graphify is not available on this machine. Install uv: https://docs.astral.sh/uv/",
   "session.graphify.error.updateFailed": "Graphify map update failed.",
   "session.graphify.toast.ready": "Project map ready",
+  "session.elicitador.suggestion.message": "This looks like a new project — the Elicitador agent helps structure requirements before you start. Switch now?",
+  "session.elicitador.suggestion.action": "Use Elicitador",
+  "session.elicitador.error.switchFailed": "Could not switch to the Elicitador agent.",
 }

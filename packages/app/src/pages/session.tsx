@@ -2180,6 +2180,15 @@ export default function Page() {
             <SessionComposerRegion
               controller={controller}
               graphifyTurnID={() => visibleUserMessages().at(-1)?.id}
+              elicitadorSessionID={() => params.id}
+              elicitadorSessionKey={sessionKey}
+              elicitadorPromptText={() =>
+                prompt
+                  .current()
+                  .map((part) => ("content" in part ? part.content : ""))
+                  .join("")
+              }
+              elicitadorUserMessageCount={() => visibleUserMessages().length}
               promptInput={
                 <Show
                   when={newSessionDesign()}

@@ -21,6 +21,7 @@ import { formatServerError } from "@/utils/server-errors"
 import { ScopedKey } from "@/utils/server-scope"
 import { createPromptSubmissionState } from "./submission-state"
 import { normalizeSessionInfo } from "@/utils/session"
+import { consumeElicitadorSubmitAgent } from "@/pages/session/elicitador-suggestion-runtime"
 import { Event } from "@opencode-ai/schema/event"
 import { blobDataUrl } from "@/utils/draft-store"
 
@@ -339,13 +340,16 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const currentModel = modelSelection.current()
     const currentAgent = local.agent.current()
     const variant = modelSelection.variant.current()
-    if (!currentModel || !currentAgent) {
+    const overrideAgent = consumeElicitadorSubmitAgent()
+    if (!currentModel || (!currentAgent && !overrideAgent)) {
       showToast({
         title: language.t("prompt.toast.modelAgentRequired.title"),
         description: language.t("prompt.toast.modelAgentRequired.description"),
       })
       return
     }
+
+    const agent = overrideAgent ?? currentAgent!.name
 
     input.addToHistory(currentPrompt, mode)
     input.resetHistoryNavigation()
@@ -402,7 +406,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     if (!session && isNewSession) {
       const created = await sdk()
         .api.session.create({
-          agent: currentAgent.name,
+          agent,
           model: { id: currentModel.id, providerID: currentModel.provider.id, variant },
           location: { directory: sessionDirectory },
         })
@@ -421,7 +425,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           if (!session) return
           if (shouldAutoAccept) permissionState.enableAutoAccept(session.id, sessionDirectory)
           local.session.promote(sessionDirectory, session.id, {
-            agent: currentAgent.name,
+            agent,
             model: { providerID: currentModel.provider.id, modelID: currentModel.id },
             variant: variant ?? null,
           })
@@ -445,7 +449,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       modelID: currentModel.id,
       providerID: currentModel.provider.id,
     }
-    const agent = currentAgent.name
     const draft: FollowupDraft = {
       sessionID: session.id,
       sessionDirectory,

@@ -9,6 +9,9 @@ import { Portal } from "solid-js/web"
 import createPresence from "solid-presence"
 import { PromptInputV2Composer } from "@/components/prompt-input-v2"
 import { PromptGitStatus, PromptWorkspaceSelector } from "@/components/prompt-workspace-selector"
+import { ElicitadorSuggestion } from "@/pages/session/elicitador-suggestion-ui"
+import { usePrompt } from "@/context/prompt"
+import { useSessionKey } from "@/pages/session/session-layout"
 import {
   PromptProjectAddButton,
   PromptProjectSelector,
@@ -31,6 +34,9 @@ export function NewSessionView(props: {
   project: PromptProjectController
   workspace: NewSessionWorkspaceController
 }) {
+  const prompt = usePrompt()
+  const { sessionKey } = useSessionKey()
+
   return (
     <div class="@container relative flex flex-col min-h-0 h-full flex-1">
       <div
@@ -41,6 +47,17 @@ export function NewSessionView(props: {
           <div class={NEW_SESSION_CONTENT_WIDTH}>
             <WordmarkV2 class="h-auto w-full text-v2-background-bg-inverse" />
             <div class="mt-8 flex flex-col gap-8">
+              <ElicitadorSuggestion
+                sessionID={() => undefined}
+                sessionKey={sessionKey}
+                promptText={() =>
+                  prompt
+                    .current()
+                    .map((part) => ("content" in part ? part.content : ""))
+                    .join("")
+                }
+                userMessageCount={() => 0}
+              />
               <PromptInputV2Composer controller={props.input} />
               <Show when={props.project.empty()}>
                 <PromptProjectAddButton controller={props.project} />
