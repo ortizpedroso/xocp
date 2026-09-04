@@ -72,6 +72,8 @@ export type HomeProjectsViewProps = {
   onOpenDocumentation: () => void
   onOpenHelp: () => void
   onToggleProjectExpanded: (server: ServerConnection.Any, directory: string) => void
+  onShowProjectHiddenSessions: (server: ServerConnection.Any, worktree: string) => void
+  onShowLooseHiddenSessions: () => void
   sidebar?: Accessor<HomeSidebarTree | undefined>
   pins?: HomePinsController
   sessions?: {
@@ -79,6 +81,8 @@ export type HomeProjectsViewProps = {
     create: () => void
     isOpenTab: (record: HomeSessionRecord) => boolean
     server: () => ServerConnection.Key
+    showHidden: (worktree: string) => void
+    showLooseHidden: () => void
   }
 }
 
@@ -384,8 +388,8 @@ function HomeProjectList(props: HomeProjectListProps) {
       }}
     >
       <div class="flex min-w-0 flex-col gap-1" ref={listRef}>
-        <Show when={props.sidebar?.()?.looseSessions.length}>
-          <HomeLooseSessionsSection {...props} records={props.sidebar!()!.looseSessions} />
+        <Show when={(props.sidebar?.()?.looseSessions.length ?? 0) > 0 || (props.sidebar?.()?.looseHiddenCount ?? 0) > 0}>
+          <HomeLooseSessionsSection {...props} records={props.sidebar?.()?.looseSessions ?? []} hiddenCount={() => props.sidebar?.()?.looseHiddenCount ?? 0} />
         </Show>
         {/* Keyed on worktree strings: the enriched project objects are
             recreated on every store or sync update, so iterating them directly
@@ -428,6 +432,8 @@ function HomeProjectSlot(
       unseen={props.unseenCount(props.server, project())}
       nestedSessions={() => node()?.sessions ?? []}
       pinned={() => node()?.pinned ?? false}
+      hiddenSessionCount={() => node()?.hiddenCount ?? 0}
+      onShowHiddenSessions={() => props.onShowProjectHiddenSessions(props.server, props.worktree)}
     />
   )
 }
@@ -503,6 +509,8 @@ function HomeProjectRow(
       unseen: number
       nestedSessions: Accessor<HomeSessionRecord[]>
       pinned: Accessor<boolean>
+      hiddenSessionCount: Accessor<number>
+      onShowHiddenSessions: () => void
     },
 ) {
   const platform = usePlatform()
@@ -671,6 +679,15 @@ function HomeProjectRow(
           <For each={props.nestedSessions()}>
             {(record) => <HomeSidebarSessionRow {...props} record={record} nested />}
           </For>
+          <Show when={props.hiddenSessionCount() > 0}>
+            <button
+              type="button"
+              class="h-7 px-1.5 text-left text-[11px] text-v2-text-text-muted hover:text-v2-text-text-base"
+              onClick={props.onShowHiddenSessions}
+            >
+              {props.language.t("home.sections.showHidden", { count: props.hiddenSessionCount() })}
+            </button>
+          </Show>
         </div>
       </Show>
     </div>
@@ -713,16 +730,46 @@ function HomeProjectAvatar(props: { project: LocalProject; outline?: boolean }) 
 function HomeLooseSessionsSection(
   props: HomeProjectsViewProps & {
     records: HomeSessionRecord[]
+    hiddenCount: Accessor<number>
   },
 ) {
+  const collapsed = () => props.pins?.collapsedLoose() ?? false
   return (
     <div class="mb-2 flex min-w-0 flex-col gap-1">
-      <div class="flex h-7 min-w-0 shrink-0 items-center pl-1.5 pr-3">
-        <div class="text-v2-text-text-faint [font-weight:530]">{props.language.t("home.sections.loose")}</div>
+      <div class="group/loose relative flex h-7 min-w-0 shrink-0 items-center pl-1.5 pr-3">
+        <button
+          type="button"
+          class="flex min-w-0 flex-1 items-center gap-1 text-left"
+          onClick={() => props.pins?.toggleLooseCollapsed()}
+        >
+          <span
+            class="inline-flex size-5 shrink-0 items-center justify-center rounded-[4px] text-v2-icon-icon-muted"
+            aria-hidden="true"
+          >
+            <IconV2
+              name="chevron-down"
+              size="small"
+              class="transition-transform duration-150 ease-in-out"
+              style={{ transform: `rotate(${collapsed() ? -90 : 0}deg)` }}
+            />
+          </span>
+          <div class="text-v2-text-text-faint [font-weight:530]">{props.language.t("home.sections.loose")}</div>
+        </button>
+        <Show when={props.hiddenCount() > 0}>
+          <button
+            type="button"
+            class="text-[11px] text-v2-text-text-muted hover:text-v2-text-text-base"
+            onClick={() => props.onShowLooseHiddenSessions()}
+          >
+            {props.language.t("home.sections.showHidden", { count: props.hiddenCount() })}
+          </button>
+        </Show>
       </div>
-      <For each={props.records}>
-        {(record) => <HomeSidebarSessionRow {...props} record={record} />}
-      </For>
+      <Show when={!collapsed()}>
+        <For each={props.records}>
+          {(record) => <HomeSidebarSessionRow {...props} record={record} />}
+        </For>
+      </Show>
     </div>
   )
 }
@@ -779,7 +826,7 @@ function HomeSidebarSessionRow(
       <Show when={props.pins}>
         <div
           class={`
-            hover-reveal absolute right-1 top-1/2 flex -translate-y-1/2 items-center
+            hover-reveal absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1
             group-hover/session:opacity-100 focus-within:opacity-100
           `}
         >
@@ -788,6 +835,31 @@ function HomeSidebarSessionRow(
             label={pinned() ? props.language.t("home.unpin.session") : props.language.t("home.pin.session")}
             onClick={() => props.pins!.toggleSession(sessionKey())}
           />
+          <TooltipV2
+            placement="bottom"
+            value={
+              props.pins!.isSessionHidden(sessionKey())
+                ? props.language.t("home.sections.showSession")
+                : props.language.t("home.sections.hideSession")
+            }
+          >
+            <IconButtonV2
+              data-action="home-session-hide"
+              variant="ghost-muted"
+              size="small"
+              icon={<IconV2 name="chevron-down" class={props.pins!.isSessionHidden(sessionKey()) ? "-rotate-90" : ""} />}
+              aria-label={
+                props.pins!.isSessionHidden(sessionKey())
+                  ? props.language.t("home.sections.showSession")
+                  : props.language.t("home.sections.hideSession")
+              }
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                props.pins!.toggleSessionHidden(sessionKey())
+              }}
+            />
+          </TooltipV2>
         </div>
       </Show>
     </div>

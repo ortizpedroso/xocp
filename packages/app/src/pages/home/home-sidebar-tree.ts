@@ -9,10 +9,12 @@ export type HomeSidebarProjectNode = {
   project: LocalProject
   sessions: HomeSessionRecord[]
   pinned: boolean
+  hiddenCount: number
 }
 
 export type HomeSidebarTree = {
   looseSessions: HomeSessionRecord[]
+  looseHiddenCount: number
   projects: HomeSidebarProjectNode[]
 }
 
@@ -56,21 +58,25 @@ export function buildHomeSidebarTree(input: {
   records: HomeSessionRecord[]
   pinnedProjects: string[]
   pinnedSessions: string[]
-}): HomeSidebarTree {
+  hiddenSessions?: string[]
+}) {
+  const hidden = new Set(input.hiddenSessions ?? [])
+  const visible = (records: HomeSessionRecord[]) =>
+    records.filter((record) => !hidden.has(homeSessionPinKey(record)))
   const openProjects = input.projects
-  const looseSessions = sortSessions(
-    input.records.filter((record) => !sessionBelongsToOpenProject(record.session, openProjects)),
-    input.pinnedSessions,
-  )
-  const projects = sortProjects(openProjects, input.pinnedProjects).map((project) => ({
-    project,
-    pinned: input.pinnedProjects.includes(project.worktree),
-    sessions: sortSessions(
-      input.records.filter((record) => sessionMatchesProject(record.session, project)),
-      input.pinnedSessions,
-    ),
-  }))
-  return { looseSessions, projects }
+  const looseRecords = input.records.filter((record) => !sessionBelongsToOpenProject(record.session, openProjects))
+  const looseSessions = sortSessions(visible(looseRecords), input.pinnedSessions)
+  const looseHiddenCount = looseRecords.filter((record) => hidden.has(homeSessionPinKey(record))).length
+  const projects = sortProjects(openProjects, input.pinnedProjects).map((project) => {
+    const projectRecords = input.records.filter((record) => sessionMatchesProject(record.session, project))
+    return {
+      project,
+      pinned: input.pinnedProjects.includes(project.worktree),
+      sessions: sortSessions(visible(projectRecords), input.pinnedSessions),
+      hiddenCount: projectRecords.filter((record) => hidden.has(homeSessionPinKey(record))).length,
+    }
+  })
+  return { looseSessions, looseHiddenCount, projects }
 }
 
 function sortProjects(projects: LocalProject[], pinned: string[]) {

@@ -8,6 +8,13 @@ import type { HomeSessionRecord } from "./home-sessions-controller"
 export type HomePinsState = {
   projects: Record<string, string[]>
   sessions: Record<string, string[]>
+  collapsed: Record<
+    string,
+    {
+      loose?: boolean
+    }
+  >
+  hiddenSessions: Record<string, string[]>
 }
 
 export function homeSessionPinKey(record: HomeSessionRecord) {
@@ -17,7 +24,7 @@ export function homeSessionPinKey(record: HomeSessionRecord) {
 export function createHomePinsController(serverKey: Accessor<ServerConnection.Key>) {
   const [_state, setState, _, ready] = persisted(
     Persist.global("home.pins", ["home.pins.v1"]),
-    createStore<HomePinsState>({ projects: {}, sessions: {} }),
+    createStore<HomePinsState>({ projects: {}, sessions: {}, collapsed: {}, hiddenSessions: {} }),
   )
   const [state] = createResource(
     () => ready.promise ?? Promise.resolve(),
@@ -55,6 +62,33 @@ export function createHomePinsController(serverKey: Accessor<ServerConnection.Ke
     return pinnedSessions().includes(sessionKey)
   }
 
+  function collapsedLoose() {
+    return state().collapsed?.[serverKey()]?.loose ?? false
+  }
+
+  function toggleLooseCollapsed() {
+    const key = serverKey()
+    const next = !collapsedLoose()
+    setState("collapsed", key, { ...state().collapsed?.[key], loose: next })
+  }
+
+  function hiddenSessions() {
+    return state().hiddenSessions?.[serverKey()] ?? []
+  }
+
+  function isSessionHidden(sessionKey: string) {
+    return hiddenSessions().includes(sessionKey)
+  }
+
+  function toggleSessionHidden(sessionKey: string) {
+    const key = serverKey()
+    const current = hiddenSessions()
+    const next = current.includes(sessionKey)
+      ? current.filter((item) => item !== sessionKey)
+      : [...current, sessionKey]
+    setState("hiddenSessions", key, next)
+  }
+
   return {
     pinnedProjects,
     pinnedSessions,
@@ -62,6 +96,11 @@ export function createHomePinsController(serverKey: Accessor<ServerConnection.Ke
     toggleSession,
     isProjectPinned,
     isSessionPinned,
+    collapsedLoose,
+    toggleLooseCollapsed,
+    hiddenSessions,
+    isSessionHidden,
+    toggleSessionHidden,
   }
 }
 

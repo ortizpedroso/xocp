@@ -27,6 +27,8 @@ export function HomeProjects(props: { projects: HomeProjectsController; scroll: 
       onRemoveServer={props.projects.server.remove}
       onMoveProject={props.projects.project.move}
       onToggleProjectExpanded={props.projects.project.toggleExpanded}
+      onShowProjectHiddenSessions={(_, worktree) => props.projects.sessions?.showHidden(worktree)}
+      onShowLooseHiddenSessions={() => props.projects.sessions?.showLooseHidden()}
       sidebar={props.projects.sidebar}
       pins={props.projects.pins}
       sessions={props.projects.sessions}

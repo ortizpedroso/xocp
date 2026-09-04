@@ -15,9 +15,10 @@ import { useNavigate } from "@solidjs/router"
 import { createMemo, createResource } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { HomeController } from "./home-controller"
-import { createHomePinsController } from "./home-pins"
+import { createHomePinsController, homeSessionPinKey } from "./home-pins"
 import { buildHomeSidebarTree } from "./home-sidebar-tree"
 import type { HomeSessionsController } from "./home-sessions-controller"
+import { pathKey } from "@/utils/path-key"
 
 export function createHomeProjectsController(home: HomeController, sessions?: HomeSessionsController) {
   const navigate = useNavigate()
@@ -53,6 +54,7 @@ export function createHomeProjectsController(home: HomeController, sessions?: Ho
       records: sessions.data.sidebarRecords(),
       pinnedProjects: pins.pinnedProjects(),
       pinnedSessions: pins.pinnedSessions(),
+      hiddenSessions: pins.hiddenSessions(),
     })
   })
 
@@ -154,6 +156,45 @@ export function createHomeProjectsController(home: HomeController, sessions?: Ho
           create: sessions.session.create,
           isOpenTab: sessions.tab.isOpen,
           server: sessions.session.server,
+          showHidden: (worktree: string) => {
+            const project = home.project.list().find((item) => item.worktree === worktree)
+            if (!project) return
+            sessions.data
+              .sidebarRecords()
+              .filter((record) => {
+                const directory = pathKey(record.session.directory)
+                return (
+                  pathKey(project.worktree) === directory ||
+                  project.sandboxes?.some((sandbox) => pathKey(sandbox) === directory) ||
+                  (!!record.session.projectID && project.id === record.session.projectID)
+                )
+              })
+              .forEach((record) => {
+                const key = homeSessionPinKey(record)
+                if (pins.isSessionHidden(key)) pins.toggleSessionHidden(key)
+              })
+          },
+          showLooseHidden: () => {
+            sessions.data
+              .sidebarRecords()
+              .filter(
+                (record) =>
+                  !home
+                    .project.list()
+                    .some((project) => {
+                      const directory = pathKey(record.session.directory)
+                      return (
+                        pathKey(project.worktree) === directory ||
+                        project.sandboxes?.some((sandbox) => pathKey(sandbox) === directory) ||
+                        (!!record.session.projectID && project.id === record.session.projectID)
+                      )
+                    }),
+              )
+              .forEach((record) => {
+                const key = homeSessionPinKey(record)
+                if (pins.isSessionHidden(key)) pins.toggleSessionHidden(key)
+              })
+          },
         }
       : undefined,
   }

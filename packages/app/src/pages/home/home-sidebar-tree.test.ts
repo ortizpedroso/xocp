@@ -103,4 +103,32 @@ describe("home-sidebar-tree", () => {
     expect(sessionBelongsToOpenProject(session("s1", "/workspace/a"), [projectA])).toBe(true)
     expect(sessionBelongsToOpenProject(session("s2", "/workspace/b", "proj-b"), [projectA])).toBe(false)
   })
+
+  test("hidden sessions are excluded from the tree and counted per group", () => {
+    const records = buildAllHomeSessionRecords({
+      sessions: () => [
+        session("visible", "/workspace/a"),
+        session("hidden", "/workspace/a"),
+        session("loose-hidden", "/workspace/b", "proj-b"),
+      ],
+      projects: () => [projectA, projectB],
+      projectByID: () => new Map([
+        ["proj-a", projectA],
+        ["proj-b", projectB],
+      ]),
+    })
+    const hiddenRecord = records.find((record) => record.session.id === "hidden")!
+    const looseHiddenRecord = records.find((record) => record.session.id === "loose-hidden")!
+    const tree = buildHomeSidebarTree({
+      projects: [projectA],
+      records,
+      pinnedProjects: [],
+      pinnedSessions: [],
+      hiddenSessions: [homeSessionPinKey(hiddenRecord), homeSessionPinKey(looseHiddenRecord)],
+    })
+    expect(tree.projects[0]?.sessions.map((record) => record.session.id)).toEqual(["visible"])
+    expect(tree.projects[0]?.hiddenCount).toBe(1)
+    expect(tree.looseSessions.map((record) => record.session.id)).toEqual([])
+    expect(tree.looseHiddenCount).toBe(1)
+  })
 })
