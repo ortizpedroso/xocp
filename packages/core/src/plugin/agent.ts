@@ -30,6 +30,8 @@ Guidelines:
 
 Complete the user's search request efficiently and report your findings clearly.`
 
+import PROMPT_ELICITADOR from "./elicitador.txt"
+
 const PROMPT_COMPACTION = `You are a context summarization agent. You are given a conversation between a user and an agent. Your goal is to produce a structured summary matching the format specified so another coding agent can continue the work.
 
 Always follow the exact output structure requested by the user prompt. Keep every section, preserve exact file paths and identifiers when known, and prefer terse bullets over paragraphs.
@@ -145,6 +147,23 @@ export const Plugin = define({
               resource: path.relative(worktree, path.join(Global.Path.data, "plans", "*.md")),
               effect: "allow",
             },
+          ]),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("elicitador"), (item) => {
+        item.description =
+          "Conduz elicitação de requisitos e gera Spec de sistema completo. Não edita código."
+        item.system = PROMPT_ELICITADOR
+        item.mode = "primary"
+        item.permissions.push(
+          ...PermissionV2.merge(defaults, [
+            { action: "question", resource: "*", effect: "allow" },
+            { action: "bash", resource: "*", effect: "deny" },
+            { action: "task", resource: "general", effect: "deny" },
+            { action: "task", resource: "explore", effect: "allow" },
+            { action: "edit", resource: "*", effect: "deny" },
+            { action: "edit", resource: path.join(".opencode", "specs", "*.md"), effect: "allow" },
           ]),
         )
       })
