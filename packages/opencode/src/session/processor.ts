@@ -136,9 +136,9 @@ const layer = Layer.effect(
       }
       let aborted = false
 
-      const parse = (e: unknown) =>
+      const parse = (e: unknown, providerID: Provider.Model["providerID"]) =>
         MessageV2.fromError(e, {
-          providerID: input.model.providerID,
+          providerID,
           aborted,
         })
 
@@ -566,7 +566,7 @@ const layer = Layer.effect(
         }
       })
 
-      const cleanup = Effect.fn("SessionProcessor.cleanup")(function* () {
+      const cleanupStream = Effect.fn("SessionProcessor.cleanupStream")(function* () {
         if (ctx.snapshot) {
           const patch = yield* snapshot.patch(ctx.snapshot)
           if (patch.files.length) {
@@ -597,7 +597,9 @@ const layer = Layer.effect(
           })
         }
         ctx.reasoningMap = {}
+      })
 
+      const finalizeMessage = Effect.fn("SessionProcessor.finalizeMessage")(function* () {
         yield* Effect.forEach(
           Object.values(ctx.toolcalls),
           (call) => Deferred.await(call.done).pipe(Effect.timeout("250 millis"), Effect.ignore),
@@ -633,7 +635,7 @@ const layer = Layer.effect(
           error: errorMessage(e),
           stack: e instanceof Error ? e.stack : undefined,
         })
-        const error = parse(e)
+        const error = parse(e, ctx.model.providerID)
         if (SessionV1.ContextOverflowError.isInstance(error)) {
           if ((yield* config.get()).compaction?.auto === false && !ctx.assistantMessage.summary) {
             ctx.assistantMessage.error = error
@@ -714,7 +716,7 @@ const layer = Layer.effect(
               Effect.retry(
                 SessionRetry.policy({
                   provider: currentInput.model.providerID,
-                  parse,
+                  parse: (e) => parse(e, currentInput.model.providerID),
                   set: (info) => {
                     return status.set(ctx.sessionID, {
                       type: "retry",
@@ -727,7 +729,7 @@ const layer = Layer.effect(
                 }),
               ),
               Effect.catch(halt),
-              Effect.ensuring(cleanup()),
+              Effect.ensuring(cleanupStream()),
             )
 
             if (!ctx.degenerateAbort) break
@@ -770,7 +772,14 @@ const layer = Layer.effect(
           if (ctx.needsCompaction) return "compact"
           if (ctx.blocked || ctx.assistantMessage.error) return "stop"
           return "continue"
-        })
+        }).pipe(
+          Effect.ensuring(
+            Effect.gen(function* () {
+              if (ctx.assistantMessage.time.completed) return
+              yield* finalizeMessage()
+            }),
+          ),
+        )
       })
 
       return {
