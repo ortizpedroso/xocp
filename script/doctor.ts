@@ -37,6 +37,15 @@ const MIN_FREE_DISK_GB = 5
 const FAIL_FREE_DISK_GB = 1
 const NPM_REGISTRY_URL = "https://registry.npmjs.org"
 
+export const OFFICIAL_DOWNLOAD_URLS = {
+  bun: "https://bun.sh",
+  node: "https://nodejs.org",
+  python: "https://python.org",
+  npm: "https://nodejs.org",
+} as const
+
+const GUIDE_ONLY_FIX_IDS = new Set(["bun", "node", "python", "npm"])
+
 export function osLabel(platform = process.platform) {
   if (platform === "win32") return "Windows"
   if (platform === "darwin") return "macOS"
@@ -60,6 +69,21 @@ export function uvInstallCommand(platform = process.platform) {
   return "curl -LsSf https://astral.sh/uv/install.sh | sh"
 }
 
+export function parseDoctorArgs(argv = process.argv.slice(2)) {
+  return { fix: argv.includes("--fix") }
+}
+
+export function isAffirmative(answer: string) {
+  const normalized = answer.trim().toLowerCase()
+  return normalized === "s" || normalized === "sim" || normalized === "y" || normalized === "yes"
+}
+
+export function officialDownloadUrl(checkId: string) {
+  if (checkId in OFFICIAL_DOWNLOAD_URLS) {
+    return OFFICIAL_DOWNLOAD_URLS[checkId as keyof typeof OFFICIAL_DOWNLOAD_URLS]
+  }
+}
+
 export function formatBytes(bytes: number) {
   const gb = bytes / (1024 ** 3)
   if (gb >= 1) return `${gb.toFixed(1)} GB`
@@ -68,18 +92,23 @@ export function formatBytes(bytes: number) {
 }
 
 async function defaultRunCommand(cmd: string[], options?: { env?: NodeJS.ProcessEnv }) {
-  const proc = Bun.spawn({
-    cmd,
-    stdout: "pipe",
-    stderr: "pipe",
-    env: options?.env ?? process.env,
-  })
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ])
-  return { exitCode, stdout, stderr }
+  try {
+    const proc = Bun.spawn({
+      cmd,
+      stdout: "pipe",
+      stderr: "pipe",
+      env: options?.env ?? process.env,
+    })
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ])
+    return { exitCode, stdout, stderr }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return { exitCode: 1, stdout: "", stderr: message }
+  }
 }
 
 async function defaultFetchRegistry() {
@@ -299,8 +328,24 @@ async function whichCommand(deps: DoctorDeps, name: string) {
   return result.stdout.trim()
 }
 
+async function findUvBinary(deps: DoctorDeps) {
+  const located = await whichCommand(deps, "uv")
+  if (located) return located
+
+  const home = deps.env.HOME ?? deps.env.USERPROFILE
+  const candidates = home
+    ? [
+        path.join(home, ".local", "bin", "uv"),
+        path.join(home, ".cargo", "bin", "uv"),
+      ]
+    : []
+  for (const candidate of candidates) {
+    if (await Bun.file(candidate).exists()) return candidate
+  }
+}
+
 async function checkUv(deps: DoctorDeps): Promise<CheckResult> {
-  const location = await whichCommand(deps, "uv")
+  const location = await findUvBinary(deps)
   if (!location) {
     return {
       id: "uv",
@@ -311,11 +356,15 @@ async function checkUv(deps: DoctorDeps): Promise<CheckResult> {
     }
   }
 
-  const version = await commandVersion(deps, ["uv", "--version"])
+  const version = await commandVersion(deps, [location, "--version"])
+  const inPath = location === await whichCommand(deps, "uv")
+  const pathNote = inPath ? "" : " (fora do PATH desta sessão)"
   return {
     id: "uv",
     status: "pass",
-    title: version ? `uv detectado (${version})` : `uv detectado (${location})`,
+    title: version
+      ? `uv detectado (${version})${pathNote}`
+      : `uv detectado (${location})${pathNote}`,
   }
 }
 
@@ -463,6 +512,134 @@ export async function runDoctorChecks(deps: DoctorDeps) {
   return checks
 }
 
+export type FixWriter = (line: string) => void
+export type FixConfirm = (prompt: string) => Promise<boolean>
+
+export type ApplyDoctorFixesOptions = {
+  confirm: FixConfirm
+  write: FixWriter
+  installUv?: (deps: DoctorDeps) => Promise<{ ok: boolean; message: string }>
+}
+
+function uvElevationNotice(platform: NodeJS.Platform) {
+  if (platform === "win32") {
+    return "O instalador oficial do uv normalmente não exige administrador; se o Windows pedir elevação, aceite manualmente — o doctor não tentará contornar."
+  }
+  return "O instalador oficial do uv normalmente não exige sudo; se o ambiente pedir elevação, confirme manualmente — o doctor não tentará contornar."
+}
+
+export async function installUv(deps: DoctorDeps) {
+  const result =
+    deps.platform === "win32"
+      ? await deps.runCommand([
+          "powershell",
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "irm https://astral.sh/uv/install.ps1 | iex",
+        ], { env: deps.env })
+      : await deps.runCommand(["sh", "-lc", "curl -LsSf https://astral.sh/uv/install.sh | sh"], {
+          env: deps.env,
+        })
+
+  const output = `${result.stdout}\n${result.stderr}`.trim()
+  if (result.exitCode !== 0) {
+    return {
+      ok: false,
+      message: output || `instalador saiu com código ${result.exitCode}`,
+    }
+  }
+
+  const location = await findUvBinary(deps)
+  if (!location) {
+    return {
+      ok: false,
+      message: output
+        ? `${output}\n\nuv não foi encontrado no PATH após a instalação.`
+        : "uv não foi encontrado no PATH após a instalação.",
+    }
+  }
+
+  const version = await commandVersion(deps, [location, "--version"])
+  const inPath = location === await whichCommand(deps, "uv")
+  if (inPath) {
+    return {
+      ok: true,
+      message: version ? `${version} (${location})` : location,
+    }
+  }
+
+  return {
+    ok: true,
+    message: version
+      ? `${version} em ${location}, mas não está no PATH desta sessão — reinicie o terminal ou adicione o diretório ao PATH`
+      : `instalado em ${location}, mas não está no PATH desta sessão — reinicie o terminal ou adicione o diretório ao PATH`,
+  }
+}
+
+export async function applyDoctorFixes(
+  checks: CheckResult[],
+  deps: DoctorDeps,
+  options: ApplyDoctorFixesOptions,
+) {
+  const failures = checks.filter((check) => check.status === "fail")
+  const installUvFn = options.installUv ?? installUv
+  const lines: string[] = []
+
+  if (failures.length === 0) {
+    options.write("")
+    options.write("Nenhum item ❌ para corrigir.")
+    return { lines, fixed: [] as string[] }
+  }
+
+  options.write("")
+  options.write("XOCP Doctor — correções opcionais (--fix)")
+  const fixed: string[] = []
+
+  for (const check of failures) {
+    if (check.id === "uv") {
+      const command = uvInstallCommand(deps.platform)
+      options.write("")
+      options.write(`❌ ${check.title}`)
+      options.write(`Comando que será executado:`)
+      options.write(`  ${command}`)
+      options.write(uvElevationNotice(deps.platform))
+      const confirmed = await options.confirm("Instalar agora? (s/n)")
+      if (!confirmed) {
+        options.write("Instalação do uv cancelada.")
+        lines.push("uv: cancelado pelo usuário")
+        continue
+      }
+
+      options.write("Instalando uv...")
+      const result = await installUvFn(deps)
+      if (result.ok) {
+        options.write(`✅ uv instalado com sucesso${result.message ? `: ${result.message}` : ""}`)
+        fixed.push("uv")
+        lines.push(`uv: sucesso (${result.message})`)
+        continue
+      }
+
+      options.write(`❌ Falha ao instalar uv: ${result.message}`)
+      lines.push(`uv: falha (${result.message})`)
+      continue
+    }
+
+    if (!GUIDE_ONLY_FIX_IDS.has(check.id)) continue
+
+    const url = officialDownloadUrl(check.id)
+    options.write("")
+    options.write(`❌ ${check.title}`)
+    options.write("Instalação automática não disponível para este item.")
+    if (url) options.write(`→ Baixe em: ${url}`)
+    options.write("Reinstale manualmente e rode `bun run doctor` novamente.")
+    lines.push(`${check.id}: orientação (${url ?? "sem URL"})`)
+  }
+
+  return { lines, fixed }
+}
+
 export function formatDoctorReport(checks: CheckResult[], platform = process.platform) {
   const icon = (status: CheckStatus) => {
     if (status === "pass") return "✅"
@@ -497,11 +674,44 @@ export async function runDoctor(options?: { deps?: DoctorDeps; platform?: NodeJS
   const deps = options?.deps ?? await loadDoctorDeps()
   const checks = await runDoctorChecks(deps)
   const report = formatDoctorReport(checks, options?.platform ?? deps.platform)
-  return { checks, report }
+  return { checks, report, deps }
+}
+
+async function defaultConfirm(prompt: string) {
+  const readline = await import("node:readline/promises")
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+  const answer = await rl.question(`${prompt} `)
+  rl.close()
+  return isAffirmative(answer)
 }
 
 if (import.meta.main) {
-  const { report } = await runDoctor()
+  const args = parseDoctorArgs()
+  const { report, checks, deps } = await runDoctor()
   console.log(report.text)
-  process.exit(report.problems > 0 ? 1 : 0)
+
+  let finalChecks = checks
+  if (args.fix) {
+    await applyDoctorFixes(checks, deps, {
+      confirm: defaultConfirm,
+      write: (line) => console.log(line),
+    })
+    finalChecks = await runDoctorChecks(deps)
+  }
+
+  if (args.fix) {
+    const problems = finalChecks.filter((check) => check.status === "fail").length
+    const warnings = finalChecks.filter((check) => check.status === "warn").length
+    if (problems > 0 || warnings > 0) {
+      const warningPart = warnings > 0 ? `, ${warnings} aviso${warnings === 1 ? "" : "s"}` : ""
+      console.log(
+        `\nApós --fix: ${problems} problema${problems === 1 ? "" : "s"}${warningPart} restante${problems === 1 ? "" : "s"}.`,
+      )
+    } else {
+      console.log("\nApós --fix: ambiente pronto.")
+    }
+  }
+
+  const problems = finalChecks.filter((check) => check.status === "fail").length
+  process.exit(problems > 0 ? 1 : 0)
 }

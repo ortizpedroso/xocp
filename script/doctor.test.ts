@@ -1,7 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import {
+  applyDoctorFixes,
   formatDoctorReport,
+  isAffirmative,
+  officialDownloadUrl,
   osLabel,
+  parseDoctorArgs,
   parsePythonVersion,
   readRequiredBunVersion,
   runDoctorChecks,
@@ -45,6 +49,24 @@ describe("doctor helpers", () => {
   test("returns OS-specific uv install commands", () => {
     expect(uvInstallCommand("win32")).toContain("install.ps1")
     expect(uvInstallCommand("darwin")).toContain("install.sh")
+  })
+
+  test("parses --fix from argv", () => {
+    expect(parseDoctorArgs(["--fix"])).toEqual({ fix: true })
+    expect(parseDoctorArgs([])).toEqual({ fix: false })
+    expect(parseDoctorArgs(["doctor", "--fix"])).toEqual({ fix: true })
+  })
+
+  test("recognizes affirmative answers", () => {
+    expect(isAffirmative("s")).toBe(true)
+    expect(isAffirmative("sim")).toBe(true)
+    expect(isAffirmative("n")).toBe(false)
+    expect(isAffirmative("não")).toBe(false)
+  })
+
+  test("maps official download urls", () => {
+    expect(officialDownloadUrl("python")).toBe("https://python.org")
+    expect(officialDownloadUrl("bun")).toBe("https://bun.sh")
   })
 })
 
@@ -179,5 +201,107 @@ describe("doctor checks", () => {
   test("skips firewall guidance on macOS", async () => {
     const checks = await runDoctorChecks(makeDeps({ platform: "darwin" }))
     expect(checks.find((check) => check.id === "firewall")).toBeUndefined()
+  })
+})
+
+describe("doctor --fix", () => {
+  test("installs uv when user confirms", async () => {
+    const writes: string[] = []
+    let installCalled = false
+    const checks = [
+      {
+        id: "uv",
+        status: "fail" as const,
+        title: "uv: não encontrado",
+      },
+    ]
+
+    const result = await applyDoctorFixes(checks, makeDeps(), {
+      confirm: async () => true,
+      write: (line) => writes.push(line),
+      installUv: async () => {
+        installCalled = true
+        return { ok: true, message: "uv 0.9.5" }
+      },
+    })
+
+    expect(installCalled).toBe(true)
+    expect(writes.some((line) => line.includes("Comando que será executado"))).toBe(true)
+    expect(writes.some((line) => line.includes("Instalando uv..."))).toBe(true)
+    expect(writes.some((line) => line.includes("✅ uv instalado com sucesso"))).toBe(true)
+    expect(result.fixed).toEqual(["uv"])
+  })
+
+  test("skips uv install when user declines", async () => {
+    const writes: string[] = []
+    let installCalled = false
+    const checks = [
+      {
+        id: "uv",
+        status: "fail" as const,
+        title: "uv: não encontrado",
+      },
+    ]
+
+    await applyDoctorFixes(checks, makeDeps(), {
+      confirm: async () => false,
+      write: (line) => writes.push(line),
+      installUv: async () => {
+        installCalled = true
+        return { ok: true, message: "uv 0.9.5" }
+      },
+    })
+
+    expect(installCalled).toBe(false)
+    expect(writes.some((line) => line.includes("cancelada"))).toBe(true)
+  })
+
+  test("shows python download url without installing", async () => {
+    const writes: string[] = []
+    let installCalled = false
+    const checks = [
+      {
+        id: "python",
+        status: "fail" as const,
+        title: "Python: nenhuma instalação funcional encontrada",
+      },
+    ]
+
+    await applyDoctorFixes(checks, makeDeps(), {
+      confirm: async () => true,
+      write: (line) => writes.push(line),
+      installUv: async () => {
+        installCalled = true
+        return { ok: true, message: "should not run" }
+      },
+    })
+
+    expect(installCalled).toBe(false)
+    expect(writes.some((line) => line.includes("https://python.org"))).toBe(true)
+    expect(writes.some((line) => line.includes("Instalação automática não disponível"))).toBe(true)
+  })
+
+  test("never auto-installs bun, node, or npm even with confirmation", async () => {
+    const writes: string[] = []
+    let installCalled = false
+    const checks = [
+      { id: "bun", status: "fail" as const, title: "Bun: versão não detectada" },
+      { id: "node", status: "fail" as const, title: "Node.js: não encontrado" },
+      { id: "npm", status: "fail" as const, title: "npm/npx: não encontrado" },
+    ]
+
+    await applyDoctorFixes(checks, makeDeps(), {
+      confirm: async () => true,
+      write: (line) => writes.push(line),
+      installUv: async () => {
+        installCalled = true
+        return { ok: true, message: "should not run" }
+      },
+    })
+
+    expect(installCalled).toBe(false)
+    expect(writes.some((line) => line.includes("https://bun.sh"))).toBe(true)
+    expect(writes.some((line) => line.includes("https://nodejs.org"))).toBe(true)
+    expect(writes.filter((line) => line.includes("Instalação automática não disponível")).length).toBe(3)
   })
 })
