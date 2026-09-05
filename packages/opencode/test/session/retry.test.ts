@@ -159,6 +159,37 @@ describe("session.retry.retryable", () => {
     expect(SessionRetry.retryable(error, retryProvider)).toEqual({ message: "Provider is overloaded" })
   })
 
+  test("does not retry gemini billing quota errors in english", () => {
+    const error = Schema.decodeUnknownSync(SessionV1.APIError.Schema)(
+      new SessionV1.APIError({
+        message:
+          "You exceeded your current quota, please check your plan and billing details. Model: gemini-3-pro-image",
+        isRetryable: true,
+        statusCode: 429,
+        responseBody: JSON.stringify({ error: { code: "RESOURCE_EXHAUSTED" } }),
+      }).toObject(),
+    )
+    expect(SessionRetry.retryable(error, retryProvider)).toBeUndefined()
+  })
+
+  test("does not retry gemini billing quota errors in portuguese", () => {
+    const error = Schema.decodeUnknownSync(SessionV1.APIError.Schema)(
+      new SessionV1.APIError({
+        message:
+          "Você excedeu sua cota atual. Verifique seu plano e detalhes de faturamento. Modelo: gemini-3-pro-image",
+        isRetryable: true,
+        statusCode: 429,
+        responseBody: JSON.stringify({
+          error: {
+            code: "RESOURCE_EXHAUSTED",
+            details: [{ "@type": "type.googleapis.com/google.rpc.QuotaFailure" }],
+          },
+        }),
+      }).toObject(),
+    )
+    expect(SessionRetry.retryable(error, retryProvider)).toBeUndefined()
+  })
+
   test("retries serialized rate_limit messages", () => {
     const message = JSON.stringify({ type: "error", error: { code: "rate_limit_exceeded" } })
     expect(SessionRetry.retryable(wrap(message), retryProvider)).toEqual({ message })
