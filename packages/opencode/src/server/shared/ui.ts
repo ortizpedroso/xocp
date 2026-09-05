@@ -52,6 +52,52 @@ function notFound() {
   return HttpServerResponse.jsonUnsafe({ error: "Not Found" }, { status: 404 })
 }
 
+const embeddedUiBuildInstructions = `Build the local XOCP web UI first:
+
+  bun run --cwd packages/app build
+  bun run --cwd packages/opencode build
+
+Then restart the server (for example: bun dev web).
+
+For development with hot reload instead:
+
+  bun dev:local
+
+Open http://localhost:4444 (API on http://localhost:4096).`
+
+function missingEmbeddedUIResponse(requestPath: string) {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>XOCP — local web UI not built</title>
+  <style>
+    body { font-family: system-ui, sans-serif; line-height: 1.5; max-width: 42rem; margin: 3rem auto; padding: 0 1rem; color: #111; }
+    h1 { font-size: 1.25rem; }
+    pre { background: #f4f4f5; padding: 1rem; overflow-x: auto; border-radius: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>XOCP web UI is not available in this server build</h1>
+  <p>The API is running, but this process does not include an embedded web UI bundle. XOCP does not proxy to a remote hosted UI.</p>
+  <pre>${embeddedUiBuildInstructions}</pre>
+</body>
+</html>`
+
+  if (requestPath === "/" || requestPath.endsWith(".html") || !requestPath.includes(".")) {
+    return HttpServerResponse.text(html, {
+      status: 503,
+      headers: new Headers({ "content-type": "text/html; charset=utf-8" }),
+    })
+  }
+
+  return HttpServerResponse.text(embeddedUiBuildInstructions, {
+    status: 503,
+    headers: new Headers({ "content-type": "text/plain; charset=utf-8" }),
+  })
+}
+
 function embeddedUIResponse(file: string, body: Uint8Array) {
   const mime = FSUtil.mimeType(file)
   const headers = new Headers({ "content-type": mime })
@@ -84,6 +130,8 @@ export function serveUIEffect(
     const path = new URL(request.url, "http://localhost").pathname
 
     if (embeddedWebUI) return yield* serveEmbeddedUIEffect(path, services.fs, embeddedWebUI)
+
+    if (!services.disableEmbeddedWebUi) return missingEmbeddedUIResponse(path)
 
     const response = yield* services.client.execute(
       HttpClientRequest.make(request.method)(upstreamURL(path), {
