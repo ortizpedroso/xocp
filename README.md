@@ -14,6 +14,8 @@ Early development on branch `dev`. Optional upstream sync from OpenCode is manua
 
 Requires [Bun 1.3.14](https://bun.sh) (see `packageManager` in `package.json`).
 
+Before installing, run `bun run doctor` to confirm your environment is ready (Bun, Node.js, Python, `uv`, npm, SSL, and disk space). Use `bun run doctor -- --fix` to optionally install `uv` with per-item confirmation.
+
 ### Full stack (recommended)
 
 Starts the API server and serves the web UI in one process:
