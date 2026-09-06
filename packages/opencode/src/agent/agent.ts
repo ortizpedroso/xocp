@@ -12,6 +12,10 @@ import { ProviderTransform } from "@/provider/transform"
 import PROMPT_GENERATE from "./generate.txt"
 import PROMPT_COMPACTION from "./prompt/compaction.txt"
 import PROMPT_ELICITADOR from "./prompt/elicitador.txt"
+import PROMPT_WORKFLOW_TRIADOR from "./prompt/workflow-triador.txt"
+import PROMPT_ANALISTA from "./prompt/analista.txt"
+import PROMPT_WORKFLOW_EXECUTOR from "./prompt/workflow-executor.txt"
+import PROMPT_AVALIADOR from "./prompt/avaliador.txt"
 import PROMPT_EXPLORE from "./prompt/explore.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
@@ -204,6 +208,105 @@ const layer = Layer.effect(
             mode: "primary",
             native: true,
             prompt: PROMPT_ELICITADOR,
+          },
+          "workflow-triador": {
+            name: "workflow-triador",
+            description:
+              "Classifica tarefas do pipeline XOCP como DIVIDIR ou FLUXO_NORMAL usando a régua S1–S4. Read-only.",
+            options: {},
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                list: "allow",
+                bash: "allow",
+                webfetch: "allow",
+                websearch: "allow",
+                read: "allow",
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            mode: "primary",
+            native: true,
+            prompt: PROMPT_WORKFLOW_TRIADOR,
+          },
+          analista: {
+            name: "analista",
+            description:
+              "Investiga o repositório e escreve briefs YAML versionados em .opencode/briefs/. Não implementa código.",
+            options: {},
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                question: "allow",
+                bash: "deny",
+                task: {
+                  general: "deny",
+                  explore: "allow",
+                },
+                edit: {
+                  "*": "deny",
+                  [path.join(".opencode", "briefs", "*.yaml")]: "allow",
+                },
+              }),
+              user,
+            ),
+            mode: "primary",
+            native: true,
+            prompt: PROMPT_ANALISTA,
+          },
+          "workflow-executor": {
+            name: "workflow-executor",
+            description:
+              "Implementa Briefs/Specs aprovados no pipeline XOCP com trilha de auditoria (cycle_tracker, execution_summary).",
+            options: {},
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                question: "allow",
+                plan_enter: "allow",
+                spec_status_write: "deny",
+                review_checklist_write: "deny",
+              }),
+              user,
+            ),
+            mode: "primary",
+            native: true,
+            prompt: PROMPT_WORKFLOW_EXECUTOR,
+          },
+          avaliador: {
+            name: "avaliador",
+            description:
+              "Revisa entregas do workflow-executor de forma independente e grava review_checklist. Read-only no código.",
+            options: {},
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                list: "allow",
+                bash: "allow",
+                webfetch: "allow",
+                websearch: "allow",
+                read: "allow",
+                execution_summary_read: "allow",
+                review_checklist_read: "allow",
+                review_checklist_write: "allow",
+                task: {
+                  general: "deny",
+                  "workflow-executor": "allow",
+                },
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            mode: "primary",
+            native: true,
+            prompt: PROMPT_AVALIADOR,
           },
           general: {
             name: "general",

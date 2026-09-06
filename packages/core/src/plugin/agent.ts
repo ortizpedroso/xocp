@@ -31,6 +31,10 @@ Guidelines:
 Complete the user's search request efficiently and report your findings clearly.`
 
 import PROMPT_ELICITADOR from "./elicitador.txt"
+import PROMPT_WORKFLOW_TRIADOR from "./workflow-triador.txt"
+import PROMPT_ANALISTA from "./analista.txt"
+import PROMPT_WORKFLOW_EXECUTOR from "./workflow-executor.txt"
+import PROMPT_AVALIADOR from "./avaliador.txt"
 
 const PROMPT_COMPACTION = `You are a context summarization agent. You are given a conversation between a user and an agent. Your goal is to produce a structured summary matching the format specified so another coding agent can continue the work.
 
@@ -165,6 +169,85 @@ export const Plugin = define({
             { action: "edit", resource: "*", effect: "deny" },
             { action: "edit", resource: path.join(".opencode", "specs", "*.md"), effect: "allow" },
           ]),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("workflow-triador"), (item) => {
+        item.description =
+          "Classifica tarefas do pipeline XOCP como DIVIDIR ou FLUXO_NORMAL usando a régua S1–S4. Read-only."
+        item.system = PROMPT_WORKFLOW_TRIADOR
+        item.mode = "primary"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "webfetch", resource: "*", effect: "allow" },
+              { action: "websearch", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("analista"), (item) => {
+        item.description =
+          "Investiga o repositório e escreve briefs YAML versionados em .opencode/briefs/. Não implementa código."
+        item.system = PROMPT_ANALISTA
+        item.mode = "primary"
+        item.permissions.push(
+          ...PermissionV2.merge(defaults, [
+            { action: "question", resource: "*", effect: "allow" },
+            { action: "bash", resource: "*", effect: "deny" },
+            { action: "task", resource: "general", effect: "deny" },
+            { action: "task", resource: "explore", effect: "allow" },
+            { action: "edit", resource: "*", effect: "deny" },
+            { action: "edit", resource: path.join(".opencode", "briefs", "*.yaml"), effect: "allow" },
+          ]),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("workflow-executor"), (item) => {
+        item.description =
+          "Implementa Briefs/Specs aprovados no pipeline XOCP com trilha de auditoria (cycle_tracker, execution_summary)."
+        item.system = PROMPT_WORKFLOW_EXECUTOR
+        item.mode = "primary"
+        item.permissions.push(
+          ...PermissionV2.merge(defaults, [
+            { action: "question", resource: "*", effect: "allow" },
+            { action: "plan_enter", resource: "*", effect: "allow" },
+            { action: "spec_status_write", resource: "*", effect: "deny" },
+            { action: "review_checklist_write", resource: "*", effect: "deny" },
+          ]),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("avaliador"), (item) => {
+        item.description =
+          "Revisa entregas do workflow-executor de forma independente e grava review_checklist. Read-only no código."
+        item.system = PROMPT_AVALIADOR
+        item.mode = "primary"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "webfetch", resource: "*", effect: "allow" },
+              { action: "websearch", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+              { action: "execution_summary_read", resource: "*", effect: "allow" },
+              { action: "review_checklist_read", resource: "*", effect: "allow" },
+              { action: "review_checklist_write", resource: "*", effect: "allow" },
+              { action: "task", resource: "general", effect: "deny" },
+              { action: "task", resource: "workflow-executor", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
         )
       })
 
