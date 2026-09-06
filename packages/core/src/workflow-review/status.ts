@@ -1,3 +1,4 @@
+import matter from "gray-matter"
 import { Option, Schema } from "effect"
 import { ConfigMarkdown } from "../config/markdown"
 import { FrontmatterParseError } from "./error"
@@ -57,4 +58,21 @@ export function readBriefStatus(content: string, filePath: string) {
   }
 
   return status.value
+}
+
+export function writeSpecStatus(content: string, status: Status) {
+  const parsed = ConfigMarkdown.parse(content)
+  return matter.stringify(parsed.content, { ...parsed.data, status })
+}
+
+export function writeBriefStatus(content: string, status: Status) {
+  if (/^status:\s*.+$/m.test(content)) {
+    return content.replace(/^status:\s*.+$/m, `status: ${status}`)
+  }
+
+  if (/^brief_id:/m.test(content)) {
+    return content.replace(/^(brief_id:.*\n)/m, `$1status: ${status}\n`)
+  }
+
+  return `status: ${status}\n${content}`
 }

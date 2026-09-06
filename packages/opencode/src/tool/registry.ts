@@ -22,6 +22,7 @@ import { ExecutionSummaryWriteTool } from "./execution-summary-write"
 import { ExecutionSummaryReadTool } from "./execution-summary-read"
 import { ReviewChecklistWriteTool } from "./review-checklist-write"
 import { ReviewChecklistReadTool } from "./review-checklist-read"
+import { SpecStatusWriteTool } from "./spec-status-write"
 import { InvalidTool } from "./invalid"
 import { SkillTool } from "./skill"
 import * as Tool from "./tool"
@@ -115,6 +116,7 @@ const layer = Layer.effect(
     const executionSummaryRead = yield* ExecutionSummaryReadTool
     const reviewChecklistWrite = yield* ReviewChecklistWriteTool
     const reviewChecklistRead = yield* ReviewChecklistReadTool
+    const specStatusWrite = yield* SpecStatusWriteTool
     const invalid = yield* InvalidTool
     const task = yield* TaskTool
     const read = yield* ReadTool
@@ -242,6 +244,7 @@ const layer = Layer.effect(
           executionSummaryRead: Tool.init(executionSummaryRead),
           reviewChecklistWrite: Tool.init(reviewChecklistWrite),
           reviewChecklistRead: Tool.init(reviewChecklistRead),
+          specStatusWrite: Tool.init(specStatusWrite),
           search: Tool.init(websearch),
           skill: Tool.init(skilltool),
           patch: Tool.init(patchtool),
@@ -273,6 +276,7 @@ const layer = Layer.effect(
             tool.executionSummaryRead,
             tool.reviewChecklistWrite,
             tool.reviewChecklistRead,
+            tool.specStatusWrite,
             tool.search,
             tool.skill,
             tool.patch,
