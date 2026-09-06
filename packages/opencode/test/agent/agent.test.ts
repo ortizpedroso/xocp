@@ -51,6 +51,10 @@ it.instance("returns default native agents when no config", () =>
     expect(names).toContain("build")
     expect(names).toContain("plan")
     expect(names).toContain("elicitador")
+    expect(names).toContain("workflow-triador")
+    expect(names).toContain("analista")
+    expect(names).toContain("workflow-executor")
+    expect(names).toContain("avaliador")
     expect(names).toContain("general")
     expect(names).toContain("explore")
     expect(names).toContain("compaction")
@@ -120,6 +124,56 @@ it.instance("elicitador agent denies bash and allows explore subagent", () =>
     expect(evalPerm(elicitador, "bash")).toBe("deny")
     expect(Permission.evaluate("task", "explore", elicitador!.permission).action).toBe("allow")
     expect(Permission.evaluate("task", "general", elicitador!.permission).action).toBe("deny")
+  }),
+)
+
+it.instance("workflow-triador agent is primary read-only like explore", () =>
+  Effect.gen(function* () {
+    const triador = yield* load((svc) => svc.get("workflow-triador"))
+    expect(triador).toBeDefined()
+    expect(triador?.mode).toBe("primary")
+    expect(triador?.native).toBe(true)
+    expect(triador?.prompt).toContain("DIVIDIR")
+    expect(evalPerm(triador, "edit")).toBe("deny")
+    expect(evalPerm(triador, "read")).toBe("allow")
+  }),
+)
+
+it.instance("analista agent allows edits only in .opencode/briefs/*.yaml", () =>
+  Effect.gen(function* () {
+    const analista = yield* load((svc) => svc.get("analista"))
+    expect(analista).toBeDefined()
+    expect(analista?.mode).toBe("primary")
+    expect(evalPerm(analista, "edit")).toBe("deny")
+    expect(Permission.evaluate("edit", ".opencode/briefs/foo.yaml", analista!.permission).action).toBe("allow")
+    expect(Permission.evaluate("edit", "src/main.ts", analista!.permission).action).toBe("deny")
+    expect(analista?.prompt).toContain("Nunca edite o brief in-place")
+  }),
+)
+
+it.instance("workflow-executor agent denies approval tools and requires gate in prompt", () =>
+  Effect.gen(function* () {
+    const executor = yield* load((svc) => svc.get("workflow-executor"))
+    expect(executor).toBeDefined()
+    expect(executor?.mode).toBe("primary")
+    expect(evalPerm(executor, "edit")).toBe("allow")
+    expect(Permission.evaluate("spec_status_write", "*", executor!.permission).action).toBe("deny")
+    expect(Permission.evaluate("review_checklist_write", "*", executor!.permission).action).toBe("deny")
+    expect(executor?.prompt).toContain("task_approval_check")
+    expect(executor?.prompt).toContain("antes do passo 2 (task_approval_check)")
+  }),
+)
+
+it.instance("avaliador agent allows review tools and workflow-executor delegation", () =>
+  Effect.gen(function* () {
+    const avaliador = yield* load((svc) => svc.get("avaliador"))
+    expect(avaliador).toBeDefined()
+    expect(avaliador?.mode).toBe("primary")
+    expect(evalPerm(avaliador, "edit")).toBe("deny")
+    expect(Permission.evaluate("review_checklist_write", "*", avaliador!.permission).action).toBe("allow")
+    expect(Permission.evaluate("execution_summary_read", "*", avaliador!.permission).action).toBe("allow")
+    expect(Permission.evaluate("task", "workflow-executor", avaliador!.permission).action).toBe("allow")
+    expect(Permission.evaluate("task", "general", avaliador!.permission).action).toBe("deny")
   }),
 )
 
@@ -783,6 +837,10 @@ it.instance(
         build: { disable: true },
         plan: { disable: true },
         elicitador: { disable: true },
+        "workflow-triador": { disable: true },
+        analista: { disable: true },
+        "workflow-executor": { disable: true },
+        avaliador: { disable: true },
       },
     },
   },
