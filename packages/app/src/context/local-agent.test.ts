@@ -9,6 +9,10 @@ describe("hasCustomAgent", () => {
   test("ignores built-in and unclassified agents", () => {
     expect(hasCustomAgent([{ native: true }, {}])).toBe(false)
   })
+
+  test("detects XOCP pipeline agents", () => {
+    expect(hasCustomAgent([{ native: true, pipeline: true }, { native: true }])).toBe(true)
+  })
 })
 
 describe("resolveAgent", () => {
