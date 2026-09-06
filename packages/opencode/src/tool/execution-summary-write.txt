@@ -1,0 +1,3 @@
+Writes the cumulative execution summary for the current workflow cycle.
+
+`completed` must reflect total project state, not only this cycle's delta. The tool rejects `status: "complete"` when `incomplete` is non-empty.

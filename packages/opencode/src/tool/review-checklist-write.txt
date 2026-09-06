@@ -1,0 +1,3 @@
+Writes the structured review checklist for the current workflow cycle.
+
+Brief tasks omit `spec_updated` and `norm_sources_verified`. Spec tasks must include both.

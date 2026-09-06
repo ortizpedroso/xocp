@@ -16,6 +16,12 @@ import { WebFetchTool } from "./webfetch"
 import { WriteTool } from "./write"
 import { HandoffWriteTool } from "./handoff-write"
 import { HandoffReadTool } from "./handoff-read"
+import { TaskApprovalCheckTool } from "./task-approval-check"
+import { CycleTrackerTool } from "./cycle-tracker"
+import { ExecutionSummaryWriteTool } from "./execution-summary-write"
+import { ExecutionSummaryReadTool } from "./execution-summary-read"
+import { ReviewChecklistWriteTool } from "./review-checklist-write"
+import { ReviewChecklistReadTool } from "./review-checklist-read"
 import { InvalidTool } from "./invalid"
 import { SkillTool } from "./skill"
 import * as Tool from "./tool"
@@ -103,6 +109,12 @@ const layer = Layer.effect(
 
     const handoffWrite = yield* HandoffWriteTool
     const handoffRead = yield* HandoffReadTool
+    const taskApprovalCheck = yield* TaskApprovalCheckTool
+    const cycleTracker = yield* CycleTrackerTool
+    const executionSummaryWrite = yield* ExecutionSummaryWriteTool
+    const executionSummaryRead = yield* ExecutionSummaryReadTool
+    const reviewChecklistWrite = yield* ReviewChecklistWriteTool
+    const reviewChecklistRead = yield* ReviewChecklistReadTool
     const invalid = yield* InvalidTool
     const task = yield* TaskTool
     const read = yield* ReadTool
@@ -224,6 +236,12 @@ const layer = Layer.effect(
           todo: Tool.init(todo),
           handoffWrite: Tool.init(handoffWrite),
           handoffRead: Tool.init(handoffRead),
+          taskApprovalCheck: Tool.init(taskApprovalCheck),
+          cycleTracker: Tool.init(cycleTracker),
+          executionSummaryWrite: Tool.init(executionSummaryWrite),
+          executionSummaryRead: Tool.init(executionSummaryRead),
+          reviewChecklistWrite: Tool.init(reviewChecklistWrite),
+          reviewChecklistRead: Tool.init(reviewChecklistRead),
           search: Tool.init(websearch),
           skill: Tool.init(skilltool),
           patch: Tool.init(patchtool),
@@ -249,6 +267,12 @@ const layer = Layer.effect(
             tool.todo,
             tool.handoffWrite,
             tool.handoffRead,
+            tool.taskApprovalCheck,
+            tool.cycleTracker,
+            tool.executionSummaryWrite,
+            tool.executionSummaryRead,
+            tool.reviewChecklistWrite,
+            tool.reviewChecklistRead,
             tool.search,
             tool.skill,
             tool.patch,
