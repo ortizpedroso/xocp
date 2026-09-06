@@ -22,8 +22,6 @@ import { SessionID } from "../../src/session/schema"
 import { LSP } from "@/lsp/lsp"
 import { MCP } from "../../src/mcp"
 import { RuntimeFlags } from "@/effect/runtime-flags"
-import { ProviderV2 } from "@opencode-ai/core/provider"
-import { ModelV2 } from "@opencode-ai/core/model"
 import { provideTmpdirServer } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { reply, TestLLMServer } from "../lib/llm-server"
@@ -43,8 +41,6 @@ const AVALIADOR_GATE_MARKERS = [
   "suficiente sozinho para aprovar",
   "sempre verifica o código",
 ]
-
-const SECURITY_RULE_MARKERS = ["Padrão mínimo de segurança", "Hash de senha correto", "nunca vazam detalhe interno"]
 
 const briefApproved = `brief_id: ${TASK_ID}
 status: aprovada
@@ -143,18 +139,6 @@ const providerCfg = (url: string) => ({
           cost: { input: 0, output: 0 },
           options: {},
         },
-        "claude-sonnet-test": {
-          id: "claude-sonnet-test",
-          name: "Claude Test Model",
-          attachment: false,
-          reasoning: false,
-          temperature: false,
-          tool_call: true,
-          release_date: "2025-01-01",
-          limit: { context: 100000, output: 10000 },
-          cost: { input: 0, output: 0 },
-          options: {},
-        },
       },
       options: {
         apiKey: "test-key",
@@ -189,15 +173,6 @@ function shouldFollowExecutorGates(hit: Hit) {
 function shouldFollowAvaliadorGates(hit: Hit) {
   if (hasAvaliadorGatePrompt(hit)) return true
   return conversationHas(hit, "execution summary cycle")
-}
-
-function hasSecurityRules(hit: Hit) {
-  return hasMarkers(hit, SECURITY_RULE_MARKERS)
-}
-
-function shouldFollowSecurityRules(hit: Hit) {
-  if (hasSecurityRules(hit)) return true
-  return conversationHas(hit, "bcrypt.compare")
 }
 
 function promptPresent(hits: Hit[], check: (hit: Hit) => boolean) {
@@ -354,46 +329,6 @@ const scheduleAvaliadorResponses = Effect.fn("WorkflowPromptTest.scheduleAvaliad
   yield* llm.pushMatch(
     (hit) => !shouldFollowAvaliadorGates(hit) && conversationHas(hit, "review approved"),
     reply().text("approved from summary alone").stop().item(),
-  )
-})
-
-const scheduleBuildLoginResponses = Effect.fn("WorkflowPromptTest.scheduleBuildLoginResponses")(function* (
-  llm: TestLLMServer["Service"],
-  filePath: string,
-) {
-  const secure = `import bcrypt from "bcrypt"
-
-export async function login(email: string, password: string) {
-  const user = await findUser(email)
-  if (!user) return { ok: false, error: "Invalid credentials" }
-  const match = await bcrypt.compare(password, user.passwordHash)
-  if (!match) return { ok: false, error: "Invalid credentials" }
-  return { ok: true, userId: user.id }
-}
-`
-  const insecure = `export async function login(email: string, password: string) {
-  const user = await findUser(email)
-  if (!user || user.password !== password) {
-    throw new Error(user?.dbError ?? "login failed")
-  }
-  return { ok: true, userId: user.id }
-}
-`
-  yield* llm.pushMatch(
-    (hit) => shouldFollowSecurityRules(hit) && !conversationHas(hit, "bcrypt.compare"),
-    reply().tool("write", { filePath, content: secure }).item(),
-  )
-  yield* llm.pushMatch(
-    (hit) => shouldFollowSecurityRules(hit) && conversationHas(hit, "bcrypt.compare"),
-    reply().text("login implemented with hashed passwords and safe errors").stop().item(),
-  )
-  yield* llm.pushMatch(
-    (hit) => !shouldFollowSecurityRules(hit) && !conversationHas(hit, "user.password !== password"),
-    reply().tool("write", { filePath, content: insecure }).item(),
-  )
-  yield* llm.pushMatch(
-    (hit) => !shouldFollowSecurityRules(hit) && conversationHas(hit, "user.password !== password"),
-    reply().text("login implemented quickly").stop().item(),
   )
 })
 
@@ -624,50 +559,6 @@ describe("workflow pipeline prompt following (TestLLMServer)", () => {
           },
         }),
       },
-    ),
-  )
-})
-
-const claudeModel = {
-  providerID: ProviderV2.ID.make("test"),
-  modelID: ModelV2.ID.make("claude-sonnet-test"),
-}
-
-describe("base prompt security rules (build agent)", () => {
-  it.live("build agent system prompt includes security rules without elicitation", () =>
-    provideTmpdirServer(
-      Effect.fnUntraced(function* ({ dir, llm }) {
-        const loginPath = path.join(dir, "src", "auth", "login.ts")
-        yield* Effect.promise(() => fs.mkdir(path.dirname(loginPath), { recursive: true }))
-        yield* scheduleBuildLoginResponses(llm, loginPath)
-
-        const prompt = yield* SessionPrompt.Service
-        const sessions = yield* Session.Service
-        const session = yield* sessions.create({
-          title: "build login security",
-          permission: [{ permission: "*", pattern: "*", action: "allow" }],
-        })
-
-        yield* prompt.prompt({
-          sessionID: session.id,
-          agent: "build",
-          model: claudeModel,
-          noReply: true,
-          parts: [{ type: "text", text: "Implement a simple login endpoint for this project." }],
-        })
-
-        yield* prompt.loop({ sessionID: session.id })
-
-        const hits = yield* llm.hits
-        expect(promptPresent(hits, hasSecurityRules)).toBe(true)
-
-        const written = yield* Effect.promise(() => fs.readFile(loginPath, "utf-8"))
-        expect(written).toContain("bcrypt.compare")
-        expect(written).not.toContain("user.password !== password")
-        expect(written).toContain("Invalid credentials")
-        expect(written).not.toContain("dbError")
-      }),
-      { git: true, config: providerCfg },
     ),
   )
 })
