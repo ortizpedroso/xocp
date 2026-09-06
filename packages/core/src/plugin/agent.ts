@@ -168,6 +168,7 @@ export const Plugin = define({
             { action: "task", resource: "explore", effect: "allow" },
             { action: "edit", resource: "*", effect: "deny" },
             { action: "edit", resource: path.join(".opencode", "specs", "*.md"), effect: "allow" },
+            { action: "edit", resource: "specs/*.md", effect: "allow" },
           ]),
         )
       })

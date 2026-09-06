@@ -201,6 +201,7 @@ const layer = Layer.effect(
                 edit: {
                   "*": "deny",
                   [path.join(".opencode", "specs", "*.md")]: "allow",
+                  "specs/*.md": "allow",
                 },
               }),
               user,
