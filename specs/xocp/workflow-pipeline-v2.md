@@ -1,6 +1,6 @@
 # XOCP — Workflow-Pipeline v2: agentes nativos + trilha de auditoria verificável
 
-**Status: Fase 0 — design formalizado, aguardando implementação (Fases 1–3).**
+**Status: Fase 0 — design formalizado, aguardando implementação (Fases 1a–3).**
 
 Substitui a confiança em prosa do v1 (`specs/xocp/workflow-pipeline.md`) por
 mecanismo de código, na mesma migração que o Elicitador já recebeu (papel via
@@ -18,7 +18,7 @@ skill → agente nativo com permissão real).
 
 ## 0. Decisões fechadas (revisão Fase 0)
 
-Estas decisões são normativas para Fases 1–3. Não reabrir sem revisão explícita.
+Estas decisões são normativas para Fases 1a–3. Não reabrir sem revisão explícita.
 
 ### 0.1 Brief e Spec — os dois fluxos, ferramentas unificadas
 
@@ -31,18 +31,11 @@ As ferramentas novas servem **explicitamente** aos dois fluxos:
 
 **Ferramentas compartilhadas** (ambos os fluxos):
 
+- `task_approval_check` — gate antes do `workflow-executor` editar código
 - `cycle_tracker`
 - `execution_summary_write` / `execution_summary_read`
 - `review_checklist_write` / `review_checklist_read`
-
-**Ferramentas específicas do fluxo Spec:**
-
-- `spec_approval_check` — gate antes do `workflow-executor` editar código contra uma Spec
-- `spec_status_write` — transição de `status` no frontmatter YAML da Spec (só após confirmação humana)
-
-O fluxo Brief **não** usa `spec_approval_check` nem `spec_status_write`. O gate de
-partida do Brief é a existência de um brief válido em `.opencode/briefs/` (ver
-ambiguidade §11 sobre gate formal de aprovação do Brief).
+- `spec_status_write` — transição de `status` no contrato (Spec ou Brief)
 
 ### 0.2 `task_id` — regra única
 
@@ -58,37 +51,46 @@ Trabalho em Spec:   task_id = spec:<slug>:G<N>
 
 - `<brief_id>` — o campo `brief_id` do YAML do brief (v1, seção 4).
 - `<slug>` — o slug do arquivo `specs/<slug>.md`.
-- `G<N>` — número de geração da Spec (incremento quando o Elicitador publica uma
-  revisão major do contrato; ver ambiguidade §11).
+- `G<N>` — número do item na tabela **Backlog (pós-v1)** da Spec
+  (`elicitador-spec-system.md` §4). Quem adiciona um item novo usa o próximo
+  número disponível **naquela tabela** — não existe contador separado. Uma única
+  fonte de verdade: o `G<N>` do `task_id` é o mesmo `G<N>` da linha do Backlog.
 
 **Nunca** misturar formatos numa mesma pasta de reviews.
 
-### 0.3 `status` da Spec — YAML frontmatter
+### 0.3 `status` — Spec e Brief
 
-Toda Spec gerada pelo Elicitador usa **YAML frontmatter** (não campo solto no corpo).
-Valores permitidos de `status`:
+Tanto Spec quanto Brief usam os **mesmos quatro valores** de `status`:
 
 | Valor | Significado |
 |-------|-------------|
-| `rascunho` | Em elaboração; não pode ser implementada |
-| `aguardando_aprovacao` | Pronta para revisão humana |
-| `aprovada` | Humano aprovou; `workflow-executor` pode implementar após `spec_approval_check` |
+| `rascunho` | Em elaboração; não pode ser implementado |
+| `aguardando_aprovacao` | Pronto para revisão humana |
+| `aprovada` | Humano aprovou; `workflow-executor` pode implementar após `task_approval_check` |
 | `em_revisao` | Ciclo de implementação/revisão em andamento |
 
-Esqueleto atualizado em `elicitador-spec-system.md` §4.
+**Spec** — campo `status` no YAML frontmatter (`elicitador-spec-system.md` §4).
 
-#### Ferramenta `spec_status_write` (Fase 1)
+**Brief** — campo `status` no YAML do brief (`.opencode/briefs/<brief_id>.yaml`),
+mesmos valores. O template do brief no v1 ganha este campo na migração Fase 2.
 
-Transiciona o `status` no frontmatter YAML da Spec no disco.
+#### Ferramenta `spec_status_write` (Fase 1b)
 
-**Regra de ouro:** nenhum agente chama esta ferramenta por iniciativa própria.
-Só em reação a **confirmação humana explícita e inequívoca** na conversa (ex.:
-"aprovado", "pode seguir", "está aprovada"). O Elicitador **nunca** auto-aprova o
-próprio trabalho.
+Transiciona o `status` no disco — frontmatter YAML da Spec **ou** campo `status`
+do YAML do Brief, conforme o `task_id`.
 
-Implementação futura deve validar na tool que a transição é permitida (ex.:
-`rascunho` → `aguardando_aprovacao` pelo Elicitador; `aguardando_aprovacao` →
-`aprovada` só após sinal humano registrado no turno).
+**Qualquer agente** pode chamar a ferramenta, mas a transição para `aprovada`
+**não confia no agente alegar que o usuário confirmou**. Ao tentar
+`new_status: aprovada`, a tool dispara uma confirmação real via mecanismo `ask`
+do XOCP (prompt na interface — não é `allow`/`deny` estático de permissão de
+arquivo). A pessoa precisa confirmar **na interface, na hora**, para a transição
+se completar. Sem essa confirmação, o status no disco **não muda**.
+
+Outras transições (ex.: `rascunho` → `aguardando_aprovacao`) prosseguem sem
+`ask` — são rotina, não críticas.
+
+O Elicitador **nunca** auto-aprova o próprio trabalho: mesmo podendo chamar a
+tool, `aprovada` só se completa com confirmação UI real.
 
 ### 0.4 Nome do agente — `workflow-executor`
 
@@ -98,9 +100,12 @@ Implementação futura deve validar na tool que a transição é permitida (ex.:
 
 Não usar `executor` como ID — colide com termos em Effect, LLM route e testes.
 
-### 0.5 `.opencode/reviews/` — versionado no Git
+### 0.5 `.opencode/reviews/` — versionado no Git de cada projeto
 
 - **Não** gitignored — o valor é auditoria no histórico do repositório.
+- Vale para **qualquer projeto** construído com o XOCP através deste pipeline —
+  não só o repositório do monorepo XOCP. Os artefatos versionam no Git **daquele
+  projeto específico** do usuário.
 - Diretório criado na **primeira escrita** de qualquer ferramenta de review.
 - Layout: `.opencode/reviews/<task_id>/`
 
@@ -131,7 +136,7 @@ Espelham o padrão do Handoff (`handoff-read` / `latest`), mais determinístico 
 |--------|-----------|
 | `workflow-triador` | = `explore` (read-only) |
 | `analista` | leitura + `edit` restrito a `.opencode/briefs/*.yaml` (mesmo molde do Elicitador em `.opencode/specs/*.md`) |
-| `workflow-executor` | = `build` restrito + ferramentas de pipeline (`spec_approval_check`, `execution_summary_write`, `cycle_tracker`, `execution_summary_read`, `review_checklist_read`); instrução de prompt: chamar `spec_approval_check` antes de editar código em trabalho Spec — **limite honesto:** convenção reforçada por ferramenta, não bloqueio de permissão de arquivo no OS |
+| `workflow-executor` | = `build` restrito + ferramentas de pipeline (`task_approval_check`, `execution_summary_write`, `cycle_tracker`, `execution_summary_read`, `review_checklist_read`); instrução de prompt: chamar `task_approval_check` antes de editar código — **limite honesto:** convenção reforçada por ferramenta, não bloqueio de permissão de arquivo no OS |
 | `avaliador` | = `explore` + `review_checklist_write` + `execution_summary_read` + `review_checklist_read` + `task: { workflow-executor: allow }` |
 
 O `build` genérico permanece para trabalho **fora** do pipeline formal.
@@ -154,7 +159,7 @@ implementado, o que foi verificado, e com qual evidência".
 
 1. **Nada impede pular direto pro `build`** sem Elicitador/Spec/aprovação ou sem
    pipeline Brief — hoje é convenção, não trava. O agente `workflow-executor`
-   separado + `spec_approval_check` reduzem esse risco no fluxo Spec.
+   separado + `task_approval_check` reduzem esse risco nos fluxos Brief e Spec.
 2. **O veredito do Avaliador não deixa rastro verificável** — hoje é só prosa.
    `review_checklist_write` + arquivos JSON versionados substituem "confiamos que
    ele fez" por "existe arquivo que prova".
@@ -170,21 +175,24 @@ implementado, o que foi verificado, e com qual evidência".
 | `workflow-executor` | Literalmente `build` + prompt extra | Agente nativo **separado** do `build` |
 | `avaliador` | Papel via skill sobre `explore` | Agente nativo, read + `review_checklist_write` + delegação ao `workflow-executor` |
 
-**Por que `workflow-executor` separado do `build`:** permite recusar trabalho Spec
-não aprovada e obrigar trilha de auditoria **sem** afetar uso livre do produto via
+**Por que `workflow-executor` separado do `build`:** permite recusar trabalho não
+aprovado e obrigar trilha de auditoria **sem** afetar uso livre do produto via
 `build`.
 
 ---
 
-## 3. Trava de aprovação (fluxo Spec)
+## 3. Trava de aprovação — `task_approval_check`
 
-### `spec_approval_check(spec_path: string)`
+### `task_approval_check(task_id: string)`
 
-Exclusiva do `workflow-executor`. Fluxo Brief **não** usa esta tool.
+Exclusiva do `workflow-executor`. **Brief e Spec** usam a mesma tool.
 
-1. Lê o arquivo real `specs/<slug>.md` no disco (parse do frontmatter YAML).
-2. Se `status !== "aprovada"`: erro claro, recusa prosseguir.
-3. Se `status === "aprovada"`: retorna conteúdo parseado para o executor trabalhar.
+1. Resolve o arquivo pelo formato do `task_id`:
+   - `spec:<slug>:G<N>` → `specs/<slug>.md` (ou `.opencode/specs/<slug>.md` se existir)
+   - `<brief_id>` → `.opencode/briefs/<brief_id>.yaml`
+2. Lê o arquivo real no disco (parse do frontmatter YAML da Spec ou do YAML do Brief).
+3. Se `status !== "aprovada"`: erro claro, recusa prosseguir.
+4. Se `status === "aprovada"`: retorna conteúdo parseado para o executor trabalhar.
 
 **Limite honesto:** depende do `workflow-executor` **chamar** a tool antes de
 editar — não é bloqueio de permissão por conteúdo de arquivo. Redução de risco
@@ -238,8 +246,8 @@ Aprovar só repetindo o Executor, sem checagem independente, é **falha do Avali
 review_checklist_write({
   task_id: string,
   gates: {
-    spec_updated: "pass" | "fail",           // relevante no fluxo Spec
-    norm_sources_verified: "pass" | "fail",  // fluxo Spec (elicitador-spec §3.5)
+    spec_updated?: "pass" | "fail",           // só quando há Spec associada
+    norm_sources_verified?: "pass" | "fail",  // só quando há Spec associada
     execution_summary_complete: "pass" | "fail",
   },
   criteria: Array<{
@@ -254,9 +262,11 @@ review_checklist_write({
 
 Grava `.opencode/reviews/<task_id>/cycle-<N>.json`.
 
-No fluxo **Brief**, `spec_updated` e `norm_sources_verified` podem ser `pass` por
-N/A documentado na `evidence`, ou omitidos do schema na implementação — ver
-ambiguidade §11.
+**Gates opcionais:** em tarefa **Brief sem Spec associada**, `spec_updated` e
+`norm_sources_verified` ficam **ausentes** do JSON — não `"pass"` forçado com
+evidence vazia. Aprovação vazia disfarçada de gate cumprido é proibida. A tool
+valida na escrita: Brief puro não pode incluir esses campos; fluxo Spec deve
+incluí-los.
 
 ### 4.5 `review_checklist_read(task_id)`
 
@@ -302,13 +312,13 @@ compressão de contexto e sessões novas.
 
 ## 6. Fluxo completo, ciclo a ciclo
 
-Válido para **Brief** e **Spec** (diferem só no contrato de entrada e em
-`spec_approval_check` no fluxo Spec).
+Válido para **Brief** e **Spec** (mesmo fluxo; `task_approval_check` resolve o
+contrato pelo `task_id`).
 
 ```
 INÍCIO DO CICLO N (N = 1, 2 ou 3):
 
-0. [Somente fluxo Spec] workflow-executor chama spec_approval_check(spec_path)
+0. workflow-executor chama task_approval_check(task_id)
    → se status !== aprovada: PARA antes de editar código
 
 1. workflow-executor chama cycle_tracker.increment(task_id)
@@ -324,7 +334,7 @@ INÍCIO DO CICLO N (N = 1, 2 ou 3):
 4. avaliador:
    a. execution_summary_read — se incomplete, tendência a reprovar, mas audita o que existe
    b. Audita código, testes, diff — nunca só o resumo do executor
-   c. Gates (spec/norma quando aplicável)
+   c. Gates (spec/norma quando há Spec associada; ausentes em Brief puro)
    d. review_checklist_write
 
 5. Resultado:
@@ -354,23 +364,27 @@ do v1). O sistema "aprende" via spec mais afiada, não via modelo mudando sozinh
 | Fase | Entregável | Escopo |
 |------|------------|--------|
 | **0** | Este documento + `status` no frontmatter do `elicitador-spec-system.md` | Só documentação |
-| **1** | 4 tools de escrita + 2 de leitura (validação na tool), **sem** agentes nativos | Ver inventário abaixo; `spec_status_write` documentada aqui — ver §11.5 sobre contagem |
+| **1a** | `task_approval_check`, `execution_summary_write`, `execution_summary_read`, `review_checklist_write`, `review_checklist_read`, `cycle_tracker` | Validação na tool, **sem** agentes nativos, **sem** `ask` |
+| **1b** | `spec_status_write` | Integração com `ask` para `aprovada`; PR separado da 1a (perfil de risco diferente) |
 | **2** | 4 agentes nativos + prompts migrados do v1 | **Não** misturar com Fase 1 no mesmo PR |
 | **3** | Testes de transcript determinísticos + piloto real com humano | Mesmo padrão do `workflow-pipeline-phase0-report.md` |
 
-**Fase 1 — núcleo 4+2 (roadmap):**
+**Fase 1a — inventário:**
 
 | Tool | Tipo |
 |------|------|
+| `task_approval_check` | leitura/validação |
 | `cycle_tracker` | escrita |
 | `execution_summary_write` | escrita |
 | `review_checklist_write` | escrita |
-| `spec_approval_check` | escrita/leitura |
 | `execution_summary_read` | leitura |
 | `review_checklist_read` | leitura |
 
-**Também Fase 1 (documentada, contagem separada):** `spec_status_write` — transição de
-`status` no frontmatter da Spec.
+**Fase 1b — inventário:**
+
+| Tool | Tipo |
+|------|------|
+| `spec_status_write` | escrita (`ask` obrigatório para `aprovada`) |
 
 ---
 
@@ -380,27 +394,14 @@ do v1). O sistema "aprende" via spec mais afiada, não via modelo mudando sozinh
   template YAML do Brief **permanecem** no v1 até migração explícita na Fase 2.
 - O v1 continua válido como piloto histórico; novos trabalhos formais devem
   seguir o v2 após Fase 2 estar implementada.
+- O template YAML do Brief no v1 ganha campo `status` na migração Fase 2 (valores
+  em §0.3).
 
 ---
 
-## 11. Ambiguidades abertas (não resolvidas nesta Fase 0)
+## 11. Ambiguidades abertas
 
-Registradas para decisão antes ou durante Fase 1 — **não inventar implementação
-silenciosa:**
-
-1. **`G<N>` em `spec:<slug>:G<N>`** — quem incrementa `N`? Elicitador a cada
-   changelog major? Automático em `spec_status_write`?
-2. **Gate de aprovação do Brief** — o fluxo Brief não tem `brief_approval_check`
-   nem `status` no YAML do brief definido aqui. Basta existir o arquivo? Precisa
-   campo `status` paralelo ao da Spec?
-3. **Gates `spec_updated` / `norm_sources_verified` no fluxo Brief** — sempre
-   `pass` com evidence `N/A`, ou campos opcionais no schema?
-4. **`spec_status_write` — quem pode chamar** — só Elicitador, ou qualquer agente
-   após detectar frase humana de aprovação? Como a tool valida "confirmação
-   explícita" vs. alucinação?
-5. **Commitar `.opencode/reviews/`** — em todos os repos de usuário ou só em
-   monorepos XOCP? Política de `.gitignore` global do produto pode conflitar com
-   §0.5.
-6. **Contagem Fase 1 (4+2 vs 7 tools)** — `spec_status_write` entra no mesmo PR
-   da Fase 1 ou PR separado? O roadmap diz 4 escritas + 2 leituras; este documento
-   lista 6 do núcleo + `spec_status_write` adicional.
+Nenhuma pendente das seis decisões fechadas na revisão pós-Fase 0 (G\<N\>,
+gate Brief, gates opcionais, `ask` em `spec_status_write`, escopo de
+`.opencode/reviews/`, faseamento 1a/1b). Novas ambiguidades devem ser
+registradas aqui antes da implementação — não inventar comportamento silencioso.
