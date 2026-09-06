@@ -15,6 +15,22 @@ describe("hasCustomAgent", () => {
   })
 })
 
+describe("@ mention agent filter", () => {
+  const mentionable = (agents: Array<{ name: string; mode?: string; hidden?: boolean }>) =>
+    agents.filter((agent) => !agent.hidden && agent.mode !== "primary")
+
+  test("excludes primary pipeline agents from @ suggestions", () => {
+    const agents = [
+      { name: "elicitador", mode: "primary", hidden: false },
+      { name: "workflow-triador", mode: "primary", hidden: false },
+      { name: "explore", mode: "subagent", hidden: false },
+      { name: "general", mode: "subagent", hidden: false },
+    ]
+
+    expect(mentionable(agents).map((agent) => agent.name)).toEqual(["explore", "general"])
+  })
+})
+
 describe("resolveAgent", () => {
   const agents = [{ name: "plan" }, { name: "build" }, { name: "custom" }]
 
