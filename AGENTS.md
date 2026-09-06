@@ -44,6 +44,15 @@ Track audited status in `specs/xocp/implementation-checklist.md`.
 - Development workflow (Cloud Agent primary, local for testing): `specs/xocp/workflow.md`
 - GitHub rules, CI, and branch protection: `specs/xocp/github-governance.md`
 
+## Papéis especializados deste projeto
+
+Antes de agir como Elicitador, Triador, Analista, Executor ou Avaliador, leia primeiro:
+
+- `specs/xocp/workflow-pipeline.md` (Triador/Analista/Executor/Avaliador)
+- `specs/xocp/elicitador-spec-system.md` (Elicitador)
+
+Isso não é opcional — sem ler, o comportamento correto desses papéis não está disponível.
+
 ---
 
 ## Upstream OpenCode rules
