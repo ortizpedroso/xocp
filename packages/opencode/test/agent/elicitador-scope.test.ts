@@ -17,7 +17,7 @@ import { testEffect } from "../lib/effect"
 const RULE_24_MARKER = "Nunca abandona o propósito — sempre entrega uma Spec"
 const RULE_24_BODY = "entregando uma Spec completa"
 const RULE_25_MARKER = "A Spec só existe se estiver salva em arquivo"
-const RULE_25_BODY = "grave em `specs/<slug>.md`"
+const RULE_25_BODY = "specs/<slug>.md"
 
 const agentLayer = (flags: Partial<RuntimeFlags.Info> = {}) =>
   LayerNode.compile(
