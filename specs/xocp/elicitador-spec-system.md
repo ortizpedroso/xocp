@@ -214,13 +214,25 @@ Baseado no padrão real de três sistemas em produção. Toda Spec gerada por
 este sistema segue esta estrutura:
 
 ```markdown
+---
+arquivo: specs/<slug>.md
+versao: "1.0"
+data: <ISO 8601>
+status: rascunho
+comandos: "/build lê e implementa; /review compara a build atual com este arquivo e valida lacunas."
+---
+
 # Spec: <Nome do Sistema>
 
-**Arquivo:** specs/<slug>.md
-**Versão:** 1.0
-**Data:** <ISO 8601>
-**Comandos:** /build lê e implementa; /review compara a build atual com
-este arquivo e valida lacunas.
+Valores permitidos de `status` no frontmatter (ver `workflow-pipeline-v2.md` §0.3):
+
+- `rascunho` — em elaboração
+- `aguardando_aprovacao` — pronta para revisão humana
+- `aprovada` — humana aprovou; `workflow-executor` pode implementar após `spec_approval_check`
+- `em_revisao` — ciclo de implementação/revisão em andamento
+
+Transições de `status` usam a ferramenta `spec_status_write` (Fase 1), **somente**
+após confirmação humana explícita — o Elicitador nunca auto-aprova.
 
 ## Objetivo
 <uma ou duas frases, o que o sistema faz e pra quem>
@@ -277,9 +289,9 @@ pra parecer completa)
 
 ## 5. O que o Executor e o Avaliador fazem diferente aqui (vs. Brief comum)
 
-- **Executor** implementa contra a Spec inteira ou contra um item
-  específico do Backlog (Gx) dela — mesmo agente `build`, mesmas regras
-  do `workflow-pipeline.md` (não reinventa comportamento).
+- **Executor** (`workflow-executor` no v2 — ver `workflow-pipeline-v2.md`)
+  implementa contra a Spec inteira ou contra um item específico do Backlog (Gx)
+  dela — regras do pipeline formal, não o `build` genérico.
 - **Avaliador** ganha DOIS gates novos, checados **antes** de qualquer
   critério de negócio:
 

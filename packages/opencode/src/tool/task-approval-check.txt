@@ -1,0 +1,3 @@
+Checks that a Brief or Spec contract is approved before implementation begins.
+
+Use at the start of each workflow-executor cycle. Reads the real contract file from disk — never trusts conversation memory.
