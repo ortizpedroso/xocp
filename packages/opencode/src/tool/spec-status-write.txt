@@ -1,0 +1,11 @@
+Update the approval `status` field in a Spec or Brief workflow contract file.
+
+## When to use
+- After elicitation or review, when the workflow contract should move to a new lifecycle state.
+- Only call when the user has explicitly requested a status change in the current conversation.
+
+## Rules
+- `task_id` follows workflow rules: Brief uses `<brief_id>`; Spec uses `spec:<slug>:G<N>`.
+- Transition to `aprovada` always requires real UI confirmation via the question prompt — never infer approval from chat text alone.
+- Other transitions (for example `rascunho` → `aguardando_aprovacao`) proceed without that confirmation.
+- Allowed values: `rascunho`, `aguardando_aprovacao`, `aprovada`, `em_revisao`.
