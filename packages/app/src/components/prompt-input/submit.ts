@@ -18,10 +18,16 @@ import { Worktree as WorktreeState } from "@/utils/worktree"
 import { buildRequestParts } from "./build-request-parts"
 import { setCursorPosition } from "./editor-dom"
 import { formatServerError } from "@/utils/server-errors"
-import { ScopedKey } from "@/utils/server-scope"
+import { ScopedKey, SessionRouteKey, SessionStateKey } from "@/utils/server-scope"
 import { createPromptSubmissionState } from "./submission-state"
 import { normalizeSessionInfo } from "@/utils/session"
-import { consumeElicitadorSubmitAgent } from "@/pages/session/elicitador-suggestion-runtime"
+import {
+  consumeElicitadorSubmitAgent,
+  elicitadorSuggestionScope,
+  isElicitadorAmbiguityResolved,
+  requestElicitadorAmbiguityResolution,
+} from "@/pages/session/elicitador-suggestion-runtime"
+import { ELICITADOR_AGENT_ID, shouldAskElicitadorAmbiguity } from "@/pages/session/elicitador-suggestion"
 import { Event } from "@opencode-ai/schema/event"
 import { blobDataUrl } from "@/utils/draft-store"
 
@@ -351,12 +357,51 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
     const agent = overrideAgent ?? currentAgent!.name
 
+    const projectDirectory = sdk().directory
+    const isNewSession = !params.id
+    const sessionID = params.id
+    const userMessageCount = sessionID
+      ? (sync().data.message[sessionID]?.filter((message: Message) => message.role === "user").length ?? 0)
+      : 0
+    const elicitadorScope = elicitadorSuggestionScope(
+      sessionID,
+      SessionStateKey.from(sdk().scope, SessionRouteKey.fromRoute(base64Encode(projectDirectory), sessionID)),
+    )
+
+    let resolvedAgent = agent
+    if (
+      mode === "normal" &&
+      !text.trim().startsWith("/") &&
+      !overrideAgent &&
+      shouldAskElicitadorAmbiguity({
+        text,
+        agent,
+        userMessageCount,
+        resolved: isElicitadorAmbiguityResolved(elicitadorScope),
+      })
+    ) {
+      const choice = await requestElicitadorAmbiguityResolution(elicitadorScope)
+      if (choice === "project") {
+        try {
+          if (sessionID) {
+            await sdk().api.session.switchAgent({ sessionID, agent: ELICITADOR_AGENT_ID })
+          }
+          local.agent.set(ELICITADOR_AGENT_ID)
+          resolvedAgent = ELICITADOR_AGENT_ID
+        } catch (err) {
+          showToast({
+            title: language.t("session.elicitador.error.switchFailed"),
+            description: errorMessage(err),
+          })
+          return
+        }
+      }
+    }
+
     input.addToHistory(currentPrompt, mode)
     input.resetHistoryNavigation()
 
-    const projectDirectory = sdk().directory
     const permissionState = permission.currentServerState()
-    const isNewSession = !params.id
     const shouldAutoAccept = isNewSession && input.autoAccept()
     const worktreeSelection = input.newSessionWorktree?.() || "main"
 
@@ -406,7 +451,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     if (!session && isNewSession) {
       const created = await sdk()
         .api.session.create({
-          agent,
+          agent: resolvedAgent,
           model: { id: currentModel.id, providerID: currentModel.provider.id, variant },
           location: { directory: sessionDirectory },
         })
@@ -425,7 +470,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           if (!session) return
           if (shouldAutoAccept) permissionState.enableAutoAccept(session.id, sessionDirectory)
           local.session.promote(sessionDirectory, session.id, {
-            agent,
+            agent: resolvedAgent,
             model: { providerID: currentModel.provider.id, modelID: currentModel.id },
             variant: variant ?? null,
           })
@@ -454,7 +499,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       sessionDirectory,
       prompt: currentPrompt,
       context,
-      agent,
+      agent: resolvedAgent,
       model,
       variant,
     }
@@ -499,7 +544,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           sessionID: session.id,
           id: eventID,
           command: text,
-          agent,
+          agent: resolvedAgent,
           model,
         })
         .catch((err) => {
@@ -526,7 +571,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
             id: messageID,
             command: commandName,
             arguments: args.join(" "),
-            agent,
+            agent: resolvedAgent,
             model: { id: model.modelID, providerID: model.providerID, variant },
             files: await Promise.all(
               images.map(async (attachment) => ({

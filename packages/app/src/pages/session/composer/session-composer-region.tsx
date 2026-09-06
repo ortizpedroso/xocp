@@ -5,6 +5,7 @@ import { SessionPermissionDock } from "@/pages/session/composer/session-permissi
 import { SessionQuestionDock } from "@/pages/session/composer/session-question-dock"
 import { SessionFollowupDock } from "@/pages/session/composer/session-followup-dock"
 import { ElicitadorSuggestion } from "@/pages/session/elicitador-suggestion-ui"
+import { ElicitadorAmbiguityPrompt } from "@/pages/session/elicitador-ambiguity-ui"
 import { GraphifySuggestion } from "@/pages/session/graphify-suggestion-ui"
 import { SessionRevertDock } from "@/pages/session/composer/session-revert-dock"
 import { SessionTodoDock } from "@/pages/session/composer/session-todo-dock"
@@ -139,12 +140,15 @@ export function SessionComposerRegion(props: {
               }}
             >
               {props.elicitadorPromptText && props.elicitadorUserMessageCount && props.elicitadorSessionKey ? (
-                <ElicitadorSuggestion
-                  sessionID={() => props.elicitadorSessionID?.()}
-                  sessionKey={props.elicitadorSessionKey}
-                  promptText={props.elicitadorPromptText}
-                  userMessageCount={props.elicitadorUserMessageCount}
-                />
+                <>
+                  <ElicitadorAmbiguityPrompt />
+                  <ElicitadorSuggestion
+                    sessionID={() => props.elicitadorSessionID?.()}
+                    sessionKey={props.elicitadorSessionKey}
+                    promptText={props.elicitadorPromptText}
+                    userMessageCount={props.elicitadorUserMessageCount}
+                  />
+                </>
               ) : null}
               {props.graphifyTurnID ? <GraphifySuggestion userTurnID={props.graphifyTurnID} /> : null}
               <Show when={controller.followup()?.items.length}>

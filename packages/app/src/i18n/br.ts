@@ -1191,5 +1191,10 @@ export const dict = {
   "session.graphify.toast.ready": "Project map ready",
   "session.elicitador.suggestion.message": "This looks like a new project — the Elicitador agent helps structure requirements before you start. Switch now?",
   "session.elicitador.suggestion.action": "Use Elicitador",
+  "session.elicitador.ambiguity.header": "Projeto novo?",
+  "session.elicitador.ambiguity.message":
+    "Isso parece descrever um sistema novo — quer que eu conduza como um projeto formal (com documento de especificação), ou é só uma dúvida pontual?",
+  "session.elicitador.ambiguity.option.project": "Projeto novo",
+  "session.elicitador.ambiguity.option.pointTask": "Só uma dúvida",
   "session.elicitador.error.switchFailed": "Could not switch to the Elicitador agent.",
 }

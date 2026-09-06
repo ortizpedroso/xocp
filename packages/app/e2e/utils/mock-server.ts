@@ -43,7 +43,7 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
     },
     "/project": [config.project],
     "/project/current": config.project,
-    "/agent": [{ name: "build", mode: "primary" }],
+    "/agent": [{ name: "build", mode: "primary" }, { name: "elicitador", mode: "primary", native: false }],
     "/vcs": { branch: "main", default_branch: "main" },
     "/session": config.sessions,
   }
@@ -126,9 +126,19 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
         data: [
           {
             id: "build",
-            name: "Build",
+            name: "build",
             mode: "primary",
             hidden: false,
+            native: true,
+            request: { settings: {}, headers: {}, body: {} },
+            permissions: [],
+          },
+          {
+            id: "elicitador",
+            name: "elicitador",
+            mode: "primary",
+            hidden: false,
+            native: false,
             request: { settings: {}, headers: {}, body: {} },
             permissions: [],
           },
@@ -182,6 +192,28 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
       return json(route, { location: location(config), data: { ticket: "e2e-ticket", expires_in: 60 } })
     if (emptyObject.has(path)) return json(route, {})
     if (emptyList.has(path)) return json(route, [])
+    if (path === "/api/session" && route.request().method() === "POST") {
+      const body = route.request().postDataJSON() as { agent?: string; model?: { id: string; providerID: string } }
+      const id = `ses_${Date.now()}`
+      const session = currentSession(
+        {
+          id,
+          agent: body.agent ?? "build",
+          model: body.model ?? { id: "test-model", providerID: "opencode" },
+          directory: config.directory,
+          time: { created: Date.now(), updated: Date.now() },
+        },
+        config.directory,
+      )
+      config.sessions.push({ id, agent: session.agent, directory: config.directory })
+      return json(route, { data: session })
+    }
+    if (/^\/api\/session\/[^/]+\/prompt$/.test(path) && route.request().method() === "POST") {
+      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
+    }
+    if (/^\/api\/session\/[^/]+\/agent$/.test(path) && route.request().method() === "POST") {
+      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
+    }
     if (path === "/api/session") {
       const directory = url.searchParams.get("directory")
       const parentID = url.searchParams.get("parentID")

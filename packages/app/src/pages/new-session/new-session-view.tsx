@@ -10,6 +10,7 @@ import createPresence from "solid-presence"
 import { PromptInputV2Composer } from "@/components/prompt-input-v2"
 import { PromptGitStatus, PromptWorkspaceSelector } from "@/components/prompt-workspace-selector"
 import { ElicitadorSuggestion } from "@/pages/session/elicitador-suggestion-ui"
+import { ElicitadorAmbiguityPrompt } from "@/pages/session/elicitador-ambiguity-ui"
 import { usePrompt } from "@/context/prompt"
 import { useSessionKey } from "@/pages/session/session-layout"
 import {
@@ -47,6 +48,7 @@ export function NewSessionView(props: {
           <div class={NEW_SESSION_CONTENT_WIDTH}>
             <WordmarkV2 class="h-auto w-full text-v2-background-bg-inverse" />
             <div class="mt-8 flex flex-col gap-8">
+              <ElicitadorAmbiguityPrompt />
               <ElicitadorSuggestion
                 sessionID={() => undefined}
                 sessionKey={sessionKey}
