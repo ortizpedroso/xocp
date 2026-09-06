@@ -24,6 +24,7 @@ import {
   createDegenerateTracker,
   degenerateFailure,
   degenerateNotice,
+  degeneratePaidFallbackBlocked,
   onDegenerateToolCompleted,
   resolveFallbackModel,
   type DegenerateTracker,
@@ -749,7 +750,20 @@ const layer = Layer.effect(
             }
 
             const fallback = yield* pickFallbackModel(sourceModel)
-            if (!fallback) {
+            if (fallback.type === "blocked_paid") {
+              ctx.assistantMessage.error = MessageV2.fromError(new Error(degeneratePaidFallbackBlocked(sourceModel)), {
+                providerID: sourceModel.providerID,
+                aborted: false,
+              })
+              ctx.assistantMessage.finish = "error"
+              yield* events.publish(Session.Event.Error, {
+                sessionID: ctx.assistantMessage.sessionID,
+                error: ctx.assistantMessage.error,
+              })
+              yield* status.set(ctx.sessionID, { type: "idle" })
+              return "stop" as Result
+            }
+            if (fallback.type !== "model") {
               ctx.assistantMessage.error = MessageV2.fromError(new Error(degenerateFailure(sourceModel)), {
                 providerID: sourceModel.providerID,
                 aborted: false,
@@ -763,9 +777,9 @@ const layer = Layer.effect(
               return "stop" as Result
             }
 
-            yield* reportDegenerateNotice(sourceModel, fallback)
-            currentInput = { ...streamInput, model: fallback }
-            ctx.model = fallback
+            yield* reportDegenerateNotice(sourceModel, fallback.model)
+            currentInput = { ...streamInput, model: fallback.model }
+            ctx.model = fallback.model
             usedFallback = true
           }
 
