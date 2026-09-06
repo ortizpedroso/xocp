@@ -86,6 +86,35 @@ export function degenerateFailure(model: ProviderTypes.Model) {
   return `Model ${model.providerID}/${model.id} did not complete the action (repetitive pattern detected). Automatic retry was not successful.`
 }
 
+export function degeneratePaidFallbackBlocked(model: ProviderTypes.Model) {
+  const label = `${model.providerID}/${model.id}`
+  return `Model ${label} did not complete the action (repetitive pattern detected). Automatic retry was blocked because the only available fallback models on this provider are paid. Configure experimental.degenerate_fallback_model explicitly to opt in to a paid fallback.`
+}
+
+export function modelHasPaidCost(model: ProviderTypes.Model) {
+  if (model.cost.input > 0 || model.cost.output > 0) return true
+  if (model.cost.cache.read > 0 || model.cost.cache.write > 0) return true
+  if (model.cost.tiers?.some((tier) => tier.input > 0 || tier.output > 0 || tier.cache.read > 0 || tier.cache.write > 0)) {
+    return true
+  }
+  const over200k = model.cost.experimentalOver200K
+  if (!over200k) return false
+  return over200k.input > 0 || over200k.output > 0 || over200k.cache.read > 0 || over200k.cache.write > 0
+}
+
+export type FallbackResolution =
+  | { type: "model"; model: ProviderTypes.Model }
+  | { type: "blocked_paid" }
+  | { type: "unavailable" }
+
+function toProviderModel(providerID: ProviderV2.ID, model: ProviderTypes.Model) {
+  return {
+    ...model,
+    providerID,
+    id: ModelV2.ID.make(model.id),
+  } satisfies ProviderTypes.Model
+}
+
 export const resolveFallbackModel = Effect.fn("SessionDegenerate.resolveFallbackModel")(function* (
   current: ProviderTypes.Model,
 ) {
@@ -95,32 +124,30 @@ export const resolveFallbackModel = Effect.fn("SessionDegenerate.resolveFallback
   const configured = cfg.experimental?.degenerate_fallback_model
   if (configured) {
     const parsed = Provider.parseModel(configured)
-    if (parsed.providerID === current.providerID && parsed.modelID === current.id) return undefined
-    return yield* provider.getModel(parsed.providerID, parsed.modelID).pipe(
+    if (parsed.providerID === current.providerID && parsed.modelID === current.id) {
+      return { type: "unavailable" } satisfies FallbackResolution
+    }
+    const model = yield* provider.getModel(parsed.providerID, parsed.modelID).pipe(
       Effect.catchTag("ProviderModelNotFoundError", () => Effect.succeed(undefined)),
     )
+    if (!model) return { type: "unavailable" } satisfies FallbackResolution
+    return { type: "model", model } satisfies FallbackResolution
   }
 
   const providers = yield* provider.list()
+  const sameProvider = providers[current.providerID]
+  const currentIsFree = !modelHasPaidCost(current)
+  const alternatives = Object.values(sameProvider?.models ?? {}).filter((model) => model.id !== current.id)
 
-  for (const model of Object.values(providers[current.providerID]?.models ?? {})) {
-    if (model.id === current.id) continue
-    return {
-      ...model,
-      providerID: current.providerID,
-      id: ModelV2.ID.make(model.id),
-    } satisfies ProviderTypes.Model
+  for (const model of alternatives) {
+    const candidate = toProviderModel(current.providerID, model)
+    if (currentIsFree && modelHasPaidCost(candidate)) continue
+    return { type: "model", model: candidate } satisfies FallbackResolution
   }
 
-  for (const [providerID, info] of Object.entries(providers)) {
-    for (const model of Object.values(info.models)) {
-      if (providerID === current.providerID && model.id === current.id) continue
-      return {
-        ...model,
-        providerID: ProviderV2.ID.make(providerID),
-        id: ModelV2.ID.make(model.id),
-      } satisfies ProviderTypes.Model
-    }
+  if (currentIsFree && alternatives.length > 0 && alternatives.every((model) => modelHasPaidCost(toProviderModel(current.providerID, model)))) {
+    return { type: "blocked_paid" } satisfies FallbackResolution
   }
-  return undefined
+
+  return { type: "unavailable" } satisfies FallbackResolution
 })
