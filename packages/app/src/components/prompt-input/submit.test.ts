@@ -33,6 +33,7 @@ const promptInputs: unknown[] = []
 const sentCommands: unknown[] = []
 const commands: Array<{ name: string }> = []
 let serverSessionSyncs = 0
+let syncMessages: Record<string, Array<{ role: string }>> | undefined = {}
 
 let params: { id?: string } = {}
 let search: { draftId?: string } = {}
@@ -210,7 +211,7 @@ beforeAll(async () => {
 
   mock.module("@/context/sync", () => ({
     useSync: () => () => ({
-      data: { command: commands },
+      data: { command: commands, message: syncMessages },
       session: {
         optimistic: {
           add: (value: {
@@ -301,6 +302,7 @@ beforeEach(() => {
   permissionServer = "server-a"
   createSessionGate = undefined
   serverSessionSyncs = 0
+  syncMessages = {}
   for (const key of Object.keys(storedSessions)) delete storedSessions[key]
 })
 
@@ -563,6 +565,37 @@ describe("prompt submit worktree selection", () => {
       message: {
         model: { providerID: "draft-provider", modelID: "draft-model", variant: "draft-variant" },
       },
+    })
+  })
+
+  test("submits when sync message store is undefined", async () => {
+    params = { id: "session-1" }
+    syncMessages = undefined
+
+    const submit = createPromptSubmit({
+      prompt,
+      info: () => ({ id: "session-1" }),
+      imageAttachments: () => [],
+      commentCount: () => 0,
+      autoAccept: () => false,
+      mode: () => "normal",
+      working: () => false,
+      editor: () => undefined,
+      queueScroll: () => undefined,
+      promptLength: (value) => value.reduce((sum, part) => sum + ("content" in part ? part.content.length : 0), 0),
+      addToHistory: () => undefined,
+      resetHistoryNavigation: () => undefined,
+      setMode: () => undefined,
+      setPopover: () => undefined,
+    })
+
+    await submit.handleSubmit({ preventDefault: () => undefined } as unknown as Event)
+    await Bun.sleep(0)
+
+    expect(sentPrompts).toEqual(["/repo/main"])
+    expect(promptInputs[0]).toMatchObject({
+      sessionID: "session-1",
+      text: "ls",
     })
   })
 
