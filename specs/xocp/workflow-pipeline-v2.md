@@ -42,7 +42,7 @@ As ferramentas novas servem **explicitamente** aos dois fluxos:
 
 O fluxo Brief **não** usa `spec_approval_check` nem `spec_status_write`. O gate de
 partida do Brief é a existência de um brief válido em `.opencode/briefs/` (ver
-ambiguidade §12 sobre gate formal de aprovação do Brief).
+ambiguidade §11 sobre gate formal de aprovação do Brief).
 
 ### 0.2 `task_id` — regra única
 
@@ -59,7 +59,7 @@ Trabalho em Spec:   task_id = spec:<slug>:G<N>
 - `<brief_id>` — o campo `brief_id` do YAML do brief (v1, seção 4).
 - `<slug>` — o slug do arquivo `specs/<slug>.md`.
 - `G<N>` — número de geração da Spec (incremento quando o Elicitador publica uma
-  revisão major do contrato; ver ambiguidade §12).
+  revisão major do contrato; ver ambiguidade §11).
 
 **Nunca** misturar formatos numa mesma pasta de reviews.
 
@@ -256,7 +256,7 @@ Grava `.opencode/reviews/<task_id>/cycle-<N>.json`.
 
 No fluxo **Brief**, `spec_updated` e `norm_sources_verified` podem ser `pass` por
 N/A documentado na `evidence`, ou omitidos do schema na implementação — ver
-ambiguidade §12.
+ambiguidade §11.
 
 ### 4.5 `review_checklist_read(task_id)`
 
@@ -354,11 +354,11 @@ do v1). O sistema "aprende" via spec mais afiada, não via modelo mudando sozinh
 | Fase | Entregável | Escopo |
 |------|------------|--------|
 | **0** | Este documento + `status` no frontmatter do `elicitador-spec-system.md` | Só documentação |
-| **1** | 4 tools de escrita + 2 de leitura + `spec_approval_check` + `spec_status_write`, validação na tool | **Sem** agentes nativos; testável isoladamente |
+| **1** | 4 tools de escrita + 2 de leitura (validação na tool), **sem** agentes nativos | Ver inventário abaixo; `spec_status_write` documentada aqui — ver §11.5 sobre contagem |
 | **2** | 4 agentes nativos + prompts migrados do v1 | **Não** misturar com Fase 1 no mesmo PR |
 | **3** | Testes de transcript determinísticos + piloto real com humano | Mesmo padrão do `workflow-pipeline-phase0-report.md` |
 
-**Fase 1 — inventário de tools:**
+**Fase 1 — núcleo 4+2 (roadmap):**
 
 | Tool | Tipo |
 |------|------|
@@ -366,9 +366,11 @@ do v1). O sistema "aprende" via spec mais afiada, não via modelo mudando sozinh
 | `execution_summary_write` | escrita |
 | `review_checklist_write` | escrita |
 | `spec_approval_check` | escrita/leitura |
-| `spec_status_write` | escrita |
 | `execution_summary_read` | leitura |
 | `review_checklist_read` | leitura |
+
+**Também Fase 1 (documentada, contagem separada):** `spec_status_write` — transição de
+`status` no frontmatter da Spec.
 
 ---
 
@@ -399,3 +401,6 @@ silenciosa:**
 5. **Commitar `.opencode/reviews/`** — em todos os repos de usuário ou só em
    monorepos XOCP? Política de `.gitignore` global do produto pode conflitar com
    §0.5.
+6. **Contagem Fase 1 (4+2 vs 7 tools)** — `spec_status_write` entra no mesmo PR
+   da Fase 1 ou PR separado? O roadmap diz 4 escritas + 2 leituras; este documento
+   lista 6 do núcleo + `spec_status_write` adicional.
