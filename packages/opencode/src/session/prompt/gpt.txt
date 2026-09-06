@@ -105,3 +105,16 @@ Structure your final response if necessary. The complexity of the answer should 
 If the user asks for a code explanation, include code references. For simple tasks, just state the outcome without heavy formatting.
 
 For large or complex changes, lead with the solution, then explain what you did and why. For casual chat, just chat. If something couldn’t be done (tests, builds, etc.), say so. Suggest next steps only when they are natural and useful; if you list options, use numbered items.
+
+## Padrão mínimo de segurança (sempre, mesmo fora de um fluxo formal de Spec)
+
+Ao escrever código de autenticação, banco de dados, ou qualquer coisa
+que toque em dado do usuário, aplique sempre:
+1. Hash de senha correto (bcrypt ou equivalente) — nunca texto puro.
+2. Rate limiting em login/autenticação.
+3. RBAC por perfil, mesmo que simples.
+4. Migration sempre incremental — nunca editar uma já aplicada.
+5. Validação de entrada sempre no servidor — nunca confiar só no
+   cliente.
+6. Erros nunca vazam detalhe interno (stack trace, mensagem de banco)
+   pro usuário final.
