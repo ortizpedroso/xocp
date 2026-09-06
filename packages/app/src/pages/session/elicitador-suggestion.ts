@@ -31,7 +31,33 @@ export const ELICITADOR_POINT_TASK_SIGNALS_V1 = [
   /\b(this|esse|esta|neste|nesta) (bug|erro|arquivo|file)\b/i,
 ] as const
 
+/**
+ * Weak hints that the message might describe a system, but without strong greenfield signals.
+ * Calibration examples (v1 — tune with real usage):
+ *
+ * ambiguous (ask):
+ * - "preciso melhorar o sistema de login"
+ * - "quero uma dashboard para vendas"
+ * - "precisamos de um portal para clientes"
+ * - "implementar módulo de relatórios"
+ *
+ * not ambiguous (silence — no project, no point-task, no weak hints):
+ * - "bom dia"
+ * - "o que é typescript?"
+ * - "como funciona o git?"
+ * - "me explica async await"
+ */
+export const ELICITADOR_AMBIGUOUS_HINTS_V1 = [
+  /\b(sistema|plataforma|aplicativo|aplicação|software|portal|módulo|modulo)\b/i,
+  /\b(app|site|dashboard|painel)\b/i,
+  /\b(system|platform|application|software|dashboard|portal|module)\b/i,
+  /\b(melhorar|implementar|desenvolver|construir|montar)\b/i,
+  /\b(improve|implement|develop|build)\b/i,
+] as const
+
 const MIN_PROMPT_LENGTH = 12
+
+export type ElicitadorTriage = "project" | "point_task" | "ambiguous" | "insufficient"
 
 export function hasElicitadorPointTaskSignals(text: string) {
   return ELICITADOR_POINT_TASK_SIGNALS_V1.some((pattern) => pattern.test(text))
@@ -41,11 +67,21 @@ export function hasElicitadorProjectSignals(text: string) {
   return ELICITADOR_PROJECT_SIGNALS_V1.some((pattern) => pattern.test(text))
 }
 
-export function suggestsElicitador(text: string) {
+export function hasElicitadorAmbiguousHints(text: string) {
+  return ELICITADOR_AMBIGUOUS_HINTS_V1.some((pattern) => pattern.test(text))
+}
+
+export function triageElicitador(text: string): ElicitadorTriage {
   const normalized = text.trim()
-  if (normalized.length < MIN_PROMPT_LENGTH) return false
-  if (hasElicitadorPointTaskSignals(normalized)) return false
-  return hasElicitadorProjectSignals(normalized)
+  if (normalized.length < MIN_PROMPT_LENGTH) return "insufficient"
+  if (hasElicitadorPointTaskSignals(normalized)) return "point_task"
+  if (hasElicitadorProjectSignals(normalized)) return "project"
+  if (hasElicitadorAmbiguousHints(normalized)) return "ambiguous"
+  return "insufficient"
+}
+
+export function suggestsElicitador(text: string) {
+  return triageElicitador(text) === "project"
 }
 
 export function shouldOfferElicitadorSuggestion(input: {
@@ -58,4 +94,16 @@ export function shouldOfferElicitadorSuggestion(input: {
   if (input.userMessageCount > 0) return false
   if (input.agent !== "build") return false
   return suggestsElicitador(input.text)
+}
+
+export function shouldAskElicitadorAmbiguity(input: {
+  text: string
+  agent: string
+  userMessageCount: number
+  resolved: boolean
+}) {
+  if (input.resolved) return false
+  if (input.userMessageCount > 0) return false
+  if (input.agent !== "build") return false
+  return triageElicitador(input.text) === "ambiguous"
 }

@@ -732,6 +732,11 @@ export const dict = {
   "session.elicitador.suggestion.message":
     "This looks like a new project — the Elicitador agent helps structure requirements before you start. Switch now?",
   "session.elicitador.suggestion.action": "Use Elicitador",
+  "session.elicitador.ambiguity.header": "New project?",
+  "session.elicitador.ambiguity.message":
+    "This looks like it might describe a new system — should I run this as a formal project (with a specification document), or is it just a quick question?",
+  "session.elicitador.ambiguity.option.project": "New project",
+  "session.elicitador.ambiguity.option.pointTask": "Just a question",
   "session.elicitador.error.switchFailed": "Could not switch to the Elicitador agent.",
 
   "session.new.title": "Build anything",
