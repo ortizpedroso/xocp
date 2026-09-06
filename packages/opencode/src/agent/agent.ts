@@ -17,6 +17,7 @@ import PROMPT_ANALISTA from "./prompt/analista.txt"
 import PROMPT_WORKFLOW_EXECUTOR from "./prompt/workflow-executor.txt"
 import PROMPT_AVALIADOR from "./prompt/avaliador.txt"
 import PROMPT_EXPLORE from "./prompt/explore.txt"
+import PROMPT_GRAPHIFY_EXPLORER from "./prompt/graphify-explorer.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
 import { Permission } from "@/permission"
@@ -152,6 +153,7 @@ const layer = Layer.effect(
               Permission.fromConfig({
                 question: "allow",
                 plan_enter: "allow",
+                graphify_query: "deny",
               }),
               user,
             ),
@@ -167,6 +169,7 @@ const layer = Layer.effect(
               Permission.fromConfig({
                 question: "allow",
                 plan_exit: "allow",
+                graphify_query: "deny",
                 task: {
                   general: "deny",
                 },
@@ -194,9 +197,11 @@ const layer = Layer.effect(
               Permission.fromConfig({
                 question: "allow",
                 bash: "deny",
+                graphify_query: "deny",
                 task: {
                   general: "deny",
                   explore: "allow",
+                  "graphify-explorer": "allow",
                 },
                 edit: {
                   "*": "deny",
@@ -342,6 +347,31 @@ const layer = Layer.effect(
             ),
             description: `Fast agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. "src/components/**/*.tsx"), search code for keywords (eg. "API endpoints"), or answer questions about the codebase (eg. "how do API endpoints work?"). When calling this agent, specify the desired thoroughness level: "quick" for basic searches, "medium" for moderate exploration, or "very thorough" for comprehensive analysis across multiple locations and naming conventions.`,
             prompt: PROMPT_EXPLORE,
+            options: {},
+            mode: "subagent",
+            native: true,
+          },
+          "graphify-explorer": {
+            name: "graphify-explorer",
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                list: "allow",
+                bash: "allow",
+                webfetch: "allow",
+                websearch: "allow",
+                read: "allow",
+                graphify_query: "allow",
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            description:
+              'Subagent specialized in answering structural code questions via Graphify. Use when you need to know how code connects (calls, imports, inheritance, dependency paths) rather than text search alone. Specify the structural question clearly.',
+            prompt: PROMPT_GRAPHIFY_EXPLORER,
             options: {},
             mode: "subagent",
             native: true,
