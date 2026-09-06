@@ -39,6 +39,17 @@ Track audited status in `specs/xocp/implementation-checklist.md`.
 - Preserve MIT license and upstream copyright notice.
 - When changing XOCP architecture, session flow, stack, or roadmap, update `specs/xocp/documentacao.md` and run `bun run generate:xocp-docs` (CI enforces this via `xocp-ci`).
 
+## Papéis especializados deste projeto
+
+Antes de agir como Elicitador, Triador, Analista, Executor ou
+Avaliador, leia primeiro:
+
+- `specs/xocp/workflow-pipeline-v2.md` (Triador/Analista/Executor/Avaliador)
+- `specs/xocp/elicitador-spec-system.md` (Elicitador)
+
+Isso não é opcional — sem ler, o comportamento correto desses papéis
+não está disponível.
+
 ## XOCP workflow and GitHub
 
 - Development workflow (Cloud Agent primary, local for testing): `specs/xocp/workflow.md`
