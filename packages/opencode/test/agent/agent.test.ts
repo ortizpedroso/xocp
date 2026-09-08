@@ -101,6 +101,7 @@ it.instance("elicitador agent has correct default properties", () =>
     expect(elicitador).toBeDefined()
     expect(elicitador?.mode).toBe("primary")
     expect(elicitador?.native).toBe(true)
+    expect(elicitador?.pipeline).toBe(true)
     expect(elicitador?.prompt).toBeDefined()
     expect(elicitador?.description).toContain("elicitação")
   }),
@@ -136,6 +137,22 @@ it.instance("workflow-triador agent is primary read-only like explore", () =>
     expect(triador?.prompt).toContain("DIVIDIR")
     expect(evalPerm(triador, "edit")).toBe("deny")
     expect(evalPerm(triador, "read")).toBe("allow")
+  }),
+)
+
+it.instance("XOCP pipeline agents are marked pipeline and OpenCode primaries are not", () =>
+  Effect.gen(function* () {
+    const pipeline = ["elicitador", "workflow-triador", "analista", "workflow-executor", "avaliador"]
+    for (const name of pipeline) {
+      const agent = yield* load((svc) => svc.get(name))
+      expect(agent?.pipeline).toBe(true)
+      expect(agent?.native).toBe(true)
+    }
+
+    const build = yield* load((svc) => svc.get("build"))
+    const plan = yield* load((svc) => svc.get("plan"))
+    expect(build?.pipeline).toBeUndefined()
+    expect(plan?.pipeline).toBeUndefined()
   }),
 )
 

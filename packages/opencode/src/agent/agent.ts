@@ -43,6 +43,7 @@ export const Info = Schema.Struct({
   description: Schema.optional(Schema.String),
   mode: Schema.Literals(["subagent", "primary", "all"]),
   native: Schema.optional(Schema.Boolean),
+  pipeline: Schema.optional(Schema.Boolean),
   hidden: Schema.optional(Schema.Boolean),
   topP: Schema.optional(Schema.Finite),
   temperature: Schema.optional(Schema.Finite),
@@ -213,6 +214,7 @@ const layer = Layer.effect(
             ),
             mode: "primary",
             native: true,
+            pipeline: true,
             prompt: PROMPT_ELICITADOR,
           },
           "workflow-triador": {
@@ -237,6 +239,7 @@ const layer = Layer.effect(
             ),
             mode: "primary",
             native: true,
+            pipeline: true,
             prompt: PROMPT_WORKFLOW_TRIADOR,
           },
           analista: {
@@ -262,6 +265,7 @@ const layer = Layer.effect(
             ),
             mode: "primary",
             native: true,
+            pipeline: true,
             prompt: PROMPT_ANALISTA,
           },
           "workflow-executor": {
@@ -281,6 +285,7 @@ const layer = Layer.effect(
             ),
             mode: "primary",
             native: true,
+            pipeline: true,
             prompt: PROMPT_WORKFLOW_EXECUTOR,
           },
           avaliador: {
@@ -312,6 +317,7 @@ const layer = Layer.effect(
             ),
             mode: "primary",
             native: true,
+            pipeline: true,
             prompt: PROMPT_AVALIADOR,
           },
           general: {
