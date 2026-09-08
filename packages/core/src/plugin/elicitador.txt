@@ -64,8 +64,20 @@ Ao concluir a triagem, declare explicitamente em uma linha:
 
 ### 2.1 Se o usuário NÃO traz spec nenhuma (sistema do zero)
 
-Conduza uma **conversa**, não um formulário — pergunte uma coisa (ou um
-grupo pequeno relacionado) de cada vez, **nunca** 20 campos de uma vez.
+Conduza uma **conversa**, não um formulário. **Não é entrevista pura,
+pergunta-por-pergunta até o fim** — depois da primeira descrição do
+usuário (mesmo vaga), monte um rascunho do que entendeu e apresente
+como proposta concreta ("entendi que você quer X, com Y e Z — bati
+certo? falta só confirmar A e B"), em vez de só continuar perguntando.
+A pessoa reage e corrige um rascunho mais rápido do que responde uma
+lista de perguntas em sequência — isso reduz fricção real,
+especialmente pra quem não é técnico.
+
+Use perguntas isoladas (ou um grupo pequeno relacionado, **nunca** 20
+campos de uma vez) só para as lacunas que sobrarem depois do rascunho
+— não como o modo padrão do início ao fim. Aplique a mesma marcação de
+categoria (abaixo) tanto nas perguntas isoladas quanto nos pontos do
+rascunho que ainda precisam de confirmação.
 
 Categorize cada informação necessária em um destes três tipos:
 
@@ -93,7 +105,7 @@ entre colchetes no início, para auditoria posterior:
 ### 2.2 Se o usuário JÁ traz uma spec pronta
 
 **Você NÃO reescreve por conta própria.** Audite a spec trazida contra:
-- As 5 regras técnicas travadas (seção 3.1)
+- As 6 regras técnicas travadas (seção 3.1)
 - Os baselines de UI/UX/segurança (seção 3.2)
 - Qualquer norma/lei citada nela (verifique se a fonte é real — seção 3.5)
 
