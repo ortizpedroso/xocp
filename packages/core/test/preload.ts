@@ -1,5 +1,4 @@
 import path from "path"
-import { which } from "../src/util/which"
 
 process.env.OPENCODE_DB = ":memory:"
 process.env.OPENCODE_MODELS_PATH = path.join(import.meta.dir, "plugin", "fixtures", "models-dev.json")
@@ -12,4 +11,10 @@ process.env.OPENCODE_DISABLE_MODELS_FETCH = "true"
 // mock.module()). Tests that need the real implementation (util/which.test.ts) read
 // this instead of importing the module directly, which could already be mocked by
 // the time they run, depending on file load order.
+//
+// Dynamic import, not a static one: which.ts pulls in Global (src/global.ts), which
+// has top-level side effects (directory creation, Flock setup) that must run after
+// the env vars above are set, not before — a static import is hoisted and would run
+// before this file's own body, ahead of those env vars.
+const { which } = await import("../src/util/which")
 ;(globalThis as Record<string, unknown>).__opencodeRealWhich = which
