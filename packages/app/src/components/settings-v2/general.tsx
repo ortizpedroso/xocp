@@ -15,6 +15,7 @@ import { SettingsRowV2 } from "./parts/row"
 import { LayoutRetirementNotice, LayoutTransitionToggle } from "./interface-transition"
 import {
   createAppearanceSettingsController,
+  createGraphifySettingsController,
   createPermissionScopeController,
   createShellOptions,
   createShellSettingsController,
@@ -282,6 +283,7 @@ export const SettingsGeneralV2: Component<{
   const updater = useUpdaterAction()
   const permissionScope = createPermissionScopeController(() => props.sessionID)
   const shell = createShellSettingsController()
+  const graphify = createGraphifySettingsController()
   const appearance = createAppearanceSettingsController()
   const sounds = createSoundSettingsController()
   const desktop = createMemo(() => platform.platform === "desktop")
@@ -436,6 +438,15 @@ export const SettingsGeneralV2: Component<{
               checked={settings.general.showCustomAgents()}
               onChange={(checked) => settings.general.setShowCustomAgents(checked)}
             />
+          </div>
+        </SettingsRowV2>
+
+        <SettingsRowV2
+          title={language.t("settings.general.row.enableGraphify.title")}
+          description={language.t("settings.general.row.enableGraphify.description")}
+        >
+          <div data-action="settings-enable-graphify">
+            <Switch checked={graphify.current()} onChange={(checked) => graphify.set(checked)} />
           </div>
         </SettingsRowV2>
       </SettingsListV2>

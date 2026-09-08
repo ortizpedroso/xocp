@@ -1,6 +1,7 @@
 import { createMemo, createResource, onMount, type Accessor } from "solid-js"
 import type { ColorScheme } from "@opencode-ai/ui/theme/context"
 import { useTheme } from "@opencode-ai/ui/theme/context"
+import type { Config } from "@opencode-ai/sdk/v2/client"
 import { usePermission } from "@/context/permission"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -68,6 +69,27 @@ export function createShellSettingsController() {
     select: (value: string) => {
       if (value === current()) return
       void serverSync().updateConfig({ shell: value })
+    },
+  }
+}
+
+// `experimental.graphify` exists in the server's Config schema (packages/core/src/config/experimental.ts)
+// but the generated SDK client type hasn't caught up yet (the codegen pipeline only refreshes it on
+// merges to dev), so this local extension keeps the field typed without hand-editing generated output.
+type ConfigWithExperimental = Config & { experimental?: { graphify?: boolean } }
+
+export function createGraphifySettingsController() {
+  const serverSync = useServerSync()
+  const current = createMemo(
+    () => (serverSync().data.config as ConfigWithExperimental).experimental?.graphify === true,
+  )
+
+  return {
+    current,
+    set: (checked: boolean) => {
+      if (checked === current()) return
+      const patch: ConfigWithExperimental = { experimental: { graphify: checked } }
+      void serverSync().updateConfig(patch)
     },
   }
 }
