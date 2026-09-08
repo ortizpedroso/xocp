@@ -1,3 +1,9 @@
 Writes the cumulative execution summary for the current workflow cycle.
 
 `completed` must reflect total project state, not only this cycle's delta. The tool rejects `status: "complete"` when `incomplete` is non-empty.
+
+Each `completed` item may optionally include `external_source` (a URL) when the
+conclusion came from an external source (web search, third-party documentation)
+rather than evidence verified in this repo's own code or tests. Don't use it for
+evidence you already verified internally — it exists so the Avaliador knows which
+items still need independent confirmation.

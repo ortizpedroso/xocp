@@ -12,6 +12,15 @@ Brief/Spec pede — nunca aceitar a palavra dele sem verificação própria.
    Brief/Spec. Aprovar só repetindo o que o executor disse é falha
    sua, mesma gravidade que ignorar qualquer outro gate.
 
+   Item de `completed` com `external_source` presente NUNCA conta como
+   verificado internamente, mesmo que pareça confiável — é uma fonte
+   externa (web, documentação de terceiro), não evidência do próprio
+   código/teste. Confirme de forma independente (rode o teste, leia o
+   código real) antes de considerar esse item coberto; nunca aceite a
+   fonte externa sozinha como prova suficiente. Isso evita que
+   informação não confiável de uma busca externa contamine o registro
+   como se fosse fato confirmado internamente.
+
 3. Confira os gates obrigatórios quando aplicável:
    - Spec foi atualizada nesta rodada (changelog + DoD correspondente)?
    - Toda norma/lei citada tem fonte real ou está marcada como
@@ -32,6 +41,20 @@ Brief/Spec pede — nunca aceitar a palavra dele sem verificação própria.
    - POR QUE parou: reason completo, sem resumir
    - O QUE fazer: categorizado (`duvida_humana` | `correcao_manual_necessaria`)
 
-6. Se verdict "approved": apresente um resumo legível pro humano —
+6. Se verdict "failed": o problema NÃO é a implementação, é o próprio
+   critério do Brief/Spec — incoerente, contraditório, ou impossível
+   de verificar como está escrito. Tentar de novo não resolve critério
+   ruim. NÃO delegue pro workflow-executor, mesmo que o cycle_tracker
+   ainda não tenha passado de 3 — escale direto pro humano, mesmo
+   formato de direção máxima da seção 4.8:
+   - ONDE parou: qual critério específico (ID) está incoerente
+   - POR QUE parou: por que esse critério, como escrito, não dá pra
+     avaliar (contradição com outro critério, ambiguidade, condição
+     impossível de checar) — não resuma, explique o problema real
+   - O QUE fazer: o humano precisa decidir entre reescrever o
+     critério (e o Analista atualiza o Brief/Spec) ou confirmar que a
+     sua leitura do critério estava errada (e você reavalia)
+
+7. Se verdict "approved": apresente um resumo legível pro humano —
    o que mudou, spec atualizada pra qual versão — não deixe só o
    JSON cru como única confirmação.

@@ -209,7 +209,13 @@ Chamada ao **final** de cada tentativa do executor, antes do Avaliador.
 ```typescript
 execution_summary_write({
   task_id: string,
-  completed: Array<{ item: string, evidence: string }>,
+  completed: Array<{
+    item: string,
+    evidence: string,
+    external_source?: string,  // URL, só se a conclusão veio de fonte externa
+                                // (web, documentação de terceiro) — não confunda
+                                // com evidência verificada no próprio código/teste
+  }>,
   // CUMULATIVO — estado completo atual do projeto, não só o delta desta rodada
   incomplete: Array<{
     item: string,
@@ -223,6 +229,11 @@ execution_summary_write({
 - Grava `.opencode/reviews/<task_id>/execution-<N>.json` com `N` do `cycle_tracker`.
 - Se `incomplete.length > 0`, a tool **rejeita** `status: "complete"` (validação
   na tool, não confia no agente).
+- Quando `external_source` está presente num item de `completed`, o Avaliador
+  (§4.3) **não** trata como verificado internamente só por estar ali — precisa
+  confirmar de forma independente (rodar teste, ler o código real) antes de
+  considerar o item coberto. Evita que informação não confiável de uma busca
+  externa contamine o registro como se fosse fato confirmado internamente.
 
 ### 4.2 `execution_summary_read(task_id)`
 
@@ -255,12 +266,20 @@ review_checklist_write({
     status: "pass" | "fail",
     evidence: string,
   }>,
-  verdict: "approved" | "rejected",
+  verdict: "approved" | "rejected" | "failed",
   timestamp: string,  // ISO 8601, preenchido pela tool se omitido
 })
 ```
 
 Grava `.opencode/reviews/<task_id>/cycle-<N>.json`.
+
+**`verdict: "failed"`** é distinto de `"rejected"`: `"rejected"` significa que o
+código não atende a um critério correto — volta pro Executor corrigir (§4.7).
+`"failed"` significa que o **critério do Brief/Spec em si** está incoerente,
+contraditório, ou impossível de verificar como está escrito — o problema não é
+a implementação, é a própria especificação. Tentar de novo não resolve
+critério ruim: `"failed"` nunca delega de volta ao Executor, escala direto pro
+humano (§4.8) mesmo que `cycle_tracker` ainda não tenha passado de 3.
 
 **Gates opcionais:** em tarefa **Brief sem Spec associada**, `spec_updated` e
 `norm_sources_verified` ficam **ausentes** do JSON — não `"pass"` forçado com
@@ -282,16 +301,22 @@ nunca salva" / `handoff_write`).
 
 Avaliador com `verdict: "rejected"` e ciclo ≤ 3 delega ao `workflow-executor` via
 `task` (`task: { workflow-executor: allow }`). Seguro porque `cycle_tracker`
-impede a 4ª tentativa autônoma.
+impede a 4ª tentativa autônoma. `verdict: "failed"` **nunca** delega, em
+nenhum ciclo — vai direto pra §4.8.
 
 ### 4.8 Escalação pro humano
 
-Quando `cycle_tracker` > 3 **ou** `execution_summary_write` reporta
-`correcao_manual_necessaria` (mesmo no ciclo 1):
+Quando `cycle_tracker` > 3, **ou** `execution_summary_write` reporta
+`correcao_manual_necessaria` (mesmo no ciclo 1), **ou** `verdict: "failed"`
+(mesmo no ciclo 1 — critério ruim não se resolve tentando de novo):
 
 1. **ONDE parou:** ciclo exato, ID do critério (Brief/Spec) que falha
-2. **POR QUE parou:** `reason` completo, sem resumir
+2. **POR QUE parou:** `reason` completo, sem resumir — para `"failed"`, o
+   motivo específico pelo qual o critério, como escrito, é incoerente,
+   contraditório ou impossível de verificar
 3. **O QUE fazer:** categorizado (`duvida_humana` | `correcao_manual_necessaria`)
+   — para `"failed"`, o humano decide entre reescrever o critério (Analista
+   atualiza o Brief/Spec) ou confirmar que a leitura do Avaliador estava certa
 
 ---
 
