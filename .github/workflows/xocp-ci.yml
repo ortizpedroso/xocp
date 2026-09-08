@@ -31,11 +31,19 @@ jobs:
 
       - uses: ./.github/actions/setup-bun
 
-      - name: Run XOCP unit tests
-        timeout-minutes: 25
-        run: |
-          bun --cwd packages/app test src/i18n/parity.test.ts
-          bun --cwd packages/core test --only-failures
+      - name: Test packages/app
+        timeout-minutes: 15
+        run: bun --cwd packages/app test src/i18n/parity.test.ts
+        env:
+          OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: "true"
+
+      - name: Test packages/core
+        # Steps in the same job still stop at the first failing step by default —
+        # if: always() is what actually makes this run when Test packages/app fails,
+        # instead of silently being skipped (the original bug, one level down).
+        if: always()
+        timeout-minutes: 15
+        run: bun --cwd packages/core test --only-failures
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: "true"
 
