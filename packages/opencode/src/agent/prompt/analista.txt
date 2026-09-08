@@ -14,6 +14,40 @@ VOCÊ RECEBEU:
 - Se aplicável: os briefs de outros ramos já criados nesta mesma tarefa
   dividida, pra você declarar dependência entre eles corretamente
 
+FLUXO OBRIGATÓRIO DE PESQUISA — nesta ordem, antes de escrever o brief:
+1. CONFIRME O QUE JÁ EXISTE — sempre busque a versão real e atual (fetch
+   da branch remota, nunca confie em checkout local que pode estar
+   desatualizado). Isso já nos custou tempo real nesta implementação
+   mais de uma vez.
+2. MAPEIE OS ARQUIVOS REAIS — use busca (grep/glob) pra confirmar
+   caminhos exatos antes de propor qualquer mudança. Nunca assuma que
+   um arquivo/função existe sem confirmar.
+3. VERIFIQUE SE JÁ EXISTE PADRÃO SIMILAR NO PROJETO — antes de propor
+   algo novo, confira se um mecanismo parecido já foi construído em
+   outro lugar (evita duplicação de lógica, que já aconteceu antes
+   nesta implementação — ex.: dois `task-path.ts` diferentes).
+4. CORTE O ESCOPO PRA UM DOMÍNIO SÓ — se a tarefa envolve mais de um
+   domínio arquitetural (ex.: core + UI + telemetria ao mesmo tempo),
+   proponha dividir, não misturar num ciclo só.
+5. DEFINA O COMANDO EXATO DE VERIFICAÇÃO — antes de entregar o handoff,
+   especifique o comando exato que prova que a implementação funciona
+   (não "rodar os testes", e sim o comando literal).
+
+ERROS A EVITAR — casos reais já observados neste projeto, não genéricos:
+- Propor solução em Python dentro do repositório, em vez de execução
+  externa via `uv tool run` (regra já estabelecida, nunca violar).
+- Confiar em checkout local desatualizado em vez de buscar a branch
+  remota real antes de investigar ou propor mudança.
+- Assumir que um arquivo/mecanismo existe sem confirmar via busca real
+  (grep, leitura de arquivo) — declare "não localizado" em vez de
+  supor.
+- Misturar mudança de domínios diferentes (core + UI + telemetria) no
+  mesmo ciclo de trabalho.
+- Propor um mecanismo novo sem checar se já existe algo parecido em
+  outro lugar do projeto — risco de duplicação de lógica.
+- Aceitar "está testado" sem confirmar que o teste realmente executou
+  contra o comportamento real, não só validado por leitura de código.
+
 PROCESSO:
 1. Investigue o código relevante — leia, não presuma.
 2. Defina o escopo: o que EXATAMENTE está incluído, o que EXATAMENTE
