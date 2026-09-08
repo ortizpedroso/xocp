@@ -1,8 +1,14 @@
 import { describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
-import { which } from "@opencode-ai/core/util/which"
 import { tmpdir } from "../fixture/tmpdir"
+
+// Read from the global stash preload.ts captures before any test file can
+// mock.module() this path — several test files (omniroute/headroom/graphify
+// service tests) replace it for the rest of the bun test process, and Bun
+// doesn't reliably undo that via mock.restore(). Importing it directly here
+// isn't safe: depending on file load order, it may already be mocked.
+const which = (globalThis as Record<string, unknown>).__opencodeRealWhich as typeof import("@opencode-ai/core/util/which").which
 
 async function cmd(dir: string, name: string, exec = true) {
   const ext = process.platform === "win32" ? ".cmd" : ""

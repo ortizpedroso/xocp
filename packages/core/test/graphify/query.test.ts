@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test"
+import { afterAll, describe, expect, mock, test } from "bun:test"
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "fs"
 import path from "path"
 import { Effect, Layer } from "effect"
@@ -19,6 +19,13 @@ const commandLog: string[] = []
 mock.module("../../src/util/which", () => ({
   which: () => (uvPresent ? "/home/ubuntu/.local/bin/uv" : null),
 }))
+
+afterAll(() => {
+  // mock.module leaks across files for the rest of the bun test process
+  // otherwise — restore it so later files (e.g. util/which.test.ts) get the
+  // real implementation, not this stub.
+  mock.restore()
+})
 
 const graphifyOn = Layer.succeed(
   Config.Service,

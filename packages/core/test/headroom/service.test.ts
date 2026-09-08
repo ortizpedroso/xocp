@@ -130,4 +130,8 @@ describe("Headroom service", () => {
 
 afterAll(() => {
   globalThis.fetch = originalFetch
+  // mock.module leaks across files for the rest of the bun test process
+  // otherwise — restore it so later files (e.g. util/which.test.ts) get the
+  // real implementation, not this stub.
+  mock.restore()
 })
