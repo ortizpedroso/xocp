@@ -70,3 +70,34 @@ do agente sozinho. Atualizar este arquivo a cada rodada.
 - [ ] Roteamento automático por comunidade (item 5) — adiado, sem
       evidência de ganho
 - [ ] Prefetch de mapa em background (item 6) — adiado
+- [ ] Teste `i18n parity` (`packages/app/src/i18n/parity.test.ts`) falha
+      no locale `ar` — chaves faltando em `session.elicitador.ambiguity.*`,
+      `settings.providers.omniroute.*`, `settings.providers.headroom.*`.
+      Pré-existente, mascarado até 08/09/2026 (ver item de CI abaixo) —
+      agora visível de propósito, ainda não corrigido. Corrigir = traduzir
+      as chaves faltantes (ou os locales faltantes) nesses namespaces.
+
+## CI — decisões pendentes
+- [ ] Bug: job `test` do `xocp-ci.yml` roda `packages/app` e
+      `packages/core` como duas linhas de um `run: |` só — `bash -e`
+      aborta no primeiro erro, então `packages/core` nunca roda de
+      verdade em PR nenhum (só compila via `typecheck`). Fix aberto no
+      PR [#66](https://github.com/ortizpedroso/xocp/pull/66): dois
+      `steps` separados, com `if: always()` no de `packages/core` (só
+      separar em steps não bastaria — mesmo comportamento de "pular o
+      próximo se o anterior falhar" existe também no nível de step).
+      **Marcar `[x]` só depois de confirmar via CI real do próprio
+      PR #66** que os dois steps aparecem separados e `packages/core`
+      roda de verdade — auditoria ainda em andamento nesta rodada.
+- [ ] **Decisão pendente:** os testes de `packages/opencode` que usam
+      `TestLLMServer` (ex.: `elicitador-prompt.test.ts`,
+      `workflow-pipeline-prompt.test.ts`, `analista-prompt.test.ts`) só
+      rodam no workflow `test.yml`, que é `workflow_dispatch`-only —
+      nunca dispara automaticamente em PR. Não é regressão desta rodada,
+      já era assim antes. Duas opções, precisa de decisão humana:
+      (a) automatizar `test.yml` pra rodar em todo PR (provavelmente
+      esses testes são mais lentos/caros — pode ter sido deixado manual
+      de propósito, verificar antes de mudar); ou (b) manter manual e
+      criar um lembrete explícito no processo de review ("rodar
+      `test.yml` via workflow_dispatch antes de mergear PRs que tocam
+      prompts/agentes de `packages/opencode`").
