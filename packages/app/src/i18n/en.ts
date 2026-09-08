@@ -962,6 +962,9 @@ export const dict = {
   "settings.general.row.showCustomAgents.title": "Show agent",
   "settings.general.row.showCustomAgents.description":
     "Switch between agents in the composer. When hidden, defaults to Build agent.",
+  "settings.general.row.enableGraphify.title": "Enable Graphify (structural code mapping)",
+  "settings.general.row.enableGraphify.description":
+    "Map code structure (calls, imports, dependencies) on demand. Requires `uv` installed on the machine.",
   "settings.general.row.reasoningSummaries.title": "Show reasoning summaries",
   "settings.general.row.reasoningSummaries.description": "Display model reasoning summaries in the timeline",
   "settings.general.row.shellToolPartsExpanded.title": "Expand shell tool parts",
