@@ -78,17 +78,31 @@ do agente sozinho. Atualizar este arquivo a cada rodada.
       as chaves faltantes (ou os locales faltantes) nesses namespaces.
 
 ## CI — decisões pendentes
-- [ ] Bug: job `test` do `xocp-ci.yml` roda `packages/app` e
+- [x] Bug: job `test` do `xocp-ci.yml` rodava `packages/app` e
       `packages/core` como duas linhas de um `run: |` só — `bash -e`
-      aborta no primeiro erro, então `packages/core` nunca roda de
-      verdade em PR nenhum (só compila via `typecheck`). Fix aberto no
+      abortava no primeiro erro, então `packages/core` nunca rodava de
+      verdade em PR nenhum (só compilava via `typecheck`). Corrigido no
       PR [#66](https://github.com/ortizpedroso/xocp/pull/66): dois
       `steps` separados, com `if: always()` no de `packages/core` (só
       separar em steps não bastaria — mesmo comportamento de "pular o
       próximo se o anterior falhar" existe também no nível de step).
-      **Marcar `[x]` só depois de confirmar via CI real do próprio
-      PR #66** que os dois steps aparecem separados e `packages/core`
-      roda de verdade — auditoria ainda em andamento nesta rodada.
+      **Confirmado via CI real** (run do próprio PR #66, e mesclado no
+      branch do PR #65 pra validar junto com as mudanças da Parte 3):
+      os dois steps aparecem separados, `packages/app` continua falhando
+      (i18n, esperado) e `packages/core` agora roda a suíte inteira de
+      verdade — 1151 testes / 151 arquivos (bate com
+      `find packages/core -iname "*.test.ts" | wc -l` = 151), incluindo
+      os 2 testes novos de `workflow-review.test.ts` da Parte 3
+      (contagem de pass foi de 1141→1143 exatamente ao mesclar o fix
+      no branch do PR #65, sem mudar o número de fails).
+- [ ] **Achado novo, revelado pelo fix acima:** `packages/core/test/util/which.test.ts`
+      tem 2 falhas reais e pré-existentes (`finds a command from PATH
+      override`, `uses first PATH match` — esperam um path e recebem
+      `null`), nunca antes visíveis porque `packages/core` nunca rodava.
+      Não é regressão desta rodada nem relacionado a nenhuma das Partes
+      1-3; não investiguei a causa raiz. Registrando como dívida técnica
+      a investigar — provavelmente algo específico do ambiente de CI
+      (runner) que quebra a resolução de PATH que o teste espera.
 - [ ] **Decisão pendente:** os testes de `packages/opencode` que usam
       `TestLLMServer` (ex.: `elicitador-prompt.test.ts`,
       `workflow-pipeline-prompt.test.ts`, `analista-prompt.test.ts`) só
