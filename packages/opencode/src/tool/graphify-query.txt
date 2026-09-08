@@ -1,0 +1,5 @@
+Query the project's Graphify code graph for structural questions (calls, imports, inheritance, and how files connect).
+
+Use this instead of grep/read when the question is about how code connects, not just where text appears.
+
+The tool maps the project first when no graph exists yet. If mapping is still running, try again shortly.

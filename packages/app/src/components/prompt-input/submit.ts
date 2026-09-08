@@ -360,40 +360,39 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const projectDirectory = sdk().directory
     const isNewSession = !params.id
     const sessionID = params.id
-    const userMessageCount = sessionID
-      ? (sync().data.message[sessionID]?.filter((message: Message) => message.role === "user").length ?? 0)
-      : 0
-    const elicitadorScope = elicitadorSuggestionScope(
-      sessionID,
-      SessionStateKey.from(sdk().scope, SessionRouteKey.fromRoute(base64Encode(projectDirectory), sessionID)),
-    )
 
     let resolvedAgent = agent
-    if (
-      mode === "normal" &&
-      !text.trim().startsWith("/") &&
-      !overrideAgent &&
-      shouldAskElicitadorAmbiguity({
-        text,
-        agent,
-        userMessageCount,
-        resolved: isElicitadorAmbiguityResolved(elicitadorScope),
-      })
-    ) {
-      const choice = await requestElicitadorAmbiguityResolution(elicitadorScope)
-      if (choice === "project") {
-        try {
-          if (sessionID) {
-            await sdk().api.session.switchAgent({ sessionID, agent: ELICITADOR_AGENT_ID })
+    if (mode === "normal" && !text.trim().startsWith("/") && !overrideAgent) {
+      const userMessageCount = sessionID
+        ? (sync().data.message?.[sessionID]?.filter((message: Message) => message.role === "user").length ?? 0)
+        : 0
+      const elicitadorScope = elicitadorSuggestionScope(
+        sessionID,
+        SessionStateKey.from(sdk().scope, SessionRouteKey.fromRoute(base64Encode(projectDirectory), sessionID)),
+      )
+      if (
+        shouldAskElicitadorAmbiguity({
+          text,
+          agent,
+          userMessageCount,
+          resolved: isElicitadorAmbiguityResolved(elicitadorScope),
+        })
+      ) {
+        const choice = await requestElicitadorAmbiguityResolution(elicitadorScope)
+        if (choice === "project") {
+          try {
+            if (sessionID) {
+              await sdk().api.session.switchAgent({ sessionID, agent: ELICITADOR_AGENT_ID })
+            }
+            local.agent.set(ELICITADOR_AGENT_ID)
+            resolvedAgent = ELICITADOR_AGENT_ID
+          } catch (err) {
+            showToast({
+              title: language.t("session.elicitador.error.switchFailed"),
+              description: errorMessage(err),
+            })
+            return
           }
-          local.agent.set(ELICITADOR_AGENT_ID)
-          resolvedAgent = ELICITADOR_AGENT_ID
-        } catch (err) {
-          showToast({
-            title: language.t("session.elicitador.error.switchFailed"),
-            description: errorMessage(err),
-          })
-          return
         }
       }
     }

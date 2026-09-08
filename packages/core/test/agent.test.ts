@@ -122,6 +122,7 @@ describe("AgentV2", () => {
         "elicitador",
         "explore",
         "general",
+        "graphify-explorer",
         "plan",
         "summary",
         "title",
