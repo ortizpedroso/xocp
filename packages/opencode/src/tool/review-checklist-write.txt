@@ -1,3 +1,10 @@
 Writes the structured review checklist for the current workflow cycle.
 
 Brief tasks omit `spec_updated` and `norm_sources_verified`. Spec tasks must include both.
+
+`verdict` has three values: `approved`, `rejected` (the code doesn't meet a correct
+criterion — send back to workflow-executor for the next cycle), or `failed` (the
+Brief/Spec criterion itself is incoherent, contradictory, or unverifiable as written —
+the implementation isn't the problem, the spec is. Never delegate a `failed` verdict
+back to workflow-executor for another attempt; escalate straight to the human even if
+cycle_tracker hasn't reached the 3-cycle limit).

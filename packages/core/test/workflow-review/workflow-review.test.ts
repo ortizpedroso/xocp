@@ -139,4 +139,44 @@ describe("WorkflowReview", () => {
     expect(latest?.payload.status).toBe("complete")
     expect(latest?.payload.cycle).toBe(1)
   })
+
+  test("review_checklist_write accepts verdict \"failed\", distinct from \"rejected\"", async () => {
+    const dir = await tmpdir()
+    const task_id = "brief-checklist-02"
+    await WorkflowReview.incrementCycle(dir, task_id)
+
+    const result = await WorkflowReview.writeReviewChecklist(dir, {
+      task_id,
+      gates: { execution_summary_complete: "fail" },
+      criteria: [{ id: "AC1", status: "fail", evidence: "AC1 and AC2 contradict each other as written" }],
+      verdict: "failed",
+    })
+
+    expect(result.payload.verdict).toBe("failed")
+
+    const latest = await WorkflowReview.readLatestReviewChecklist(dir, task_id)
+    expect(latest?.payload.verdict).toBe("failed")
+  })
+
+  test("execution_summary_write persists external_source on a completed item", async () => {
+    const dir = await tmpdir()
+    const task_id = "brief-summary-03"
+    await WorkflowReview.incrementCycle(dir, task_id)
+
+    await WorkflowReview.writeExecutionSummary(dir, {
+      task_id,
+      completed: [
+        {
+          item: "AC1",
+          evidence: "third-party docs say this call is safe",
+          external_source: "https://example.com/docs",
+        },
+      ],
+      incomplete: [],
+      status: "complete",
+    })
+
+    const latest = await WorkflowReview.readLatestExecutionSummary(dir, task_id)
+    expect(latest?.payload.completed[0]?.external_source).toBe("https://example.com/docs")
+  })
 })

@@ -18,7 +18,7 @@ export const ReviewGates = Schema.Struct({
   execution_summary_complete: GateResult,
 })
 
-export const ReviewVerdict = Schema.Literals(["approved", "rejected"])
+export const ReviewVerdict = Schema.Literals(["approved", "rejected", "failed"])
 
 export const ReviewChecklist = Schema.Struct({
   task_id: Schema.String,

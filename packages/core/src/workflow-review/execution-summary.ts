@@ -15,6 +15,10 @@ export const IncompleteItem = Schema.Struct({
 export const CompletedItem = Schema.Struct({
   item: Schema.String,
   evidence: Schema.String,
+  // URL of an external source (web, third-party docs) the conclusion came from.
+  // Distinct from evidence verified in the repo's own code/tests — the Avaliador
+  // must independently confirm items that carry this before treating them as verified.
+  external_source: Schema.optional(Schema.String),
 })
 
 export const ExecutionSummaryStatus = Schema.Literals(["complete", "incomplete"])

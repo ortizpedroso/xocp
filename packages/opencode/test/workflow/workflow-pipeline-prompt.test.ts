@@ -41,6 +41,8 @@ const AVALIADOR_GATE_MARKERS = [
   "suficiente sozinho para aprovar",
   "sempre verifica o código",
 ]
+const AVALIADOR_FAILED_VERDICT_MARKERS = ["critério do Brief/Spec — incoerente, contraditório"]
+const AVALIADOR_EXTERNAL_SOURCE_MARKERS = ["fonte externa sozinha como prova suficiente"]
 
 const briefApproved = `brief_id: ${TASK_ID}
 status: aprovada
@@ -332,6 +334,67 @@ const scheduleAvaliadorResponses = Effect.fn("WorkflowPromptTest.scheduleAvaliad
   )
 })
 
+const scheduleFailedVerdictResponses = Effect.fn("WorkflowPromptTest.scheduleFailedVerdictResponses")(function* (
+  llm: TestLLMServer["Service"],
+  input: { task_id: string },
+) {
+  yield* llm.push(
+    reply().tool("execution_summary_read", { task_id: input.task_id }).item(),
+    reply()
+      .tool("review_checklist_write", {
+        task_id: input.task_id,
+        gates: { execution_summary_complete: "fail" },
+        criteria: [
+          {
+            id: "AC1",
+            status: "fail",
+            evidence:
+              "AC1 exige que o endpoint rejeite login sem senha (400) e AC2 exige que o mesmo " +
+              "endpoint sempre autentique sem senha para contas de teste — contraditórios como escritos, " +
+              "não dá pra satisfazer os dois ao mesmo tempo.",
+          },
+        ],
+        verdict: "failed",
+      })
+      .item(),
+    reply()
+      .text(
+        "ONDE parou: critério AC1 x AC2 do brief-cycle-demo, ciclo atual. " +
+          "POR QUE parou: AC1 e AC2 se contradizem — um exige rejeitar login sem senha, o outro exige " +
+          "sempre aceitar sem senha para contas de teste; nenhuma implementação satisfaz os dois. " +
+          "O QUE fazer: humano precisa reescrever um dos dois critérios no Brief, ou confirmar que a " +
+          "leitura está errada.",
+      )
+      .stop()
+      .item(),
+  )
+})
+
+const scheduleExternalSourceResponses = Effect.fn("WorkflowPromptTest.scheduleExternalSourceResponses")(function* (
+  llm: TestLLMServer["Service"],
+  input: { task_id: string; sourcePath: string },
+) {
+  yield* llm.push(
+    reply().tool("execution_summary_read", { task_id: input.task_id }).item(),
+    reply().tool("read", { filePath: input.sourcePath }).item(),
+    reply()
+      .tool("review_checklist_write", {
+        task_id: input.task_id,
+        gates: { execution_summary_complete: "pass" },
+        criteria: [
+          {
+            id: "AC1",
+            status: "pass",
+            evidence: `verificado independentemente lendo ${path.basename(input.sourcePath)}, não só a fonte externa citada`,
+          },
+        ],
+        verdict: "approved",
+      })
+      .item(),
+    reply().text("audit approved after independently verifying the externally-sourced claim").stop().item(),
+  )
+})
+
 async function writeApprovedBrief(directory: string) {
   const briefPath = path.join(directory, ".opencode", "briefs", `${TASK_ID}.yaml`)
   await fs.mkdir(path.dirname(briefPath), { recursive: true })
@@ -353,6 +416,22 @@ async function seedCompleteExecutionSummary(directory: string) {
   await WorkflowReview.writeExecutionSummary(directory, {
     task_id: TASK_ID,
     completed: [{ item: "AC1", evidence: "executor claims login done" }],
+    incomplete: [],
+    status: "complete",
+  })
+}
+
+async function seedCompleteExecutionSummaryWithExternalSource(directory: string) {
+  await WorkflowReview.incrementCycle(directory, TASK_ID)
+  await WorkflowReview.writeExecutionSummary(directory, {
+    task_id: TASK_ID,
+    completed: [
+      {
+        item: "AC1",
+        evidence: "library docs say this API is safe to call without rate limiting",
+        external_source: "https://example.com/third-party-lib/docs",
+      },
+    ],
     incomplete: [],
     status: "complete",
   })
@@ -559,6 +638,108 @@ describe("workflow pipeline prompt following (TestLLMServer)", () => {
           },
         }),
       },
+    ),
+  )
+
+  it.live("avaliador returns failed and escalates immediately for a contradictory brief criterion", () =>
+    provideTmpdirServer(
+      Effect.fnUntraced(function* ({ dir, llm }) {
+        yield* Effect.promise(async () => {
+          await writeApprovedBrief(dir)
+          await seedCompleteExecutionSummary(dir)
+        })
+
+        yield* scheduleFailedVerdictResponses(llm, { task_id: TASK_ID })
+
+        const prompt = yield* SessionPrompt.Service
+        const sessions = yield* Session.Service
+        const session = yield* sessions.create({
+          title: "avaliador failed verdict",
+          permission: [{ permission: "*", pattern: "*", action: "allow" }],
+        })
+
+        yield* prompt.prompt({
+          sessionID: session.id,
+          agent: "avaliador",
+          noReply: true,
+          parts: [
+            {
+              type: "text",
+              text: `Audit task ${TASK_ID}. AC1 requires rejecting login without a password (400), but AC2 requires the same endpoint to always authenticate without a password for test accounts.`,
+            },
+          ],
+        })
+
+        const result = yield* prompt.loop({ sessionID: session.id })
+        expect(result.info.role).toBe("assistant")
+
+        const hits = yield* llm.hits
+        expect(promptPresent(hits, (hit) => hasMarkers(hit, AVALIADOR_FAILED_VERDICT_MARKERS))).toBe(true)
+
+        const transcript = yield* completedToolTranscript(session.id)
+        // No `task` delegation to workflow-executor — "failed" never retries, even well below cycle 3.
+        expect(transcript.map((entry) => entry.tool)).toEqual(["execution_summary_read", "review_checklist_write"])
+
+        const latest = yield* Effect.promise(() => WorkflowReview.readLatestReviewChecklist(dir, TASK_ID))
+        expect(latest?.payload.verdict).toBe("failed")
+
+        const assistantTexts = (yield* MessageV2.filterCompactedEffect(session.id))
+          .filter((msg) => msg.info.role === "assistant")
+          .flatMap((msg) => msg.parts)
+          .filter((part) => part.type === "text")
+          .map((part) => part.text)
+        expect(assistantTexts.some((text) => text.includes("ONDE parou"))).toBe(true)
+        expect(assistantTexts.some((text) => text.includes("O QUE fazer"))).toBe(true)
+      }),
+      { git: true, config: providerCfg },
+    ),
+  )
+
+  it.live("avaliador still verifies independently when an execution summary item cites an external_source", () =>
+    provideTmpdirServer(
+      Effect.fnUntraced(function* ({ dir, llm }) {
+        const source = path.join(dir, "src", "login.ts")
+        yield* Effect.promise(async () => {
+          await writeApprovedBrief(dir)
+          await seedCompleteExecutionSummaryWithExternalSource(dir)
+          await fs.mkdir(path.dirname(source), { recursive: true })
+          await fs.writeFile(source, "export const login = () => ({ ok: true })\n", "utf-8")
+        })
+
+        yield* scheduleExternalSourceResponses(llm, { task_id: TASK_ID, sourcePath: source })
+
+        const prompt = yield* SessionPrompt.Service
+        const sessions = yield* Session.Service
+        const session = yield* sessions.create({
+          title: "avaliador external_source",
+          permission: [{ permission: "*", pattern: "*", action: "allow" }],
+        })
+
+        yield* prompt.prompt({
+          sessionID: session.id,
+          agent: "avaliador",
+          noReply: true,
+          parts: [
+            {
+              type: "text",
+              text: `Audit task ${TASK_ID}. One completed item cites an external_source — verify independently before approving.`,
+            },
+          ],
+        })
+
+        const result = yield* prompt.loop({ sessionID: session.id })
+        expect(result.info.role).toBe("assistant")
+
+        const hits = yield* llm.hits
+        expect(promptPresent(hits, (hit) => hasMarkers(hit, AVALIADOR_EXTERNAL_SOURCE_MARKERS))).toBe(true)
+
+        const transcript = yield* completedToolTranscript(session.id)
+        // Independent verification (read) happens between reading the summary and writing the review —
+        // the external_source claim alone never reaches review_checklist_write unverified.
+        assertAvaliadorVerificationBeforeReview(transcript)
+        expect(transcript.map((entry) => entry.tool)).toEqual(["execution_summary_read", "read", "review_checklist_write"])
+      }),
+      { git: true, config: providerCfg },
     ),
   )
 })
