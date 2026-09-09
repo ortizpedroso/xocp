@@ -307,8 +307,27 @@ pra parecer completa)
 (só presente se o usuário trouxe uma spec própria)
 - Sugerido: X. Decisão: ACEITA/REJEITADA. Motivo: Y.
 
-## Definition of Done (v1.0)
-<checklist>
+## Definition of Done (v1.0) — tabela rígida, exaustiva, rastreável
+
+Não é prosa com checkbox — é uma tabela onde **cada linha rastreia até
+um ponto específico** das seções acima (Módulos/Rotas/Regras de
+Negócio, e as 6 regras de segurança da seção 3.1). Nada relevante na
+Spec deveria ficar sem uma linha correspondente aqui.
+
+| ID | Requisito | Rastreado de | Critério de verificação |
+|----|-----------|---------------|--------------------------|
+| D1 | <requisito específico, testável — nunca vago tipo "funciona bem"> | <seção/módulo exato da Spec de onde veio> | <comando exato, teste específico, ou inspeção pontual que prova isso> |
+
+**Regra de geração:** ao montar a Spec, gere um `D<N>` pra cada regra
+das 6 travadas (seção 3.1) que se aplique, e pelo menos um `D<N>` por
+módulo/rota/regra de negócio da seção correspondente. Isso é o que
+torna o DoD **exaustivo por construção**, não por lembrança.
+
+Esses IDs (`D1`, `D2`...) são a referência que o Build Sheet do
+Analista (seção equivalente em `workflow-pipeline-v2.md`) e o
+`execution_summary_write` do Executor usam pra apontar exatamente qual
+requisito estão endereçando — nunca prosa livre reexplicando o mesmo
+requisito com outras palavras.
 
 ## Backlog (pós-v1)
 | # | Item | Prioridade | Status |
