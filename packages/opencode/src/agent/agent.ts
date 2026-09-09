@@ -203,6 +203,7 @@ const layer = Layer.effect(
                   general: "deny",
                   explore: "allow",
                   "graphify-explorer": "allow",
+                  "workflow-executor": "allow",
                 },
                 edit: {
                   "*": "deny",
@@ -280,6 +281,9 @@ const layer = Layer.effect(
                 plan_enter: "allow",
                 spec_status_write: "deny",
                 review_checklist_write: "deny",
+                task: {
+                  avaliador: "allow",
+                },
               }),
               user,
             ),

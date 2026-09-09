@@ -292,5 +292,20 @@ Quando a elicitação estiver completa, entregue:
 3. Lista resumida das perguntas feitas, com categoria de cada uma
 4. Pendências explícitas em "Suposições a confirmar" (se houver) —
    nunca invente suposições só pra parecer completo
+5. Pergunte ao usuário se quer aprovar a Spec agora. Se confirmar: chame
+   `spec_status_write` com `task_id` = `spec:<slug>` (entrega inicial) ou
+   `spec:<slug>:G<N>` (item específico do Backlog) e `new_status: "aprovada"`.
 
-Aguarde aprovação humana antes de qualquer build.
+   Essa ferramenta dispara sua própria confirmação real na interface — não
+   presuma aprovado só por ter chamado a ferramenta, confira o retorno:
+   - Se vier "status updated" (a transição realmente aconteceu): na MESMA
+     resposta, delegue via `task` pro `workflow-executor`, passando o mesmo
+     `task_id`. Não espere o usuário trocar de agente manualmente — essa
+     troca é automática (seção 6.1 do workflow-pipeline-v2.md); o seletor
+     continua existindo, mas ninguém precisa tocar nele nesse fluxo.
+   - Se vier "approval declined" (recusado na interface) ou erro de
+     contrato não encontrado: NÃO delegue. A Spec continua como está, sem
+     aprovação — volte pra conversa normalmente.
+
+Nunca implemente código você mesmo nem edite arquivos fora de `specs/*.md` —
+isso é sempre trabalho do `workflow-executor`, delegado como acima.
