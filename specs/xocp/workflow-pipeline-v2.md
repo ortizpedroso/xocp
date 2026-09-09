@@ -187,6 +187,36 @@ implementado, o que foi verificado, e com qual evidência".
 aprovado e obrigar trilha de auditoria **sem** afetar uso livre do produto via
 `build`.
 
+### 2.1 Build Sheet — formato rígido do que o Analista entrega
+
+O Brief do Analista não é prosa livre — campos fixos, cada um objetivo,
+sem espaço pra "encher" com texto. Mesmo princípio da Spec (DoD rígido,
+`elicitador-spec-system.md`): estrutura em vez de narrativa.
+
+```yaml
+task_id: <brief_id>
+status: rascunho | aguardando_aprovacao | aprovada | em_revisao
+objetivo: <uma frase, direto>
+dod_refs: [D1, D3, D7]   # IDs do DoD da Spec associada que este Brief
+                         # endereça — vazio/omitido se for trabalho
+                         # sem Spec formal por trás
+arquivos:
+  - <caminho exato a criar/modificar>
+passos:
+  1. <passo numerado, objetivo>
+comando_verificacao:
+  - <comando exato que prova que funcionou — não "rodar os testes",
+    o comando literal>
+adiado_para_depois:
+  - <item explicitamente fora de escopo deste ciclo, não esquecido,
+    só adiado>
+```
+
+**Regra cardeal:** se o Analista não souber preencher um campo com
+precisão (ex.: não confirmou o caminho exato de um arquivo), o campo
+fica `"NÃO LOCALIZADO — confirmar antes de prosseguir"` — nunca um
+chute disfarçado de resposta.
+
 ---
 
 ## 3. Trava de aprovação — `task_approval_check`
@@ -220,6 +250,9 @@ execution_summary_write({
   completed: Array<{
     item: string,
     evidence: string,
+    dod_id?: string,           // referencia o ID do DoD da Spec (D1, D2...)
+                                // que este item satisfaz — omitido se for
+                                // trabalho sem Spec formal (Brief puro)
     external_source?: string,  // URL, só se a conclusão veio de fonte externa
                                 // (web, documentação de terceiro) — não confunda
                                 // com evidência verificada no próprio código/teste
@@ -256,6 +289,18 @@ tool expuser parâmetro opcional). Usada pelo `avaliador` e pelo `workflow-execu
   O Avaliador **sempre** audita código, diff, testes e critérios do Brief/Spec.
 
 Aprovar só repetindo o Executor, sem checagem independente, é **falha do Avaliador**.
+
+**Ordem de consulta, quando há Spec associada (DoD rígido disponível):**
+
+1. Para cada item de `completed` com `dod_id` preenchido, compare **direto**
+   contra a linha correspondente (`D<N>`) do DoD da Spec — comparação
+   tabela-contra-tabela, não reinterpretação de prosa.
+2. Só releia a **Spec inteira** quando o DoD sozinho não resolver a dúvida
+   (ex.: `dod_id` ausente, ou o critério da linha do DoD for ambíguo demais
+   pra decidir sozinho) — não é passo de rotina, é exceção.
+3. Independente do que o DoD/Spec disserem, a verificação real (rodar teste,
+   ler código) continua obrigatória — o DoD acelera **onde procurar**, nunca
+   substitui **checar de verdade**.
 
 ### 4.4 `review_checklist_write` (`avaliador`)
 
