@@ -136,10 +136,18 @@ Espelham o padrão do Handoff (`handoff-read` / `latest`), mais determinístico 
 |--------|-----------|
 | `workflow-triador` | = `explore` (read-only) |
 | `analista` | leitura + `edit` restrito a `.opencode/briefs/*.yaml` (mesmo molde do Elicitador em `.opencode/specs/*.md`) |
-| `workflow-executor` | = `build` restrito + ferramentas de pipeline (`task_approval_check`, `execution_summary_write`, `cycle_tracker`, `execution_summary_read`, `review_checklist_read`); instrução de prompt: chamar `task_approval_check` antes de editar código — **limite honesto:** convenção reforçada por ferramenta, não bloqueio de permissão de arquivo no OS |
+| `elicitador` | (permissão já existente) + `task: { workflow-executor: allow }` — **novo**, seção 6.1 |
+| `workflow-executor` | = `build` restrito + ferramentas de pipeline (`task_approval_check`, `execution_summary_write`, `cycle_tracker`, `execution_summary_read`, `review_checklist_read`) + `task: { avaliador: allow }` — **novo**, seção 6.1; instrução de prompt: chamar `task_approval_check` antes de editar código — **limite honesto:** convenção reforçada por ferramenta, não bloqueio de permissão de arquivo no OS |
 | `avaliador` | = `explore` + `review_checklist_write` + `execution_summary_read` + `review_checklist_read` + `task: { workflow-executor: allow }` |
 
 O `build` genérico permanece para trabalho **fora** do pipeline formal.
+
+**Nota sobre profundidade de delegação:** a cadeia completa é
+`elicitador → workflow-executor → avaliador → workflow-executor (se
+rejeitado) → ...` — sempre delegação de **um nível**, nunca um agente
+delegado delega mais fundo por conta própria (mesmo princípio de
+segurança usado por sistemas de agente hospedados profissionalmente:
+depth 1 apenas).
 
 ### 0.8 Handoff (SQLite) vs review tools (JSON)
 
@@ -368,6 +376,59 @@ INÍCIO DO CICLO N (N = 1, 2 ou 3):
 ```
 
 ---
+
+### 6.1 Automação de ponta a ponta — sem seleção manual de agente
+
+**Motivação, achada em uso real:** pedir pro usuário escolher entre
+`elicitador`/`workflow-executor`/`avaliador` num seletor é fricção sem
+valor de segurança — a pessoa não tem por que saber esses nomes
+existem. A troca de "quem trabalha agora" deve ser **automática**, por
+delegação (`task`) — o julgamento humano só entra nos pontos que
+genuinamente precisam dele.
+
+**Os únicos três momentos que envolvem o humano, no fluxo inteiro:**
+
+```
+1. Aprovar a Spec/Brief — já existe, confirmação real via `ask`
+   (spec_status_write, seção 3)
+2. Ler o resumo final quando o Avaliador aprova — não exige ação,
+   só leitura
+3. Responder a uma escalação — limite de ciclo atingido (§4.8), ou
+   verdict "failed" (critério incoerente, não é erro de código)
+```
+
+**Tudo o mais é automático:**
+
+```
+1. spec_status_write confirma "aprovada" (passo 1 já existente)
+   → elicitador, na mesma resposta, delega via `task` pro
+     workflow-executor, passando o task_id (spec:<slug> pra entrega
+     inicial, ou spec:<slug>:G<N> pra item específico do backlog)
+
+2. workflow-executor completa o ciclo normal (seção 6, passos 0-3)
+   → ao terminar execution_summary_write, delega via `task` pro
+     avaliador automaticamente — não espera humano selecionar
+
+3. avaliador revisa (seção 6, passo 4)
+   → approved: resumo legível pro humano, FIM — sem exigir ação
+   → rejected (dentro do limite): já delegava de volta pro
+     workflow-executor (comportamento já existente, seção 4.7) —
+     agora simétrico com os passos 1-2 acima
+   → failed ou limite de ciclo: escala pro humano (único ponto de
+     parada além da aprovação inicial)
+```
+
+**O seletor de agente continua existindo, não é removido** — fica
+disponível pra quem quiser intervir manualmente (depuração, ou domínio
+técnico avançado que prefere controlar cada passo). A diferença é que,
+no fluxo **normal**, ninguém precisa tocar nele nunca.
+
+**Limite honesto, mesmo princípio da seção 3:** isso ainda depende de
+cada agente **chamar** a delegação corretamente, conforme instruído no
+próprio prompt — não é um orquestrador externo, determinístico, forçando
+a sequência. Reduz drasticamente a fricção; não é impossível de um
+agente pular a delegação se ignorar a própria instrução (mesma
+limitação já documentada em todo o resto deste sistema).
 
 ## 7. O que o v2 NÃO resolve
 
