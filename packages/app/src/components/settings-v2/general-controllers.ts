@@ -73,9 +73,13 @@ export function createShellSettingsController() {
   }
 }
 
-// `experimental.graphify` exists in the server's Config schema (packages/core/src/config/experimental.ts)
-// but the generated SDK client type hasn't caught up yet (the codegen pipeline only refreshes it on
-// merges to dev), so this local extension keeps the field typed without hand-editing generated output.
+// `experimental.graphify` exists in both server-side Config schemas now — the V2 schema
+// (packages/core/src/config/experimental.ts) already had it, and the V1 payload schema used by the
+// actual config PATCH endpoint (packages/core/src/v1/config/config.ts) just gained it too, which is
+// what makes this toggle persist for real. The generated SDK client type still hasn't caught up
+// (the codegen pipeline only refreshes it on pushes to dev, so it lags one merge behind), so this
+// local extension keeps the field typed without hand-editing generated output. Safe to remove once
+// `bun run script/generate.ts` regenerates `packages/sdk/js/src/gen/types.gen.ts` with this field.
 type ConfigWithExperimental = Config & { experimental?: { graphify?: boolean } }
 
 export function createGraphifySettingsController() {
