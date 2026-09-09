@@ -373,6 +373,49 @@ it.instance("updates config and preserves empty shell sentinel", () =>
   }),
 )
 
+// Regression for the Graphify Settings toggle never sticking: the config PATCH endpoint validates
+// the incoming payload against ConfigV1.Info (packages/core/src/v1/config/config.ts). Before
+// `experimental.graphify` was added there, the schema silently dropped it during decode — the toggle
+// looked like it worked in the UI, but the value never reached disk.
+it.effect("accepts and round-trips experimental.graphify through the ConfigV1 payload schema", () =>
+  Effect.sync(() => {
+    const parsed = ConfigParse.schema(ConfigV1.Info, { experimental: { graphify: true } }, "test:config")
+    expect(parsed.experimental?.graphify).toBe(true)
+  }),
+)
+
+it.instance("persists experimental.graphify to the real project config file on disk", () =>
+  Effect.gen(function* () {
+    const test = yield* TestInstance
+    yield* writeConfigEffect(test.directory, { $schema: "https://opencode.ai/config.json" }, "config.json")
+
+    yield* Config.Service.use((svc) =>
+      svc.update(ConfigParse.schema(ConfigV1.Info, { experimental: { graphify: true } }, "test:config")),
+    )
+
+    const writtenConfig = yield* FSUtil.use.readJson(path.join(test.directory, "config.json"))
+    expect(writtenConfig).toMatchObject({ experimental: { graphify: true } })
+  }),
+)
+
+it.effect("persists experimental.graphify in global config and survives a fresh reload from disk", () =>
+  withGlobalConfig({ config: {} }, ({ dir }) =>
+    Effect.gen(function* () {
+      yield* Config.use.updateGlobal({ experimental: { graphify: true } })
+
+      const file = path.join(dir, "opencode.json")
+      const writtenConfig = yield* FSUtil.use.readJson(file)
+      expect(writtenConfig).toMatchObject({ experimental: { graphify: true } })
+
+      // Simulate restarting the session: re-parse the file from disk fresh, through the same
+      // schema the PATCH endpoint uses, independent of any in-memory config cache.
+      const raw = yield* FSUtil.use.readFileString(file)
+      const reloaded = ConfigParse.schema(ConfigV1.Info, JSON.parse(raw), file)
+      expect(reloaded.experimental?.graphify).toBe(true)
+    }),
+  ),
+)
+
 it.effect("updates global config and omits empty shell key in json", () =>
   withGlobalConfig({ config: { shell: "bash" } }, ({ dir }) =>
     Effect.gen(function* () {

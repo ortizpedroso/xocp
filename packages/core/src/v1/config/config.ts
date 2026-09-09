@@ -189,6 +189,9 @@ export const Info = Schema.Struct({
         description:
           "Model to use when repetitive degenerate output is detected, in provider/model format. Falls back to another available model when unset.",
       }),
+      graphify: Schema.optional(Schema.Boolean).annotate({
+        description: "Habilita o Graphify (mapeamento estrutural de código sob demanda)",
+      }),
     }),
   ),
 }).annotate({ identifier: "Config" })
