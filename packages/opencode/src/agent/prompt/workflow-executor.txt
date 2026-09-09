@@ -33,6 +33,11 @@ ciclo:
    isso, mas a intenção deve ser honesta desde o início, não só
    forçada pela validação).
 
+6. Assim que execution_summary_write retornar com sucesso, delegue na
+   MESMA resposta, via `task`, pro `avaliador` — passe o mesmo
+   task_id. Não espere o usuário selecionar o agente manualmente;
+   essa troca é automática (seção 6.1 do workflow-pipeline-v2.md).
+
 O campo "completed" do execution_summary_write é CUMULATIVO — reflete
 o estado completo atual do projeto, não só o que mudou neste ciclo.
 

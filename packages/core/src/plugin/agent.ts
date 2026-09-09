@@ -188,6 +188,7 @@ export const Plugin = define({
             { action: "task", resource: "general", effect: "deny" },
             { action: "task", resource: "explore", effect: "allow" },
             { action: "task", resource: "graphify-explorer", effect: "allow" },
+            { action: "task", resource: "workflow-executor", effect: "allow" },
             { action: "edit", resource: "*", effect: "deny" },
             { action: "edit", resource: path.join(".opencode", "specs", "*.md"), effect: "allow" },
             { action: "edit", resource: "specs/*.md", effect: "allow" },
@@ -244,6 +245,7 @@ export const Plugin = define({
             { action: "plan_enter", resource: "*", effect: "allow" },
             { action: "spec_status_write", resource: "*", effect: "deny" },
             { action: "review_checklist_write", resource: "*", effect: "deny" },
+            { action: "task", resource: "avaliador", effect: "allow" },
           ]),
         )
       })
