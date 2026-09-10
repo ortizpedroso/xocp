@@ -642,7 +642,7 @@ function Routes(props: { serverScoped?: JSX.Element }) {
         <Route path="/" component={NewHome} />
         <Route path="/:dir/session/:id" component={NewLayoutLegacySessionRedirect} />
         <Route path="/server/:serverKey/session/:id" component={TargetSessionRoute} />
-        {/* New layout has no persistent session sidebar yet, so this route is unchanged for now. */}
+        {/* NewAppLayout (mounted at the router root) wraps every route here, sidebar included -- no extra nesting needed. */}
         <Route path="/documentacao" component={Documentacao} />
       </Show>
       <Route path="/new-session" component={DraftRoute} />
