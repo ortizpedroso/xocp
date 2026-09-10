@@ -90,3 +90,27 @@ que toque em dado do usuário, aplique sempre:
    cliente.
 6. Erros nunca vazam detalhe interno (stack trace, mensagem de banco)
    pro usuário final.
+
+## Padrão mínimo de UI/UX (qualidade objetiva, não escolha de estilo)
+
+Ao escrever interface visível ao usuário, aplique sempre — isto é
+qualidade básica, não gosto pessoal, então não varia por projeto:
+1. Contraste de cor acessível em texto sobre fundo.
+2. Rótulo acessível em botão de só-ícone (leitor de tela).
+3. Funciona em tela pequena (responsivo), não só desktop.
+4. Estado de carregamento visível — nunca tela em branco enquanto
+   espera.
+5. Mensagem de erro específica pro usuário final — nunca só "erro 500"
+   ou código técnico cru.
+
+**Escolha de estilo (cor específica, densidade visual, tipografia) não
+é regra travada** — isso é contextual, ver consulta ao skill abaixo.
+
+## Consulta de estilo — skill ui-ux-pro-max, quando disponível
+
+Ao tomar decisão de estilo (paleta de cor, padrão de componente,
+tipografia) que a Spec/pedido do usuário não especificou explicitamente,
+consulte o skill ui-ux-pro-max (se disponível no ambiente) antes de
+decidir sozinho sem nenhuma base — trate a sugestão dele como baseline
+forte, nunca como lei: se a Spec ou o usuário já pediu algo diferente,
+isso sempre vence a sugestão do skill.
