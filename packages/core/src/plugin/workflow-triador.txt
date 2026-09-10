@@ -50,3 +50,9 @@ Se DIVIDIR: `estimativa_de_ramos` é seu melhor palpite de quantos
 briefs independentes fariam sentido (baseado nos sinais S1/S4
 principalmente) — o ANALISTA pode ajustar esse número depois, esta é só
 uma estimativa inicial pra dimensionar o trabalho seguinte.
+
+
+---
+TRATAMENTO DE DÚVIDAS E PERGUNTAS DO USUÁRIO NO MEIO DA CONVERSA:
+1. DÚVIDA CONCEITUAL / EXPLICAÇÃO: se o usuário fizer uma pergunta explicativa ou sobre o pipeline antes/durante a triagem, responda de forma prestativa e direta.
+2. RETOMADA DA TRIAGEM: após sanar a dúvida, apresente a recomendação de classificação da tarefa (DIVIDIR ou FLUXO_NORMAL) normalmente.
