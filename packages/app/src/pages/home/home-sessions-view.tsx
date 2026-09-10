@@ -39,6 +39,7 @@ function isBackgroundOpen(event: MouseEvent) {
 export type HomeSessionsViewProps = {
   language: ReturnType<typeof useLanguage>
   groups: Accessor<HomeSessionGroup[]>
+  hideTimeline?: Accessor<boolean>
   showProjectName: Accessor<boolean>
   server: Accessor<ServerConnection.Key>
   canCreateSession: Accessor<boolean>
@@ -81,7 +82,7 @@ export function HomeSessionsView(props: HomeSessionsViewProps) {
       <div class="sticky top-0 z-30 shrink-0 bg-v2-background-bg-base pb-3 pt-6 lg:pt-12" onWheel={props.onWheel}>
         <HomeSessionSearch {...props} />
         <Suspense>
-          <Show when={props.groups().length > 0 && props.canCreateSession()}>
+          <Show when={!props.hideTimeline?.() && props.groups().length > 0 && props.canCreateSession()}>
             <div class="pointer-events-none absolute right-0 top-[84px] z-20 flex lg:top-[108px]">
               <ButtonV2
                 data-action="home-new-session"
@@ -113,12 +114,19 @@ export function HomeSessionsView(props: HomeSessionsViewProps) {
           }
         >
           <Show
-            when={props.groups().length > 0}
+            when={!props.hideTimeline?.() && props.groups().length > 0}
             fallback={
-              <HomeSessionsEmpty
-                onNewSession={props.canCreateSession() ? props.onCreateSession : undefined}
-                language={props.language}
-              />
+              <Show
+                when={props.hideTimeline?.()}
+                fallback={
+                  <HomeSessionsEmpty
+                    onNewSession={props.canCreateSession() ? props.onCreateSession : undefined}
+                    language={props.language}
+                  />
+                }
+              >
+                <HomeSessionsBrowseHint language={props.language} onCreateSession={props.onCreateSession} canCreate={props.canCreateSession()} />
+              </Show>
             }
           >
             <div ref={props.onSetContent} class="flex flex-col pt-3 pr-3 pb-16">
@@ -503,6 +511,28 @@ function HomeSessionProjectName(props: { name: string; search?: boolean }) {
     >
       {props.name}
     </span>
+  )
+}
+
+function HomeSessionsBrowseHint(props: {
+  language: ReturnType<typeof useLanguage>
+  onCreateSession: () => void
+  canCreate: boolean
+}) {
+  return (
+    <div class="flex min-h-full flex-col items-center gap-4 px-6 pt-[52px] text-center">
+      <div class="shrink-0 text-[13px] leading-[13px] tracking-[-0.04px] text-v2-text-text-base [font-weight:530]">
+        {props.language.t("home.sessions.browseHint.title")}
+      </div>
+      <p class="mb-1 text-center text-[13px] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-weight:440]">
+        {props.language.t("home.sessions.browseHint.description")}
+      </p>
+      <Show when={props.canCreate}>
+        <ButtonV2 data-action="home-new-session" variant="neutral" size="normal" icon="edit" onClick={props.onCreateSession}>
+          {props.language.t("command.session.new")}
+        </ButtonV2>
+      </Show>
+    </div>
   )
 }
 

@@ -7,11 +7,13 @@ export function HomeSessions(props: {
   sessions: HomeSessionsController
   search: HomeSessionSearchController
   scroll: HomeScrollController
+  hideTimeline?: () => boolean
 }) {
   return (
     <HomeSessionsView
       language={props.sessions.copy.language}
       groups={props.sessions.data.groups}
+      hideTimeline={props.hideTimeline}
       showProjectName={props.sessions.session.showProjectName}
       server={props.sessions.session.server}
       canCreateSession={props.sessions.session.canCreate}
