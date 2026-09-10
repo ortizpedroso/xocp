@@ -50,6 +50,9 @@ type CompletedToolPart = SessionV1.ToolPart & { state: SessionV1.ToolStateComple
 const EXECUTOR_MARKER = "Você é o workflow-executor"
 const AVALIADOR_MARKER = "Você é o avaliador"
 const AUDITOR_MARKER = "Você é o baseline-auditor"
+// Specific to the real prompt's G-SEC-1 mechanical guidance — distinguishes "the auditor agent is
+// selected" from "the auditor's actual instructions for this rule are present in the request".
+const AUDITOR_GSEC1_GUIDANCE_MARKER = "grep por comparação direta de senha em texto"
 
 const mcp = Layer.succeed(
   MCP.Service,
@@ -236,6 +239,44 @@ describe("baseline_audit_write validation", () => {
 
       expect(result.title).toBe("inconsistent overall")
       expect(result.output).toContain('overall cannot be "pass"')
+
+      const saved = yield* Effect.promise(() => WorkflowReview.readLatestBaselineAudit(test.directory, task_id))
+      expect(saved).toBeUndefined()
+    }),
+  )
+
+  itUnit.instance("rejects an item with empty or whitespace-only evidence", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const task_id = "brief-baseline-blank-evidence"
+      yield* Effect.promise(() => WorkflowReview.incrementCycle(test.directory, task_id))
+
+      const info = yield* BaselineAuditWriteTool
+      const tool = yield* Tool.init(info)
+
+      const empty = yield* tool.execute(
+        {
+          task_id,
+          items: [{ id: "G-SEC-1", status: "pass" as const, evidence: "" }],
+          overall: "pass" as const,
+        },
+        ctx,
+      )
+      expect(empty.title).toBe("inconsistent overall")
+      expect(empty.output).toContain("G-SEC-1")
+      expect(empty.output).toContain("empty or whitespace-only evidence")
+
+      const whitespaceOnly = yield* tool.execute(
+        {
+          task_id,
+          items: [{ id: "G-SEC-2", status: "pass" as const, evidence: "   " }],
+          overall: "pass" as const,
+        },
+        ctx,
+      )
+      expect(whitespaceOnly.title).toBe("inconsistent overall")
+      expect(whitespaceOnly.output).toContain("G-SEC-2")
+      expect(whitespaceOnly.output).toContain("empty or whitespace-only evidence")
 
       const saved = yield* Effect.promise(() => WorkflowReview.readLatestBaselineAudit(test.directory, task_id))
       expect(saved).toBeUndefined()
@@ -651,6 +692,152 @@ export async function login(email, password) {
           expect(latestReview?.payload.verdict).toBe("approved")
         }),
         { git: true, config: (url) => providerCfg(url, 1) },
+      ),
+  )
+})
+
+// Both tests below call the baseline-auditor agent directly (never via avaliador/executor
+// delegation) to isolate the auditor's own decision from the caller's reaction to it — the tests
+// above already cover that reaction. The scripted response is gated on the real prompt's G-SEC-1
+// guidance text being present in the request, mirroring the marker-gating technique in
+// workflow-pipeline-prompt.test.ts: this proves the auditor's specific instructions are what
+// produce the "fail" decision, not a hand-picked "correct" answer that would fire regardless of
+// prompt content.
+describe("baseline-auditor decides independently, driven by its own prompt (TestLLMServer)", () => {
+  const STANDALONE_TASK_ID = "brief-baseline-standalone-audit"
+  const vulnerableSnippet = `export async function login(email, password) {
+  const user = await findUser(email)
+  if (!user || user.password !== password) throw new Error("login failed")
+  return { ok: true, userId: user.id }
+}`
+  const auditPrompt = [
+    `Audite o task ${STANDALONE_TASK_ID} contra as 11 regras do Baseline Global.`,
+    "Aqui está o trecho relevante de src/auth/login.ts:",
+    "",
+    vulnerableSnippet,
+  ].join("\n")
+
+  it.live(
+    "baseline-auditor decides G-SEC-1 fail on its own when given plaintext password comparison",
+    () =>
+      provideTmpdirServer(
+        Effect.fnUntraced(function* ({ dir, llm }) {
+          yield* Effect.promise(() => WorkflowReview.incrementCycle(dir, STANDALONE_TASK_ID))
+
+          yield* llm.pushMatch(
+            (hit) =>
+              hasMarker(hit, AUDITOR_GSEC1_GUIDANCE_MARKER) && hasMarker(hit, "user.password !== password"),
+            reply()
+              .tool("baseline_audit_write", {
+                task_id: STANDALONE_TASK_ID,
+                items: [
+                  {
+                    id: "G-SEC-1",
+                    status: "fail",
+                    evidence:
+                      "src/auth/login.ts: `user.password !== password` compares plaintext, no bcrypt/argon2/scrypt call",
+                  },
+                ],
+                overall: "fail",
+              })
+              .item(),
+          )
+          yield* llm.pushMatch(
+            (hit) => hasMarker(hit, AUDITOR_GSEC1_GUIDANCE_MARKER),
+            reply().text("G-SEC-1 falhou: comparação de senha em texto puro.").stop().item(),
+          )
+
+          const prompt = yield* SessionPrompt.Service
+          const sessions = yield* Session.Service
+          const session = yield* sessions.create({
+            title: "baseline-auditor standalone decision",
+            permission: [{ permission: "*", pattern: "*", action: "allow" }],
+          })
+
+          yield* prompt.prompt({
+            sessionID: session.id,
+            agent: "baseline-auditor",
+            noReply: true,
+            parts: [{ type: "text", text: auditPrompt }],
+          })
+
+          const result = yield* prompt.loop({ sessionID: session.id })
+          expect(result.info.role).toBe("assistant")
+
+          const hits = yield* llm.hits
+          expect(promptPresent(hits, (hit) => hasMarker(hit, AUDITOR_GSEC1_GUIDANCE_MARKER))).toBe(true)
+
+          const audit = yield* Effect.promise(() => WorkflowReview.readLatestBaselineAudit(dir, STANDALONE_TASK_ID))
+          expect(audit?.payload.overall).toBe("fail")
+          const item = audit?.payload.items.find((entry) => entry.id === "G-SEC-1")
+          expect(item?.status).toBe("fail")
+          expect(item?.evidence).toContain("!==")
+        }),
+        { git: true, config: (url) => providerCfg(url, 1) },
+      ),
+  )
+
+  it.live(
+    "baseline-auditor fails to catch G-SEC-1 when its prompt is broken, proving the real prompt drives the decision above",
+    () =>
+      provideTmpdirServer(
+        Effect.fnUntraced(function* ({ dir, llm }) {
+          yield* Effect.promise(() => WorkflowReview.incrementCycle(dir, STANDALONE_TASK_ID))
+
+          // With the prompt overridden, the G-SEC-1 guidance marker never appears in the request —
+          // the only scripted branch left is a blind "pass", standing in for a generic agent with no
+          // specific instruction to catch this particular rule.
+          yield* llm.pushMatch(
+            (hit) => !hasMarker(hit, AUDITOR_GSEC1_GUIDANCE_MARKER),
+            reply()
+              .tool("baseline_audit_write", {
+                task_id: STANDALONE_TASK_ID,
+                items: [{ id: "G-SEC-1", status: "pass", evidence: "looks fine" }],
+                overall: "pass",
+              })
+              .item(),
+          )
+          yield* llm.pushMatch(
+            (hit) => !hasMarker(hit, AUDITOR_GSEC1_GUIDANCE_MARKER),
+            reply().text("Tudo certo.").stop().item(),
+          )
+
+          const prompt = yield* SessionPrompt.Service
+          const sessions = yield* Session.Service
+          const session = yield* sessions.create({
+            title: "baseline-auditor broken prompt",
+            permission: [{ permission: "*", pattern: "*", action: "allow" }],
+          })
+
+          yield* prompt.prompt({
+            sessionID: session.id,
+            agent: "baseline-auditor",
+            noReply: true,
+            parts: [{ type: "text", text: auditPrompt }],
+          })
+
+          yield* prompt.loop({ sessionID: session.id })
+
+          const hits = yield* llm.hits
+          expect(promptPresent(hits, (hit) => hasMarker(hit, AUDITOR_GSEC1_GUIDANCE_MARKER))).toBe(false)
+
+          const audit = yield* Effect.promise(() => WorkflowReview.readLatestBaselineAudit(dir, STANDALONE_TASK_ID))
+          // Opposite outcome of the test above — the plaintext comparison goes uncaught without the
+          // real prompt's mechanical guidance, proving that guidance (not just agent selection) is
+          // what causes the "fail" decision there.
+          expect(audit?.payload.overall).toBe("pass")
+        }),
+        {
+          git: true,
+          config: (url) => ({
+            ...providerCfg(url, 1),
+            agent: {
+              "baseline-auditor": {
+                prompt: "You are baseline-auditor. Report everything as pass without checking.",
+              },
+            },
+          }),
+        },
       ),
   )
 })

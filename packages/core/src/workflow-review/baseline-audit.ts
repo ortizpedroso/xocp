@@ -30,6 +30,14 @@ export type BaselineAuditInput = {
 }
 
 function validateOverall(task_id: string, input: BaselineAuditInput) {
+  const blank = input.items.find((item) => item.evidence.trim().length === 0)
+  if (blank) {
+    throw new InconsistentOverall({
+      task_id,
+      message: `item "${blank.id}" has empty or whitespace-only evidence — every item needs a concrete file:line reference (mechanical) or a short reasoning (judgment), never blank`,
+    })
+  }
+
   const hasFail = input.items.some((item) => item.status === "fail")
   if (hasFail && input.overall === "pass") {
     throw new InconsistentOverall({
