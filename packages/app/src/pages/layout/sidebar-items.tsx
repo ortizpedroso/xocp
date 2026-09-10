@@ -78,6 +78,8 @@ export type SessionItemProps = {
   list: Session[]
   navList?: Accessor<Session[]>
   slug: string
+  /** Overrides the default `/${slug}/session/${id}` (legacy) URL shape, e.g. for the new layout's `/server/:serverKey/session/:id` routes. */
+  href?: (session: Session) => string
   mobile?: boolean
   dense?: boolean
   showTooltip?: boolean
@@ -91,7 +93,7 @@ export type SessionItemProps = {
 
 const SessionRow = (props: {
   session: Session
-  slug: string
+  href: string
   mobile?: boolean
   dense?: boolean
   tint: Accessor<string | undefined>
@@ -108,7 +110,7 @@ const SessionRow = (props: {
 
   return (
     <A
-      href={`/${props.slug}/session/${props.session.id}`}
+      href={props.href}
       class={`flex items-center gap-2 min-w-0 w-full text-left focus:outline-none ${props.dense ? "py-0.5" : "py-1"}`}
       onPointerDown={props.warmPress}
       onFocus={props.warmFocus}
@@ -197,10 +199,14 @@ export const SessionItem = (props: SessionItemProps): JSX.Element => {
     }
   }
 
+  const href = createMemo(() =>
+    props.href ? props.href(props.session) : `/${props.slug}/session/${props.session.id}`,
+  )
+
   const item = (
     <SessionRow
       session={props.session}
-      slug={props.slug}
+      href={href()}
       mobile={props.mobile}
       dense={props.dense}
       tint={tint}
