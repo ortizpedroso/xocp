@@ -22,6 +22,8 @@ import { ExecutionSummaryWriteTool } from "./execution-summary-write"
 import { ExecutionSummaryReadTool } from "./execution-summary-read"
 import { ReviewChecklistWriteTool } from "./review-checklist-write"
 import { ReviewChecklistReadTool } from "./review-checklist-read"
+import { BaselineAuditWriteTool } from "./baseline-audit-write"
+import { BaselineAuditReadTool } from "./baseline-audit-read"
 import { SpecStatusWriteTool } from "./spec-status-write"
 import { GraphifyQueryTool } from "./graphify-query"
 import { InvalidTool } from "./invalid"
@@ -117,6 +119,8 @@ const layer = Layer.effect(
     const executionSummaryRead = yield* ExecutionSummaryReadTool
     const reviewChecklistWrite = yield* ReviewChecklistWriteTool
     const reviewChecklistRead = yield* ReviewChecklistReadTool
+    const baselineAuditWrite = yield* BaselineAuditWriteTool
+    const baselineAuditRead = yield* BaselineAuditReadTool
     const specStatusWrite = yield* SpecStatusWriteTool
     const graphifyQuery = yield* GraphifyQueryTool
     const invalid = yield* InvalidTool
@@ -246,6 +250,8 @@ const layer = Layer.effect(
           executionSummaryRead: Tool.init(executionSummaryRead),
           reviewChecklistWrite: Tool.init(reviewChecklistWrite),
           reviewChecklistRead: Tool.init(reviewChecklistRead),
+          baselineAuditWrite: Tool.init(baselineAuditWrite),
+          baselineAuditRead: Tool.init(baselineAuditRead),
           specStatusWrite: Tool.init(specStatusWrite),
           graphifyQuery: Tool.init(graphifyQuery),
           search: Tool.init(websearch),
@@ -279,6 +285,8 @@ const layer = Layer.effect(
             tool.executionSummaryRead,
             tool.reviewChecklistWrite,
             tool.reviewChecklistRead,
+            tool.baselineAuditWrite,
+            tool.baselineAuditRead,
             tool.specStatusWrite,
             tool.graphifyQuery,
             tool.search,
