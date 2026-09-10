@@ -1535,7 +1535,11 @@ export function Prompt(props: PromptProps) {
                       const message = createMemo(() => {
                         const r = retry()
                         if (!r) return
-                        if (r.message.includes("exceeded your current quota") && r.message.includes("gemini"))
+                        if (
+                          r.message.toLowerCase().includes("gemini") &&
+                          (/quota|excedeu sua cota|exceeded your current quota|free_tier/i.test(r.message) ||
+                            /verifique seu plano/i.test(r.message))
+                        )
                           return "gemini is way too hot right now"
                         if (r.message.length > 80) return r.message.slice(0, 80) + "..."
                         return r.message

@@ -30,6 +30,23 @@ export const RETRY_MAX_DELAY_NO_HEADERS = 30_000 // 30 seconds
 export const RETRY_MAX_DELAY = 2_147_483_647 // max 32-bit signed integer for setTimeout
 export const RETRY_MAX_RETRIES = 5
 
+const QUOTA_EXCEEDED_PATTERNS = [
+  /exceeded your current quota/i,
+  /excedeu sua cota/i,
+  /insufficient_quota/i,
+  /quota exceeded.*billing/i,
+  /check your plan and billing/i,
+  /verifique seu plano/i,
+  /free_tier/i,
+  /generate_content_free_tier/i,
+]
+
+function quotaExceeded(...values: unknown[]) {
+  const text = values.filter((value): value is string => typeof value === "string").join("\n")
+  if (!text) return false
+  return QUOTA_EXCEEDED_PATTERNS.some((pattern) => pattern.test(text))
+}
+
 const RETRYABLE_MESSAGE_PATTERNS = [
   /429|500|502|503|504|524/i,
   /rate increased too quickly|rate limit|rate-limit|rate_limit|too many requests/i,
@@ -86,6 +103,7 @@ export function retryable(error: Err, provider: string) {
   // context overflow errors should not be retried
   if (SessionV1.ContextOverflowError.isInstance(error)) return undefined
   if (SessionV1.APIError.isInstance(error)) {
+    if (quotaExceeded(error.data.message, error.data.responseBody)) return undefined
     const status = error.data.statusCode
     // 5xx errors are transient server failures and should always be retried,
     // even when the provider SDK doesn't explicitly mark them as retryable.
@@ -147,6 +165,7 @@ export function retryable(error: Err, provider: string) {
 
   const message = isRecord(error.data) ? error.data.message : undefined
   if (typeof message !== "string") return undefined
+  if (quotaExceeded(message)) return undefined
   const lower = message.toLowerCase()
   if (lower.includes("too_many_requests")) return { message: "Too Many Requests" }
   if (lower.includes("exhausted") || lower.includes("unavailable")) return { message: "Provider is overloaded" }

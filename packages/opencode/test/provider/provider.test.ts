@@ -846,6 +846,18 @@ test("provider.sort prioritizes preferred models", () => {
   expect(sorted[sorted.length - 1].id).not.toContain("sonnet-4")
 })
 
+test("provider.sort deprioritizes image models", () => {
+  const models = [
+    { id: "gemini-3-pro-image" },
+    { id: "gemini-3-pro-preview" },
+    { id: "gemini-2.5-flash" },
+  ]
+
+  const sorted = Provider.sort(models)
+  expect(sorted[0].id).toBe("gemini-3-pro-preview")
+  expect(sorted[sorted.length - 1].id).toBe("gemini-3-pro-image")
+})
+
 it.instance(
   "multiple providers can be configured simultaneously",
   Effect.gen(function* () {
