@@ -184,6 +184,26 @@ function responseText(response: Response) {
 }
 
 describe("HttpApi UI fallback", () => {
+  it.live("returns build instructions when embedded UI is unavailable", () =>
+    Effect.gen(function* () {
+      let proxiedUrl: string | undefined
+
+      const response = yield* uiApp({
+        client: httpClient(new Response("should not proxy"), (request) => {
+          proxiedUrl = request.url
+        }),
+      }).request("/")
+
+      expect(response.status).toBe(503)
+      expect(response.headers.get("content-type")).toContain("text/html")
+      const body = yield* responseText(response)
+      expect(body).toContain("XOCP web UI is not available")
+      expect(body).toContain("bun run --cwd packages/app build")
+      expect(body).toContain("bun dev:local")
+      expect(proxiedUrl).toBeUndefined()
+    }),
+  )
+
   it.live("serves the web UI through the HTTP API app", () =>
     Effect.gen(function* () {
       let proxiedUrl: string | undefined
