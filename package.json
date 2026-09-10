@@ -27,6 +27,7 @@
     "sso": "aws sso login --sso-session=opencode --no-browser",
     "generate:xocp-docs": "bun ./script/generate-xocp-docs.ts",
     "check:xocp-docs": "bun ./script/generate-xocp-docs.ts --check",
+    "doctor": "bun ./script/doctor.ts",
     "test": "echo 'do not run tests from root' && exit 1"
   },
   "workspaces": {
