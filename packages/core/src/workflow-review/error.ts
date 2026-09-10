@@ -36,6 +36,14 @@ export class InvalidGates extends Schema.TaggedErrorClass<InvalidGates>()("Workf
   message: Schema.String,
 }) {}
 
+export class InconsistentOverall extends Schema.TaggedErrorClass<InconsistentOverall>()(
+  "WorkflowReview.InconsistentOverall",
+  {
+    task_id: Schema.String,
+    message: Schema.String,
+  },
+) {}
+
 export class ReviewArtifactNotFound extends Schema.TaggedErrorClass<ReviewArtifactNotFound>()(
   "WorkflowReview.ReviewArtifactNotFound",
   {

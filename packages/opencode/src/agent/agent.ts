@@ -18,6 +18,7 @@ import PROMPT_WORKFLOW_EXECUTOR from "./prompt/workflow-executor.txt"
 import PROMPT_AVALIADOR from "./prompt/avaliador.txt"
 import PROMPT_EXPLORE from "./prompt/explore.txt"
 import PROMPT_GRAPHIFY_EXPLORER from "./prompt/graphify-explorer.txt"
+import PROMPT_BASELINE_AUDITOR from "./prompt/baseline-auditor.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
 import { Permission } from "@/permission"
@@ -283,6 +284,7 @@ const layer = Layer.effect(
                 review_checklist_write: "deny",
                 task: {
                   avaliador: "allow",
+                  "baseline-auditor": "allow",
                 },
               }),
               user,
@@ -314,6 +316,7 @@ const layer = Layer.effect(
                 task: {
                   general: "deny",
                   "workflow-executor": "allow",
+                  "baseline-auditor": "allow",
                 },
                 external_directory: readonlyExternalDirectory,
               }),
@@ -382,6 +385,27 @@ const layer = Layer.effect(
             description:
               'Subagent specialized in answering structural code questions via Graphify. Use when you need to know how code connects (calls, imports, inheritance, dependency paths) rather than text search alone. Specify the structural question clearly.',
             prompt: PROMPT_GRAPHIFY_EXPLORER,
+            options: {},
+            mode: "subagent",
+            native: true,
+          },
+          "baseline-auditor": {
+            name: "baseline-auditor",
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                read: "allow",
+                baseline_audit_write: "allow",
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            description:
+              "Subagent dedicado a checar as 11 regras fixas do Baseline Global (specs/xocp/baseline-global.md) contra o código. Read-only, nunca edita código.",
+            prompt: PROMPT_BASELINE_AUDITOR,
             options: {},
             mode: "subagent",
             native: true,

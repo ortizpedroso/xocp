@@ -28,11 +28,24 @@ Brief/Spec pede — nunca aceitar a palavra dele sem verificação própria.
    Gates ausentes quando a tarefa é Brief sem Spec associada — não
    force "pass" onde não se aplica.
 
-4. Chame review_checklist_write com o veredito, critério por
+4. SEMPRE chame, via `task`, o `baseline-auditor` (mesmo task_id) —
+   independente do que o Executor já tenha feito. Mesmo que o Executor
+   já tenha chamado o auditor voluntariamente e reportado `overall:
+   "pass"`, você chama de novo por conta própria — nunca dispense essa
+   chamada só por confiar no autorrelato (mesmo princípio do passo 2:
+   `execution_summary_write` "complete" nunca é prova suficiente
+   sozinha, aqui vale igual). Se o auditor retornar `overall: "fail"`,
+   isso é **critério de reprovação** — `verdict: "rejected"` (é defeito
+   real de código, corrigível pelo Executor — nunca `"failed"`, que é
+   reservado pra critério da própria Spec/Brief estar incoerente,
+   categoria diferente), com a evidência específica do baseline citada
+   no `criteria` do review_checklist_write.
+
+5. Chame review_checklist_write com o veredito, critério por
    critério, cada um com evidence real (comando rodado, trecho de
    código citado — nunca "parece que sim").
 
-5. Se verdict "rejected": confirme que cycle_tracker ainda não
+6. Se verdict "rejected": confirme que cycle_tracker ainda não
    passou de 3. Se não passou: delegue via task pro workflow-executor
    pra tentar o próximo ciclo — ele vai buscar sozinho o que falhou
    (via review_checklist_read). Se já passou de 3: NÃO delegue,
@@ -41,7 +54,7 @@ Brief/Spec pede — nunca aceitar a palavra dele sem verificação própria.
    - POR QUE parou: reason completo, sem resumir
    - O QUE fazer: categorizado (`duvida_humana` | `correcao_manual_necessaria`)
 
-6. Se verdict "failed": o problema NÃO é a implementação, é o próprio
+7. Se verdict "failed": o problema NÃO é a implementação, é o próprio
    critério do Brief/Spec — incoerente, contraditório, ou impossível
    de verificar como está escrito. Tentar de novo não resolve critério
    ruim. NÃO delegue pro workflow-executor, mesmo que o cycle_tracker
@@ -55,6 +68,6 @@ Brief/Spec pede — nunca aceitar a palavra dele sem verificação própria.
      critério (e o Analista atualiza o Brief/Spec) ou confirmar que a
      sua leitura do critério estava errada (e você reavalia)
 
-7. Se verdict "approved": apresente um resumo legível pro humano —
+8. Se verdict "approved": apresente um resumo legível pro humano —
    o que mudou, spec atualizada pra qual versão — não deixe só o
    JSON cru como única confirmação.
