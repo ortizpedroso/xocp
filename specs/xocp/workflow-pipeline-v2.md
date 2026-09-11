@@ -536,3 +536,11 @@ Nenhuma pendente das seis decisões fechadas na revisão pós-Fase 0 (G\<N\>,
 gate Brief, gates opcionais, `ask` em `spec_status_write`, escopo de
 `.opencode/reviews/`, faseamento 1a/1b). Novas ambiguidades devem ser
 registradas aqui antes da implementação — não inventar comportamento silencioso.
+
+### 6.2 Tratamento de Dúvidas e Perguntas do Usuário no Meio do Fluxo
+**Motivação:** Em sessões reais, o usuário pode fazer perguntas aleatórias, conceituais ou dúvidas pontuais no meio de uma elicitação, análise ou execução de ciclo. Anteriormente, agentes restritos podiam travar ou recursar responder com mensagens como "não posso responder porque sou o analista".
+
+**Diretriz Unificada de Tratamento:**
+1. **Dúvida Conceitual / Explicação:** O próprio agente em foco responde de forma consultiva e clara. Não tenta forçar avanço de fase nem bloqueia a interação.
+2. **Consulta e Investigação de Código:** Se a dúvida exigir verificar arquivos, bibliotecas ou rotas existentes fora do contexto imediato, o agente delega ao subagente `explore` via ferramenta `task` (permissão `task: { explore: allow }` configurada em todos os agentes primários: elicitador, analista, workflow-executor e avaliador).
+3. **Retomada Transparente:** Após responder à dúvida, o agente lembra sucintamente onde o trabalho principal parou e convida o usuário a continuar.

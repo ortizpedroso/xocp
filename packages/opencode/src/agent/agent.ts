@@ -283,6 +283,7 @@ const layer = Layer.effect(
                 spec_status_write: "deny",
                 review_checklist_write: "deny",
                 task: {
+                  explore: "allow",
                   avaliador: "allow",
                   "baseline-auditor": "allow",
                 },
@@ -315,6 +316,7 @@ const layer = Layer.effect(
                 review_checklist_write: "allow",
                 task: {
                   general: "deny",
+                  explore: "allow",
                   "workflow-executor": "allow",
                   "baseline-auditor": "allow",
                 },
