@@ -142,6 +142,11 @@ Espelham o padrão do Handoff (`handoff-read` / `latest`), mais determinístico 
 
 O `build` genérico permanece para trabalho **fora** do pipeline formal.
 
+| `baseline-auditor` | leitura (`read`/`grep`/`glob`) + `baseline_audit_write` — nunca edita código |
+
+Delegação adicional: `workflow-executor: task: { "baseline-auditor": allow }`
+e `avaliador: task: { "baseline-auditor": allow }`.
+
 **Nota sobre profundidade de delegação:** a cadeia completa é
 `elicitador → workflow-executor → avaliador → workflow-executor (se
 rejeitado) → ...` — sempre delegação de **um nível**, nunca um agente
@@ -372,6 +377,64 @@ Quando `cycle_tracker` > 3, **ou** `execution_summary_write` reporta
    atualiza o Brief/Spec) ou confirmar que a leitura do Avaliador estava certa
 
 ---
+
+### 4.9 `baseline-auditor` — subagente dedicado, checagem das 11 regras fixas
+
+**Motivação:** algumas das 11 regras do Baseline Global
+(`specs/xocp/baseline-global.md`) são checáveis de forma mecânica
+(busca de padrão), outras exigem leitura/julgamento — nenhuma ferramenta
+sozinha cobre as duas. Um subagente dedicado cobre ambas numa passada
+só, sem sobrecarregar o prompt do Avaliador com 11 itens a mais pra
+lembrar.
+
+**Agente:** `baseline-auditor`, `mode: "subagent"` (mesmo padrão do
+`graphify-explorer`) — permissão só leitura (`read`, `grep`, `glob`),
+nunca edita código.
+
+**Ferramenta nova — `baseline_audit_write`:**
+
+```typescript
+baseline_audit_write({
+  task_id: string,
+  items: Array<{
+    id: string,       // G-SEC-1, G-UX-3, etc. — ou "not_applicable"
+                       // se o item genuinamente não se aplica (ex.:
+                       // G-UX-* numa API sem interface visual)
+    status: "pass" | "fail" | "not_applicable",
+    evidence: string,  // grep/arquivo:linha (mecânico) ou raciocínio
+                        // curto (julgamento) — nunca "parece que sim"
+  }>,
+  overall: "pass" | "fail",  // fail se qualquer item relevante for fail
+})
+```
+
+Grava em `.opencode/reviews/<task_id>/baseline-<N>.json`, `N` do
+`cycle_tracker` — mesmo padrão de auditoria versionada já usado pelo
+resto do pipeline.
+
+**Quem chama, e quando:**
+
+- `workflow-executor` **pode** chamar antes de finalizar (opcional,
+  recomendado — pega problema cedo, corrige na hora, sem gastar um
+  ciclo inteiro de reprovação).
+- `avaliador` **sempre** chama, de forma independente — mesmo que o
+  Executor já tenha chamado e reportado `pass`. Nunca dispensa essa
+  chamada só por confiar no autorrelato (mesmo princípio de sempre:
+  `execution_summary_write` "complete" nunca é prova suficiente
+  sozinha, aqui vale igual).
+
+**Resultado:** se `baseline_audit_write` retornar `overall: "fail"`,
+isso vira **critério de reprovação** no `review_checklist_write` do
+Avaliador — `verdict: "rejected"` (é defeito real de código, corrigível
+pelo Executor — não é `"failed"`, que é reservado pra critério da
+própria Spec estar incoerente, categoria diferente).
+
+**Limite honesto:** os itens de segurança são majoritariamente
+checáveis por padrão mecânico; os de UI/UX frequentemente exigem
+julgamento (é uma mensagem de erro "clara o suficiente"?) — isso
+continua sendo um agente de linguagem fazendo leitura, não uma trava de
+compilador. Redução de risco real e significativa, não impossibilidade
+lógica de erro.
 
 ## 5. Contagem de ciclo — `cycle_tracker`
 
