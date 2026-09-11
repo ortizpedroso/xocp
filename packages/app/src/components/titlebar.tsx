@@ -1,15 +1,4 @@
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  Match,
-  on,
-  onMount,
-  Show,
-  Switch,
-  untrack,
-} from "solid-js"
+import { createEffect, createMemo, createResource, Match, on, onMount, Show, Switch, untrack } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLocation, useNavigate, useParams } from "@solidjs/router"
 import { IconButton } from "@opencode-ai/ui/icon-button"
@@ -28,7 +17,6 @@ import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { WindowsAppMenu } from "./windows-app-menu"
 import { applyPath, backPath, forwardPath } from "./titlebar-history"
-import { TitlebarTabStrip } from "@/components/titlebar-tab-strip"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { createMediaQuery } from "@solid-primitives/media"
 import { readSessionTabsRemovedDetail, SESSION_TABS_REMOVED_EVENT } from "@/components/titlebar-session-events"
@@ -39,6 +27,7 @@ import type { PromptSession } from "@/context/prompt"
 import "./titlebar.css"
 import { newTabTooltipKeybind } from "./command-tooltip-keybind"
 import { normalizeSessionInfo } from "@/utils/session"
+import { adjacentTabKey } from "./titlebar-tab-order"
 
 const legacyTitlebarHeight = 40
 const v2TitlebarHeight = 36
@@ -356,7 +345,52 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
               ].filter((v) => v !== undefined)
             })
 
-            const [tabsAreOverflowing, setTabsAreOverflowing] = createSignal(false)
+            // Previously registered by the horizontal tab strip itself (one shortcut per
+            // rendered slot); reimplemented here directly over `tabsStore` order now that
+            // switching happens from the sidebar instead.
+            command.register("titlebar-tab-cycle", () => {
+              const order = tabsStore.map(tabKey)
+              const selectAdjacent = (offset: -1 | 1) => {
+                const current = currentTab()
+                const key = adjacentTabKey(order, current ? tabKey(current) : undefined, offset)
+                const next = tabsStore.find((tab) => tabKey(tab) === key)
+                if (next) tabsStoreActions.select(next)
+              }
+              const numbered = Array.from({ length: 9 }, (_, index) => {
+                const number = index + 1
+                return {
+                  id: `tab.${number}`,
+                  category: "tab",
+                  title: "",
+                  keybind: `mod+${number}`,
+                  hidden: true,
+                  disabled: !tabsStore[index],
+                  onSelect: () => {
+                    const target = tabsStore[index]
+                    if (target) tabsStoreActions.select(target)
+                  },
+                }
+              })
+              return [
+                {
+                  id: "tab.prev",
+                  category: "tab",
+                  title: "",
+                  keybind: "mod+option+ArrowLeft,ctrl+shift+tab",
+                  hidden: true,
+                  onSelect: () => selectAdjacent(-1),
+                },
+                {
+                  id: "tab.next",
+                  category: "tab",
+                  title: "",
+                  keybind: "mod+option+ArrowRight,ctrl+tab",
+                  hidden: true,
+                  onSelect: () => selectAdjacent(1),
+                },
+                ...numbered,
+              ]
+            })
 
             return (
               <div
@@ -395,21 +429,9 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                   />
                 </TooltipV2>
 
-                <TitlebarTabStrip
-                  tabs={tabsStore}
-                  currentTab={currentTab}
-                  forceTruncate={tabsAreOverflowing()}
-                  onOverflowChange={setTabsAreOverflowing}
-                  onNavigate={(tab, el) => {
-                    tabs.select(tab)
-                    el?.scrollIntoView({ behavior: "instant" })
-                  }}
-                  onClose={(tab) => {
-                    const index = tabsStore.findIndex((item) => tabKey(item) === tabKey(tab))
-                    if (index !== -1) tabsStoreActions.closeTab(index)
-                  }}
-                  onReorder={(keys) => tabsStoreActions.reorder(keys)}
-                />
+                {/* Open sessions are chosen from the persistent left sidebar (NewLayoutSidebar)
+                    instead of a horizontal tab strip here. `tabs`/`currentTab` above still back
+                    keybinds (mod+w, mod+1..9, tab cycling) and command palette entries. */}
                 <TooltipV2
                   placement="bottom"
                   value={
