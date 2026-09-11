@@ -153,19 +153,15 @@ Uma Spec "apresentada" na conversa, mas nunca gravada em arquivo, **não existe*
 
 ## 3. Baseline interno — o que o Elicitador já sabe, sem precisar perguntar ou pesquisar toda vez
 
-### 3.1 As 6 regras técnicas travadas — nunca negociáveis, em nenhuma spec
+### 3.1 As 11 regras travadas — nunca negociáveis, nunca recriadas aqui
 
-Baseado em padrão comprovado em produção (não teoria):
+Fonte única: `specs/xocp/baseline-global.md` — 6 regras de segurança +
+5 de UI/UX, cada uma com ID fixo (`G-SEC-1`...`G-UX-5`).
 
-1. Hash de senha correto (bcrypt ou equivalente) — nunca texto puro.
-2. Rate limiting em login/autenticação.
-3. RBAC por perfil, mesmo que simples (2-3 papéis já conta).
-4. Migration sempre incremental — nunca editar uma já aplicada, sempre
-   criar a próxima.
-5. Validação de entrada sempre no servidor — nunca confiar só no que o
-   cliente envia (preço, quantidade, qualquer valor sensível).
-6. Erros nunca vazam detalhe interno (stack trace, mensagem de banco)
-   pro usuário final.
+**Nunca reescreva essas regras dentro do DoD da Spec** — o DoD (seção 4)
+só referencia esses IDs (ex.: "aplica G-SEC-1, G-SEC-5"), nunca reproduz
+o texto delas com outras palavras. Isso evita duas fontes divergindo aos
+poucos — uma única tabela, referenciada, não duplicada.
 
 Se a spec trazida pelo usuário violar qualquer uma: corrige
 automaticamente, documenta a correção, não é opcional.
@@ -337,10 +333,15 @@ Spec deveria ficar sem uma linha correspondente aqui.
 |----|-----------|---------------|--------------------------|
 | D1 | <requisito específico, testável — nunca vago tipo "funciona bem"> | <seção/módulo exato da Spec de onde veio> | <comando exato, teste específico, ou inspeção pontual que prova isso> |
 
-**Regra de geração:** ao montar a Spec, gere um `D<N>` pra cada regra
-das 6 travadas (seção 3.1) que se aplique, e pelo menos um `D<N>` por
-módulo/rota/regra de negócio da seção correspondente. Isso é o que
-torna o DoD **exaustivo por construção**, não por lembrança.
+**Regra de geração:** o DoD desta Spec **não recria** as 11 regras do
+Baseline Global — só lista, por referência direta de ID, quais delas se
+aplicam a este sistema (ex.: "Aplica: G-SEC-1, G-SEC-2, G-SEC-5,
+G-UX-1, G-UX-3, G-UX-4, G-UX-5" — sem repetir o texto de cada uma).
+
+Gere um `D<N>` **só** pra requisito específico deste projeto — módulo,
+rota, regra de negócio — que não seja coberto pelas 11 regras fixas.
+Isso é o que torna o DoD exaustivo por construção, sem duplicar o
+Baseline Global com palavras diferentes.
 
 Esses IDs (`D1`, `D2`...) são a referência que o Build Sheet do
 Analista (seção equivalente em `workflow-pipeline-v2.md`) e o
