@@ -48,6 +48,7 @@ Guidelines:
 
 Complete the caller's structural question and report findings clearly from graph evidence.`
 
+import PROMPT_BASELINE_AUDITOR from "./baseline-auditor.txt"
 import PROMPT_ELICITADOR from "./elicitador.txt"
 import PROMPT_WORKFLOW_TRIADOR from "./workflow-triador.txt"
 import PROMPT_ANALISTA from "./analista.txt"
@@ -246,6 +247,7 @@ export const Plugin = define({
             { action: "spec_status_write", resource: "*", effect: "deny" },
             { action: "review_checklist_write", resource: "*", effect: "deny" },
             { action: "task", resource: "avaliador", effect: "allow" },
+            { action: "task", resource: "baseline-auditor", effect: "allow" },
           ]),
         )
       })
@@ -270,6 +272,7 @@ export const Plugin = define({
               { action: "review_checklist_write", resource: "*", effect: "allow" },
               { action: "task", resource: "general", effect: "deny" },
               { action: "task", resource: "workflow-executor", effect: "allow" },
+              { action: "task", resource: "baseline-auditor", effect: "allow" },
             ],
             readonlyExternalDirectory,
           ),
@@ -320,6 +323,26 @@ export const Plugin = define({
               { action: "websearch", resource: "*", effect: "allow" },
               { action: "read", resource: "*", effect: "allow" },
               { action: "graphify_query", resource: "*", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("baseline-auditor"), (item) => {
+        item.description =
+          "Subagent dedicado a checar as 11 regras fixas do Baseline Global (specs/xocp/baseline-global.md) contra o código. Read-only, nunca edita código."
+        item.system = PROMPT_BASELINE_AUDITOR
+        item.mode = "subagent"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+              { action: "baseline_audit_write", resource: "*", effect: "allow" },
             ],
             readonlyExternalDirectory,
           ),
