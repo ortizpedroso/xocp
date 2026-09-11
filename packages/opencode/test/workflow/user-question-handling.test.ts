@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test"
 import { Permission } from "@/permission"
-import { Agent } from "@/agent"
 import PROMPT_ANALISTA from "@/agent/prompt/analista.txt"
 import PROMPT_WORKFLOW_EXECUTOR from "@/agent/prompt/workflow-executor.txt"
 import PROMPT_AVALIADOR from "@/agent/prompt/avaliador.txt"
