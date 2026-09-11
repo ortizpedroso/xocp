@@ -628,6 +628,8 @@ function Routes(props: { serverScoped?: JSX.Element }) {
             <>
               <Route path="/" component={LegacyHome} />
               <Route path="/server/:serverKey/session/:id" component={LegacyTargetSessionRoute} />
+              {/* Nested here (not as a top-level sibling route) so the legacy sidebar shell keeps rendering. */}
+              <Route path="/documentacao" component={Documentacao} />
             </>
           }
         </Show>
@@ -640,9 +642,10 @@ function Routes(props: { serverScoped?: JSX.Element }) {
         <Route path="/" component={NewHome} />
         <Route path="/:dir/session/:id" component={NewLayoutLegacySessionRedirect} />
         <Route path="/server/:serverKey/session/:id" component={TargetSessionRoute} />
+        {/* NewAppLayout (mounted at the router root) wraps every route here, sidebar included -- no extra nesting needed. */}
+        <Route path="/documentacao" component={Documentacao} />
       </Show>
       <Route path="/new-session" component={DraftRoute} />
-      <Route path="/documentacao" component={Documentacao} />
     </>
   )
 }
