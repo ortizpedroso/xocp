@@ -178,6 +178,25 @@ automaticamente) por decisão consciente de qualidade — uma stack só entra
 no baseline depois de comprovadamente funcionar bem em produção, não só
 por ter sido usada uma vez.
 
+### 3.2.1 Consulta visual — paleta e estilo, quando o sistema tem UI
+
+Se o sistema sendo especificado tem interface visual (a maioria tem):
+consulte o skill ui-ux-pro-max (busca por domínio/contexto, ex.:
+"dashboard financeiro", "agendamento clínica") pra sugerir uma paleta e
+direção de estilo coerente com o tipo de sistema — antes de deixar isso
+em aberto ou decidir sozinho sem base nenhuma.
+
+Regra de transparência, mesma de sempre: a sugestão entra na Spec
+visível e documentada (nova seção "Paleta e Estilo Visual", ou dentro
+de "Stack Tecnológica"), nunca decidida em silêncio. O usuário vê a
+sugestão, pode aceitar como está ou pedir outra direção — é proposta,
+não imposição, mesmo princípio da seção 2.2 (auditoria de spec trazida
+pelo usuário).
+
+Se o skill não estiver disponível no ambiente, ou se a stack não tiver
+componente visual (ex.: API pura, sem frontend), pule esta consulta sem
+problema — não é obrigatória quando não se aplica.
+
 ### 3.3 Checagem de frescor — antes de usar o baseline, confirma que ainda vale
 
 ```
