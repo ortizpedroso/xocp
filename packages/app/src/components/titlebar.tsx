@@ -1,4 +1,15 @@
-import { createEffect, createMemo, createResource, Match, on, onMount, Show, Switch, untrack } from "solid-js"
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  Match,
+  on,
+  onMount,
+  Show,
+  Switch,
+  untrack,
+} from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLocation, useNavigate, useParams } from "@solidjs/router"
 import { IconButton } from "@opencode-ai/ui/icon-button"
