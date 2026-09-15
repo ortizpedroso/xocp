@@ -20,9 +20,10 @@ sinônimos informais para agentes que existem com outro nome (`baseline-auditor`
 `graphify-explorer`, `compaction`). O número "14" bate por coincidência —
 são dois conjuntos de 14 diferentes. **Este documento, não `AGENTS.md`
 §1, reflete o que roda de verdade.** `AGENTS.md` §3 ("Executor Pre-Flight
-Self-Test Protocol", linhas 41–50) também descreve `runExecutorSelfTest`
-como um gate obrigatório do fluxo real — isso também não é verdade; ver
-§5.3.
+Self-Test Protocol", linhas 41–50) descreve `runExecutorSelfTest` como um
+gate obrigatório do fluxo real — isso passou a ser verdade a partir da
+Tarefa 8 (`specs/xocp/prompt-implementacao-melhorias-xocp-v2.md`); ver
+§5.3 para os detalhes de conexão e a nota histórica.
 
 ## 1. Os 14 agentes nativos
 
@@ -40,7 +41,7 @@ ou o override do usuário em `opencode.json`.
 | `elicitador` | primary | **Sim** | Tier alto (ambiguidade, julgamento, conversas longas) | Conduz elicitação de requisitos do zero e gera Spec completa em `specs/<slug>.md`. Nunca implementa nem edita código fora de `specs/*.md`. | 3 fases: (1) triagem inicial decide se é elicitação nova, incremento ou fluxo pontual (`elicitador.txt:25-59`); (2) conduz a conversa por rascunho-e-confirmação, não formulário (`:63-104`); (3) baseline interno de 6 regras técnicas travadas + stack recomendada + checagem de frescor via busca (`:191-282`). Regra dura: sempre entrega uma Spec, nunca recomenda não construir (`:139-162`); Spec só existe se gravada em arquivo (`:164-187`). |
 | `workflow-triador` | primary | **Sim** | Tier baixo (classificação mecânica, sem geração de conteúdo) | Classifica a tarefa como `DIVIDIR` ou `FLUXO_NORMAL` pela régua de 4 sinais S1–S4. Read-only puro — nunca escreve Brief nem implementa. | Avalia S1 (≥3 superfícies de deploy), S2 (≥3 critérios independentes de natureza distinta), S3 (≥8 arquivos em ≥2 dirs não-adjacentes), S4 (≥2 fases sequenciais); ≥2 sinais ativos → `DIVIDIR` (`workflow-triador.txt:23-32`). Saída é só um bloco YAML de triagem, nada mais (`:34-47`). |
 | `analista` | primary | **Sim** | Tier alto (investigação + especificação verificável) | Investiga o repositório e escreve Briefs YAML em `.opencode/briefs/<brief_id>.yaml`. Nunca implementa. | Fluxo obrigatório antes de escrever: confirmar o que já existe na branch remota, mapear arquivos reais via busca, checar padrão duplicado, cortar escopo por domínio, definir comando de verificação exato (`analista.txt:17-34`). Nunca edita brief in-place — incrementa `version` + `history` (`:73-84`); limite de 2 rodadas de esclarecimento antes de escalar (`:86-88`). |
-| `workflow-executor` | primary | **Sim** | Tier alto (implementação de código real) | Implementa Briefs/Specs já aprovados, com trilha de auditoria (`cycle_tracker`, `execution_summary_write`). | Sequência fixa por ciclo: `cycle_tracker.increment` → `task_approval_check` → ler `review_checklist_read` do ciclo anterior se `rejected` → implementar → `execution_summary_write` → delegar `avaliador` na mesma resposta (`workflow-executor.txt:11-56`, numeração após a regra de primeiro passo adicionada nesta mesma revisão). Nunca chama `edit`/`write`/`apply_patch`/bash mutável antes do `task_approval_check` passar (`:61-62`). |
+| `workflow-executor` | primary | **Sim** | Tier alto (implementação de código real) | Implementa Briefs/Specs já aprovados, com trilha de auditoria (`cycle_tracker`, `self_test_tracker`, `execution_summary_write`). | Sequência fixa por ciclo: `cycle_tracker.increment` → `task_approval_check` → ler `review_checklist_read` do ciclo anterior se `rejected` → implementar → loop de autoteste obrigatório via `self_test_tracker` (contador isolado do `cycle_tracker`, máx. 3 tentativas, escalação separada se estourar — Tarefa 8) → opcionalmente `baseline-auditor` → `execution_summary_write` → delegar `avaliador` na mesma resposta (`workflow-executor.txt:7-100`, numeração após a regra de primeiro passo e o passo de autoteste adicionados nesta e na revisão anterior). Nunca chama `edit`/`write`/`apply_patch`/bash mutável antes do `task_approval_check` passar (`:105-106`). |
 | `avaliador` | primary | **Sim** | Tier alto (julgamento independente, adversarial) | Revisa a entrega do executor de forma independente — nunca aceita o autorrelato sem verificação própria — e grava `review_checklist`. Read-only no código. | Lê `execution_summary_read`, mas isso nunca basta sozinho — sempre roda teste/lê diff/confere critério por critério (`avaliador.txt:5-13`); item `completed` com `external_source` nunca conta como verificado internamente (`:15-22`); sempre chama `baseline-auditor` de novo, mesmo que o executor já tenha rodado (`:31-42`); `rejected` volta pro executor se ciclo ≤3, `failed` sempre escala direto pro humano mesmo com ciclo livre (`:44-69`). |
 | `general` | subagent | Não | Tier médio | Propósito geral, pesquisa/execução multi-step em paralelo. Sem prompt customizado (`agent.ts:332-345`). | — |
 | `explore` | subagent | Não | Tier baixo/rápido (busca, não geração) | Busca rápida em código por padrão/keyword/pergunta estrutural, com 3 níveis de profundidade declarados por quem chama. | Especialista em glob/grep/read; nunca cria arquivo nem roda bash mutável (`explore.txt:1-18`). |
@@ -267,8 +268,10 @@ Schema: `packages/opencode/src/tool/task.ts:44-49`.
 
 ## 5. Limitações conhecidas
 
-Estas 4 existem no código, mas **não estão conectadas ao fluxo real** —
-documentadas aqui como limitação, não como feature.
+Destas 4, 5.1/5.2/5.4 existem no código mas **não estão conectadas ao
+fluxo real** — documentadas aqui como limitação, não como feature. 5.3 foi
+resolvida na Tarefa 8 (ver nota na própria seção) e fica registrada como
+histórico, não como limitação atual.
 
 ### 5.1 `ClusterDispatcher` / `TechnicalBriefV2.files_scope` — subsistema paralelo sem caller em produção
 
@@ -297,16 +300,27 @@ branch por padrão (`avaliador.ts:73-75`, anti-salami-slicing) — a
 correção é real e testada, mas isso não muda o fato de que a função
 segue sem nenhum chamador em produção.
 
-### 5.3 `runExecutorSelfTest` — sem tool wrapper, sem menção em `workflow-executor.txt`
+### 5.3 `runExecutorSelfTest` — RESOLVIDO na Tarefa 8 (deixado aqui como registro histórico)
 
-`packages/core/src/workflow-executor/self-test.ts:26` define
-`runExecutorSelfTest`. Nenhum arquivo em `packages/opencode/src/tool`
-importa `workflow-executor/self-test` (`grep` vazio) — não existe uma
-tool `self_test` ou equivalente exposta a nenhum agente. `workflow-executor.txt`
-não menciona "self-test", "selftest" nem "pre-flight" em nenhum ponto.
-`AGENTS.md:41-50` descreve esse autoteste como um "Hard Local Gate"
-obrigatório antes de `task_approval_check` — isso nunca dispara no fluxo
-real; é uma docstring descrevendo um mecanismo que não foi conectado.
+Até a Tarefa 8 (ver `specs/xocp/prompt-implementacao-melhorias-xocp-v2.md`),
+`packages/core/src/workflow-executor/self-test.ts:26`
+(`runExecutorSelfTest`) não tinha nenhum tool wrapper nem menção em
+`workflow-executor.txt` — exatamente a mesma categoria de gap dos outros 3
+achados desta seção. Isso foi conectado: a tool `self_test_tracker`
+(`packages/opencode/src/tool/self-test-tracker.ts:2,52`, registrada em
+`packages/opencode/src/tool/registry.ts:21,119`) chama
+`runExecutorSelfTest` diretamente, e `workflow-executor.txt:36-45`
+instrui o passo 6 (obrigatório) do ciclo a usá-la. O contador de
+tentativas é isolado do `cycle_tracker` do Avaliador por um segundo banco
+SQLite (`packages/core/src/workflow-executor/self-test-tracker.ts`,
+tabela `self_test_cycles` em `self-test-cycles.db`, separado de
+`workflow-cycles.db`) — e a tool nunca aparece pro `avaliador`, porque o
+perfil dele já usa `"*": "deny"` (`agent.ts:306`) e a tool nova não foi
+adicionada à lista de exceções, confirmado por teste
+(`packages/opencode/test/agent/agent.test.ts`, "Reviewer Blindness: self_test_tracker
+is never visible to avaliador..."). `AGENTS.md:41-50` já descrevia esse
+autoteste como "Hard Local Gate" — a diferença é que agora essa descrição
+bate com o código.
 
 ### 5.4 Não existe orquestrador determinístico — a cadeia funciona por convenção de prompt, não por mecanismo de framework
 

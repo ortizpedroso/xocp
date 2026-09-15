@@ -1,0 +1,5 @@
+Runs the workflow-executor's pre-flight self-test loop for one attempt: increments a durable counter isolated from cycle_tracker (max 3 attempts), then runs `bun test <test_file_path>`.
+
+Call this after generating or updating the unit test covering your change, before calling execution_summary_write. If the run fails (exitCode !== 0), fix the code and call this tool again — do not call execution_summary_write yet. If it passes, you're authorized to proceed to execution_summary_write normally.
+
+If the counter is exhausted (this would be the 4th attempt): do NOT call execution_summary_write and do NOT delegate to the avaliador — escalate directly to the human via a chat message instead. This tool and this counter are strictly local to the executor; the avaliador is never told this loop ran or how many attempts it took.
