@@ -24,6 +24,8 @@ export class CycleLimitExceeded extends Schema.TaggedErrorClass<CycleLimitExceed
   cycle: Schema.Int,
 }) {}
 
+export { CycleLimitExceeded as CycleLimitExceededError }
+
 export class CompleteWithIncomplete extends Schema.TaggedErrorClass<CompleteWithIncomplete>()(
   "WorkflowReview.CompleteWithIncomplete",
   {

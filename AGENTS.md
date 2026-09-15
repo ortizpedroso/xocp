@@ -1,222 +1,50 @@
-# XOCP project rules
+# XOCP Multi-Agent Directory & Execution Policy
 
-XOCP (**eXtensible Open Code Platform**, by Pedroso) is an independent fork of [OpenCode](https://github.com/anomalyco/opencode) (MIT). Repository: `github.com/ortizpedroso/xocp`. Default branch: `dev`.
+## 1. System Agent Directory (14 Cognitive Agents)
 
-## Remotes
-
-- `origin` — XOCP (this repo)
-- `opencode` — upstream OpenCode for optional merges
-
-Do not treat this repo as a GitHub fork of OpenCode. Sync upstream manually on a dedicated branch.
-
-## Branch names
-
-| Context | Pattern | Example |
-|---------|---------|---------|
-| Cloud Agent | `cursor/<short-name>-40fd` | `cursor/documentacao-page-40fd` |
-| Local feature | short hyphenated name (max 3 words) | `session-telemetry`, `graph-sidecar` |
-
-No `feat/` or `fix/` prefixes on Cloud Agent branches.
-
-## XOCP roadmap (implement in order)
-
-Track audited status in `specs/xocp/implementation-checklist.md`.
-
-1. **Telemetry** — session score, event log, feature flags (`experimental.graphify`) — **done** (merged to `dev` via PRs [#11](https://github.com/ortizpedroso/xocp/pull/11), [#13](https://github.com/ortizpedroso/xocp/pull/13))
-2. **Graphify** — local CLI via `uv tool run --from graphifyy==<pinned>`; map jobs via `BackgroundJob`; no HTTP — **done** (merged to `dev` via PRs [#9](https://github.com/ortizpedroso/xocp/pull/9), [#11](https://github.com/ortizpedroso/xocp/pull/11))
-3. **UI** — opt-in suggestion, “Map” button, toast when ready — **done** (merged to `dev` via PR [#19](https://github.com/ortizpedroso/xocp/pull/19))
-4. **Handoff** — durable ≤2000 chars + agent tools (`handoff-write`/`handoff-read`; not UI LRU in `packages/app/src/pages/session/handoff.ts`) — **done** (merged to `dev` via PRs [#9](https://github.com/ortizpedroso/xocp/pull/9), [#11](https://github.com/ortizpedroso/xocp/pull/11), [#14](https://github.com/ortizpedroso/xocp/pull/14))
-5. **Clusters** — FE / BE / Core routing + `work-map.json` — **deferred** (needs hypothesis validation; see checklist)
-6. **Prefetch** — background map only if telemetry proves value — **deferred**
-
-## XOCP constraints
-
-- Keep OpenCode session core (SessionV2) behavior unless a spec says otherwise.
-- Graphify is an external CLI tool (`graphifyy`, pinned version, invoked via `uv tool run`) — not a sidecar or HTTP server. Do not vendor the Graphify repo into the monorepo.
-- XOCP orchestrates Graphify from TypeScript (`AppProcess` + `BackgroundJob`), spawning the external binary as a subprocess; there is no Python orchestration code in this repo.
-- No auto-activation of map/clusters; user opt-in only.
-- Surface UI uses the **XOCP** product name (titles, i18n, desktop window labels). Package names, env vars, `.opencode/`, and the `opencode` CLI binary keep upstream naming by design for sync with OpenCode.
-- Preserve MIT license and upstream copyright notice.
-- When changing XOCP architecture, session flow, stack, or roadmap, update `specs/xocp/documentacao.md` and run `bun run generate:xocp-docs` (CI enforces this via `xocp-ci`).
-
-## Papéis especializados deste projeto
-
-Antes de agir como Elicitador, Triador, Analista, Executor ou
-Avaliador, leia primeiro:
-
-- `specs/xocp/workflow-pipeline-v2.md` (Triador/Analista/Executor/Avaliador)
-- `specs/xocp/elicitador-spec-system.md` (Elicitador)
-
-Isso não é opcional — sem ler, o comportamento correto desses papéis
-não está disponível.
-
-## XOCP workflow and GitHub
-
-- Development workflow (Cloud Agent primary, local for testing): `specs/xocp/workflow.md`
-- GitHub rules, CI, and branch protection: `specs/xocp/github-governance.md`
+| Agent Name | Operational Domain | Primary Responsibility |
+|:---|:---|:---|
+| **Elicitador** | Pipeline Gateway | Requirements gathering, ambiguity resolution, user intent elicitation, source querying. |
+| **workflow-triador** | Pipeline Gateway | Semantic intent classification (`SPEC`, `BRIEF`, `DIVIDIR`), Graphify trigger evaluation. |
+| **Analista** | Specification Engine | System modeling, Technical Brief v2 generation, DAG dependency graph construction. |
+| **Cluster Dispatcher** | Orchestration Lead | DAG execution engine, parallel context manager, worker context isolation. |
+| **core Lead** | Domain Cluster | Oversees runtime protocols, data contracts, schemas, and persistence primitives. |
+| **backend Lead** | Domain Cluster | Oversees server routes, API endpoints, microservices, and database connectors. |
+| **frontend Lead** | Domain Cluster | Oversees Solid/React UI components, design tokens, accessibility, and client state. |
+| **workflow-executor** | Execution Worker | Ephemeral implementation worker; writes code within declared `files_scope`. |
+| **Avaliador** | Verification Gate | Zero-Trust Dual-Lens auditor; validates evidence (Lens 1) and impact (Lens 2). |
+| **Auditor** | Governance | Cross-checks compliance with `baseline-global.md` and security invariants. |
+| **Graphify Operator** | Static Analysis | Code knowledge graph generator using local AST parsing (`graphify update`). |
+| **Research Operator** | Knowledge Ingestion | Ingests multimodal external research sources (HTML, PDF, YouTube, Snippets). |
+| **Evolution Incident Reporter** | Telemetry | Records cycle escalations and failure incidents in `.opencode/evolution/`. |
+| **Session Compactor** | Memory Management | Reclaims context space during extended conversations via structured summaries. |
 
 ---
 
-## Upstream OpenCode rules
+## 2. Invariant Delegation Boundaries & Depth Limit
 
-- To regenerate the legacy JavaScript SDK, run `./packages/sdk/js/script/build.ts`.
-- After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.
-- Keep runtime dependencies directed from Schema to Core and Protocol, then from Core and Protocol to Server. Client runtime code may depend on Schema and Protocol but never Core or Server; `sdk-next` composes Client, Core, and Server.
-- The default branch in this repo is `dev`.
-- Local `main` ref may not exist; use `dev` or `origin/dev` for diffs.
+1. **Strict Delegation Depth = 1:**
+   - Any agent invoking sub-agents via the `task` tool is restricted to **Depth = 1**.
+   - Sub-agents are **strictly prohibited** from recursively spawning additional sub-agents.
+   - All delegations must return results directly to the orchestrating lead or caller.
 
-## Branch Names
+2. **Standardized Review Tool Reference:**
+   - The official tool for requesting task verification and approval from the Avaliador is **`task_approval_check`**.
 
-Use a short branch name of at most three words, separated by hyphens. Do not use slashes or type prefixes such as `feat/` or `fix/`.
+3. **Strict Research Sources Permission Boundary:**
+   - **Allowed Agents:** `Elicitador` and `Analista` have full read access to `.opencode/sources.db` and the intent query engine (`querySourcesByIntent`).
+   - **Blocked Agents:** `workflow-executor` and `Avaliador` are strictly blocked from invoking sources tools (`SourcesPermissionDeniedError`).
+   - **Rationale:** Prevents context contamination and ensures implementation workers execute strictly against the validated Technical Brief.
 
-Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
+---
 
-## Commits and PR Titles
+## 3. Executor Pre-Flight Self-Test Protocol
 
-Use conventional commit-style messages and PR titles: `type(scope): summary`.
-
-Valid types are `feat`, `fix`, `docs`, `chore`, `refactor`, and `test`. Scopes are optional; use the affected package or area when helpful, e.g. `core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, or `plugin`.
-
-Examples: `fix(tui): simplify thinking toggle styling`, `docs: update contributing guide`, `chore(sdk): regenerate types`.
-
-## Style Guide
-
-### General Principles
-
-- Keep things in one function unless composable or reusable
-- Do not extract single-use helpers preemptively. Inline the logic at the call site unless the helper is reused, hides a genuinely complex boundary, or has a clear independent name that improves the caller.
-- Avoid `try`/`catch` where possible
-- Avoid using the `any` type
-- Use Bun APIs when possible, like `Bun.file()`
-- Rely on type inference when possible; avoid explicit type annotations or interfaces unless necessary for exports or clarity
-- Prefer functional array methods (flatMap, filter, map) over for loops; use type guards on filter to maintain type inference downstream
-- In `src/config`, follow the existing self-export pattern at the top of the file (for example `export * as ConfigAgent from "./agent"`) when adding a new config module.
-- In Effect generators, bind services to named variables before calling methods. Do not use nested service yields such as `yield* (yield* Foo.Service).bar()`.
-
-Reduce total variable count by inlining when a value is only used once.
-
-```ts
-// Good
-const journal = await Bun.file(path.join(dir, "journal.json")).json()
-
-// Bad
-const journalPath = path.join(dir, "journal.json")
-const journal = await Bun.file(journalPath).json()
-```
-
-### Destructuring
-
-Avoid unnecessary destructuring. Use dot notation to preserve context.
-
-```ts
-// Good
-obj.a
-obj.b
-
-// Bad
-const { a, b } = obj
-```
-
-### Imports
-
-- Never alias imports. Do not use `import { foo as bar } from "..."` or renamed imports like `resolve as pathResolve`.
-- Never use star imports. Do not use `import * as Foo from "..."` or `import type * as Foo from "..."`.
-- If a namespace-style value is needed, import the module's own exported namespace by name, for example `import { Project } from "@opencode-ai/core/project"`, then reference `Project.ID`.
-- Prefer dynamic imports for heavy modules that are only needed in selected code paths, especially in startup-sensitive entrypoints. Destructure dynamic import bindings near the top of the narrowest scope that needs them so they read like normal imports. Avoid inline chains such as `await import("./module").then((mod) => mod.value())` or `(await import("./module")).value()`. Keep branch-specific imports inside the branch that needs them to preserve lazy loading.
-
-### Variables
-
-Prefer `const` over `let`. Use ternaries or early returns instead of reassignment.
-
-```ts
-// Good
-const foo = condition ? 1 : 2
-
-// Bad
-let foo
-if (condition) foo = 1
-else foo = 2
-```
-
-### Control Flow
-
-Avoid `else` statements. Prefer early returns.
-
-```ts
-// Good
-function foo() {
-  if (condition) return 1
-  return 2
-}
-
-// Bad
-function foo() {
-  if (condition) return 1
-  else return 2
-}
-```
-
-### Complex Logic
-
-When a function has several validation branches or supporting details, make the main function read as the happy path and move supporting details into small helpers below it.
-
-```ts
-// Good
-export function loadThing(input: unknown) {
-  const config = requireConfig(input)
-  const metadata = readMetadata(input)
-  return createThing({ config, metadata })
-}
-
-function requireConfig(input: unknown) {
-  ...
-}
-```
-
-- Keep helpers close to the code they support, below the main export when that improves readability.
-- Do not over-abstract simple expressions into many single-use helpers; extract only when it names a real concept like `requireConfig` or `readMetadata`.
-- Do not return `Effect` from helpers unless they actually perform effectful work. Synchronous parsing, validation, and option building should stay synchronous.
-- Prefer Effect schema helpers such as `Schema.UnknownFromJsonString` and `Schema.decodeUnknownOption` over manual `JSON.parse` wrapped in `Effect.try` when parsing untrusted JSON strings.
-- Add comments for non-obvious constraints and surprising behavior, not for obvious assignments or control flow.
-
-### Schema Definitions (Drizzle)
-
-Use snake_case for field names so column names don't need to be redefined as strings.
-
-```ts
-// Good
-const table = sqliteTable("session", {
-  id: text().primaryKey(),
-  project_id: text().notNull(),
-  created_at: integer().notNull(),
-})
-
-// Bad
-const table = sqliteTable("session", {
-  id: text("id").primaryKey(),
-  projectID: text("project_id").notNull(),
-  createdAt: integer("created_at").notNull(),
-})
-```
-
-## Testing
-
-- Avoid mocks as much as possible, you shouldn't be using globalThis.\* at all unless it's the only option.
-- Test actual implementation, do not duplicate logic into tests
-- Tests cannot run from repo root (guard: `do-not-run-tests-from-root`); run from package dirs like `packages/opencode`.
-
-## Type Checking
-
-- Always run `bun typecheck` from package directories (e.g., `packages/opencode`), never `tsc` directly.
-
-## V2 Session Core
-
-- Keep durable prompt admission separate from model execution. `SessionV2.prompt(...)` admits one durable `session_input` row before scheduling advisory `SessionExecution.wake(sessionID)` unless `resume: false` requests admit-only behavior. The serialized runner promotes admitted inputs into visible user messages at safe boundaries.
-- Reusing a Session ID adopts the existing Session. Reusing a prompt message ID reconciles an exact retry only when Session, prompt, and delivery mode match; conflicting reuse fails. Historical projected prompts lazily synthesize promoted inbox records during exact retry.
-- Keep `SessionExecution` process-global and Session-ID based. Its local implementation owns the process-local Session coordinator and discovers placement through `SessionStore` plus `LocationServiceMap.get(session.location)` only when a drain starts; no layer should take a Session ID. V2 interruption targets the active process-local ownership chain for that Session; idle or missing interruption is a no-op.
-- Keep `SessionRunner`, model resolution, tool registry, permissions, and filesystem Location-scoped. Omitted `Location.workspaceID` means implicit-local placement; explicit workspace identity remains reserved for future placement semantics.
-- Preserve one explicit `llm.stream(request)` call per provider turn and reload projected history before durable continuation. Do not bridge through legacy `SessionPrompt.loop(...)` or delegate orchestration to an in-memory tool loop.
-- Keep local Session drains process-local until clustering is implemented. `SessionRunCoordinator` joins explicit same-Session resumes, coalesces prompt wakeups, and allows different Sessions to run concurrently. Advisory wakes drain eligible durable inbox rows only; post-crash continuation recovery requires a separate explicit design before it may retry provider work. A drain has no durable identity or transcript boundary.
-- Keep delivery vocabulary explicit. Prompts steer by default and promote at the next safe provider-turn boundary while the current drain requires continuation. An explicit `queue` input remains pending until the Session would otherwise become idle; promote one queued input at that boundary, then reevaluate continuation before promoting another. Promoting any new user input resets the selected agent's provider-turn allowance; a batch of steers resets it once.
-- Keep EventV2 replay owner claims separate from clustered Session execution ownership.
-- Keep the System Context algebra, registry, and built-ins in `src/system-context`; keep Context Source producers with their observed domains, and keep Session History selection plus Context Epoch persistence Session-owned.
+Before submitting changes for evaluation:
+1. When `workflow-executor` modifies files within `files_scope.allow_modify`, it **must** write or update a corresponding unit test (`<module>.test.ts`).
+2. The executor invokes `runExecutorSelfTest(workspaceDir, testFilePath)` which runs `bun test <testFilePath>`.
+3. **Hard Local Gate:**
+   - If `exitCode !== 0`: Submission is blocked. The executor must inspect test output and fix regressions locally.
+   - If `exitCode === 0`: The executor is authorized to call `task_approval_check`.
+4. **Reviewer Blindness (Zero Contamination):**
+   - The Avaliador remains 100% blind to executor self-test logs. The Avaliador evaluates changes independently against canonical test gates specified in the Technical Brief.

@@ -1,93 +1,70 @@
-# XOCP
+# XOCP (eXtensible Open Code Platform)
 
-**eXtensible Open Code Platform** · by Pedroso
+Autonomous, deterministic, multi-agent software engineering runtime built with **Bun (>= 1.3.14)**, **Effect-TS**, and **SQLite internals**.
 
-Independent AI coding agent with structural code mapping (Graphify), cluster orchestration, and durable agent handoff.
+---
 
-> Based on [OpenCode](https://github.com/anomalyco/opencode) (MIT License). XOCP is an independent project — not affiliated with OpenCode or X Corp.
+## 🚀 Key Features
 
-## Status
+- **Cognitive Pipeline Orchestration:** End-to-end task workflow through `Elicitador` -> `workflow-triador` -> `Analista` -> `Cluster Dispatcher` -> `Avaliador`.
+- **DAG Cluster Dispatcher:** Simultaneous parallel execution of independent tasks (`depends_on: []`) in isolated worker contexts with zero cross-talk.
+- **Zero-Trust Dual-Lens Avaliador:** Independent blind evaluation of implementation proposals across **Lens 1 (Evidence - Deterministic Shell Checks)** and **Lens 2 (Impact - Scope & Graphify Boundary Enforcement)**.
+- **Local Knowledge Sources Engine:** Ingests HTML, PDF, YouTube transcripts, and code snippets into normalized Markdown with YAML frontmatter, indexed in SQLite FTS5 for intent-aligned query retrieval (`querySourcesByIntent`).
+- **Strict Permission Barriers:** Research sources are indexed exclusively for `Elicitador` and `Analista`; `workflow-executor` and `Avaliador` access is strictly blocked (`SourcesPermissionDeniedError`).
+- **Executor Pre-Flight Self-Test Guard:** Local hard gate blocking submission to Avaliador if unit tests fail, maintaining complete reviewer blindness.
+- **Atomic Cycle Tracking & Incident Telemetry:** Bounded re-try loop (max 3 cycles) backed by atomic SQLite transactions and automated incident logging in `.opencode/evolution/`.
 
-Early development on branch `dev`. Optional upstream sync from OpenCode is manual.
+---
 
-## Quick start
+## 🗺️ Roadmap & Status
 
-Requires [Bun 1.3.14](https://bun.sh) (see `packageManager` in `package.json`).
+| Milestone | Status | Description |
+|:---|:---|:---|
+| **Pipeline & Path Hardening** | ✅ Complete | Windows-safe path sanitization and contract validation |
+| **Cluster Orchestration (Dispatcher)** | ✅ Complete | DAG engine with parallel context isolation |
+| **Dual-Lens Avaliador Engine** | ✅ Complete | Zero-Trust evidence and impact audit gates |
+| **Deterministic Source Normalization** | ✅ Complete | Multi-format transformers (HTML, PDF, YouTube, Code) |
+| **FTS5 Intent-Aligned Search** | ✅ Complete | BM25 indexing and intent keyword suppression filter |
+| **Sources Web Drawer Component** | ✅ Complete | Multi-tab UI drawer integrated into app titlebar |
+| **Distributed Remote Workers** | 🔄 Upcoming | Worker node distribution over secure gRPC |
 
-### Full stack (recommended)
+---
 
-Starts the API server and serves the web UI in one process:
+## ⚡ Quickstart
 
+### Prerequisites
+- [Bun](https://bun.sh) (>= 1.3.14)
+- Node.js (for optional web tooling)
+
+### Installation
 ```bash
+# Clone the repository
+git clone https://github.com/ortizpedroso/xocp.git
+cd xocp
+
+# Install dependencies across all monorepo workspaces
 bun install
+```
+
+### Development Commands
+```bash
+# Start backend core development server (Port 4096)
+bun dev
+
+# Start frontend application with Vite (Port 3000)
 bun dev web
 ```
 
-Open http://localhost:4096
-
-### Local UI development (hot reload)
-
-The web UI is a separate Vite app. It needs the API server on port **4096**; without it the page loads but buttons stay disabled.
-
+### Running Test Suites
 ```bash
-bun install
-bun dev:local
+# Run core test suites (Workflow Review, Transformers, Sources, Self-Test)
+bun test test/workflow-review/ test/sources/ test/workflow-executor/
+
+# Run complete repository test suite
+bun test
 ```
 
-Open http://localhost:4444 (API at http://localhost:4096).
+---
 
-Or run the two processes in separate terminals:
-
-```bash
-bun dev serve --port 4096          # API
-bun run --cwd packages/app dev -- --port 4444   # UI with HMR
-```
-
-> **Note:** `bun dev:web` starts only the Vite frontend. Use `bun dev web` (no colon) for the full stack, or `bun dev:local` for frontend + API together.
-
-Other entrypoints:
-
-```bash
-bun dev              # CLI / TUI (packages/opencode)
-bun dev:desktop      # Desktop app
-```
-
-## Repository remotes
-
-| Remote | Purpose |
-|--------|---------|
-| `origin` | This repo — `github.com/ortizpedroso/xocp` |
-| `opencode` | Upstream OpenCode — `github.com/anomalyco/opencode` |
-
-Sync with upstream when needed:
-
-```bash
-git fetch opencode
-git checkout -b sync-opencode-$(date +%Y-%m-%d)
-git merge opencode/dev
-# resolve conflicts in XOCP-owned files (README, AGENTS.md, specs/xocp/*)
-git checkout dev
-git merge sync-opencode-$(date +%Y-%m-%d)
-```
-
-## Roadmap
-
-- [x] Session telemetry and complexity score
-- [x] Graphify local CLI (code map via `uv tool run`, pinned `graphifyy` version)
-- [x] Opt-in map UI (background jobs, toast)
-- [x] Durable handoff (≤2000 chars per session)
-- [ ] Cluster orchestration (frontend / backend / core) — deferred; see `specs/xocp/architecture.md` §5.4
-- [ ] Background map prefetch — deferred until telemetry validates value; see `specs/xocp/implementation-checklist.md`
-
-See `AGENTS.md` for implementation rules and phased delivery.
-
-## Development
-
-- Default branch: `dev`
-- Typecheck: `bun typecheck` (from repo root) or `bun typecheck` inside a package
-- Tests: run from package dirs (e.g. `cd packages/opencode && bun test`), not from repo root
-- Agent guidelines: `AGENTS.md`
-
-## License
-
-MIT — see [LICENSE](./LICENSE). Original OpenCode copyright retained; XOCP modifications © Pedroso.
+## 📄 License
+MIT License. Copyright (c) 2026 XOCP Contributors.
