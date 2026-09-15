@@ -213,6 +213,26 @@ it.instance(
     }),
 )
 
+it.instance("pattern-auditor agent is registered read-only, same shape as baseline-auditor", () =>
+  Effect.gen(function* () {
+    const patternAuditor = yield* load((svc) => svc.get("pattern-auditor"))
+    expect(patternAuditor).toBeDefined()
+    expect(patternAuditor?.mode).toBe("subagent")
+    expect(evalPerm(patternAuditor, "edit")).toBe("deny")
+    expect(evalPerm(patternAuditor, "write")).toBe("deny")
+    expect(evalPerm(patternAuditor, "bash")).toBe("deny")
+    expect(Permission.evaluate("pattern_recurrence_read", "*", patternAuditor!.permission).action).toBe("allow")
+    expect(Permission.evaluate("read", "*", patternAuditor!.permission).action).toBe("allow")
+  }),
+)
+
+it.instance("avaliador can delegate to pattern-auditor via task", () =>
+  Effect.gen(function* () {
+    const avaliador = yield* load((svc) => svc.get("avaliador"))
+    expect(Permission.evaluate("task", "pattern-auditor", avaliador!.permission).action).toBe("allow")
+  }),
+)
+
 it.instance(
   "user permission can allow the general subagent from plan mode",
   () =>

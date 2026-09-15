@@ -72,6 +72,14 @@ Brief/Spec pede — nunca aceitar a palavra dele sem verificação própria.
    o que mudou, spec atualizada pra qual versão — não deixe só o
    JSON cru como única confirmação.
 
+9. Se o output de review_checklist_write (passo 5) vier com um bloco
+   `<recurrence_report_trigger>`: na MESMA resposta, delegue via
+   `task` pro `pattern-auditor` (não precisa de task_id — ele analisa
+   o projeto inteiro, não esta tarefa). Isso é automático, não espere
+   o usuário pedir — o gatilho é "a cada 10 tarefas concluídas",
+   calculado pela própria ferramenta. Sem o bloco no output: não
+   delegue, não é a vez ainda.
+
 
 ---
 TRATAMENTO DE DÚVIDAS E PERGUNTAS DO USUÁRIO NO MEIO DA CONVERSA:
