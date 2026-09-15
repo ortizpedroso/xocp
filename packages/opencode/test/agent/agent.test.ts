@@ -195,6 +195,25 @@ it.instance("avaliador agent allows review tools and workflow-executor delegatio
 )
 
 it.instance(
+  "Reviewer Blindness: self_test_tracker is never visible to avaliador, but is visible to workflow-executor",
+  () =>
+    Effect.gen(function* () {
+      const avaliador = yield* load((svc) => svc.get("avaliador"))
+      const executor = yield* load((svc) => svc.get("workflow-executor"))
+      expect(avaliador).toBeDefined()
+      expect(executor).toBeDefined()
+
+      // Mirrors the real tool-visibility filter in session/llm/request.ts (resolveTools):
+      // a tool id is hidden from an agent iff its permission ruleset resolves to a
+      // blanket "*"-pattern "deny" for that tool id.
+      const avaliadorDisabled = Permission.disabled(["self_test_tracker"], avaliador!.permission)
+      const executorDisabled = Permission.disabled(["self_test_tracker"], executor!.permission)
+      expect(avaliadorDisabled.has("self_test_tracker")).toBe(true)
+      expect(executorDisabled.has("self_test_tracker")).toBe(false)
+    }),
+)
+
+it.instance(
   "user permission can allow the general subagent from plan mode",
   () =>
     Effect.gen(function* () {

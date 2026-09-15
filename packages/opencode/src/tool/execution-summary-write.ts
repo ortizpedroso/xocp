@@ -2,6 +2,7 @@ import { Effect, Schema } from "effect"
 import { WorkflowReview } from "@opencode-ai/core/workflow-review"
 import { InstanceState } from "@/effect/instance-state"
 import * as Tool from "./tool"
+import { sanitizeHandoffSummary } from "./handoff-sanitize"
 import DESCRIPTION from "./execution-summary-write.txt"
 
 export const Parameters = Schema.Struct({
@@ -23,8 +24,16 @@ export const ExecutionSummaryWriteTool = Tool.define(
           try {
             const saved = await WorkflowReview.writeExecutionSummary(instance.directory, {
               task_id: params.task_id,
-              completed: [...params.completed],
-              incomplete: [...params.incomplete],
+              completed: params.completed.map((entry) => ({
+                ...entry,
+                item: sanitizeHandoffSummary(entry.item),
+                evidence: sanitizeHandoffSummary(entry.evidence),
+              })),
+              incomplete: params.incomplete.map((entry) => ({
+                ...entry,
+                item: sanitizeHandoffSummary(entry.item),
+                reason: sanitizeHandoffSummary(entry.reason),
+              })),
               status: params.status,
             })
             return {

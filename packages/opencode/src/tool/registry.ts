@@ -18,6 +18,7 @@ import { HandoffWriteTool } from "./handoff-write"
 import { HandoffReadTool } from "./handoff-read"
 import { TaskApprovalCheckTool } from "./task-approval-check"
 import { CycleTrackerTool } from "./cycle-tracker"
+import { SelfTestTrackerTool } from "./self-test-tracker"
 import { ExecutionSummaryWriteTool } from "./execution-summary-write"
 import { ExecutionSummaryReadTool } from "./execution-summary-read"
 import { ReviewChecklistWriteTool } from "./review-checklist-write"
@@ -115,6 +116,7 @@ const layer = Layer.effect(
     const handoffRead = yield* HandoffReadTool
     const taskApprovalCheck = yield* TaskApprovalCheckTool
     const cycleTracker = yield* CycleTrackerTool
+    const selfTestTracker = yield* SelfTestTrackerTool
     const executionSummaryWrite = yield* ExecutionSummaryWriteTool
     const executionSummaryRead = yield* ExecutionSummaryReadTool
     const reviewChecklistWrite = yield* ReviewChecklistWriteTool
@@ -246,6 +248,7 @@ const layer = Layer.effect(
           handoffRead: Tool.init(handoffRead),
           taskApprovalCheck: Tool.init(taskApprovalCheck),
           cycleTracker: Tool.init(cycleTracker),
+          selfTestTracker: Tool.init(selfTestTracker),
           executionSummaryWrite: Tool.init(executionSummaryWrite),
           executionSummaryRead: Tool.init(executionSummaryRead),
           reviewChecklistWrite: Tool.init(reviewChecklistWrite),
@@ -281,6 +284,7 @@ const layer = Layer.effect(
             tool.handoffRead,
             tool.taskApprovalCheck,
             tool.cycleTracker,
+            tool.selfTestTracker,
             tool.executionSummaryWrite,
             tool.executionSummaryRead,
             tool.reviewChecklistWrite,

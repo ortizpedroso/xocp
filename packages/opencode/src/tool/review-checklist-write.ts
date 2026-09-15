@@ -2,6 +2,7 @@ import { Effect, Schema } from "effect"
 import { WorkflowReview } from "@opencode-ai/core/workflow-review"
 import { InstanceState } from "@/effect/instance-state"
 import * as Tool from "./tool"
+import { sanitizeHandoffSummary } from "./handoff-sanitize"
 import DESCRIPTION from "./review-checklist-write.txt"
 
 export const Parameters = Schema.Struct({
@@ -25,7 +26,10 @@ export const ReviewChecklistWriteTool = Tool.define(
             const saved = await WorkflowReview.writeReviewChecklist(instance.directory, {
               task_id: params.task_id,
               gates: params.gates,
-              criteria: [...params.criteria],
+              criteria: params.criteria.map((entry) => ({
+                ...entry,
+                evidence: sanitizeHandoffSummary(entry.evidence),
+              })),
               verdict: params.verdict,
               timestamp: params.timestamp,
             })
