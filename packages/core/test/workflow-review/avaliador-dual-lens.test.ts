@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test"
-import { evaluateDualLens } from "../../src/workflow-review/avaliador"
+import { evaluateDualLens, computeCumulativeDiffFiles } from "../../src/workflow-review/avaliador"
 import type { TechnicalBriefV2 } from "../../src/brief/types"
+import { $ } from "bun"
+import fs from "fs/promises"
+import path from "path"
+import os from "os"
 
 describe("workflow-review/avaliador Dual-Lens Verification", () => {
   const sampleBrief: TechnicalBriefV2 = {
@@ -122,5 +126,77 @@ describe("workflow-review/avaliador Dual-Lens Verification", () => {
     expect(review.lensEvidence.passed).toBe(true)
     expect(review.lensImpact.passed).toBe(true)
     expect(review.blindChecklist.unmappedModifications.length).toBe(0)
+  })
+})
+
+describe("workflow-review/avaliador anti-salami cumulative diff", () => {
+  async function makeSalamiRepo() {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), "avaliador-anti-salami-"))
+    const git = (args: string) => $`git ${{ raw: args }}`.cwd(directory).quiet()
+    await git("init -q -b main")
+    await git("config user.email test@example.com")
+    await git("config user.name test")
+    await fs.writeFile(path.join(directory, "base.ts"), "export const base = 1\n")
+    await git("add base.ts")
+    await git("commit -q -m base")
+    await git("checkout -q -b feature/task")
+
+    // Cycle 1: touches an in-scope file, committed on its own.
+    await fs.writeFile(path.join(directory, "in-scope.ts"), "export const inScope = 1\n")
+    await git("add in-scope.ts")
+    await git("commit -q -m cycle1")
+
+    // Cycle 2: touches a second, out-of-scope file in a *separate* commit — a
+    // per-commit diff would only see this one, hiding the cycle-1 change (salami slicing).
+    await fs.writeFile(path.join(directory, "out-of-scope.ts"), "export const outOfScope = 1\n")
+    await git("add out-of-scope.ts")
+    await git("commit -q -m cycle2")
+
+    return directory
+  }
+
+  test("computeCumulativeDiffFiles sees every cycle's changes against the base branch", async () => {
+    const directory = await makeSalamiRepo()
+
+    const cumulative = await computeCumulativeDiffFiles(directory, "main")
+    expect(cumulative.sort()).toEqual(["in-scope.ts", "out-of-scope.ts"])
+
+    // A diff scoped to only the latest commit would miss the cycle-1 file —
+    // proving the bug this default closes.
+    const lastCommitOnly = await computeCumulativeDiffFiles(directory, "HEAD~1")
+    expect(lastCommitOnly).toEqual(["out-of-scope.ts"])
+  })
+
+  test("evaluateDualLens defaults to the cumulative diff when diffFiles is omitted", async () => {
+    const directory = await makeSalamiRepo()
+
+    const brief: TechnicalBriefV2 = {
+      schema_version: "2.0",
+      brief_id: "brief-anti-salami-01",
+      task_id: "task-anti-salami-01",
+      domain_cluster: "core",
+      depends_on: [],
+      files_scope: {
+        allow_modify: ["in-scope.ts"],
+        allow_read_only: [],
+        strictly_forbidden: [],
+      },
+      contracts: { exported_symbols: [], function_signatures: [] },
+      verification_gates: { shell_checks: [], baseline_rules: [] },
+    }
+
+    const review = await evaluateDualLens({
+      directory,
+      brief,
+      baseBranch: "main",
+      shellRunner: async () => ({ success: true, output: "ok" }),
+    })
+
+    // out-of-scope.ts only shows up because the default compares against the
+    // full base-branch diff, not just the active cycle's commit.
+    expect(review.lensImpact.modifiedFiles.sort()).toEqual(["in-scope.ts", "out-of-scope.ts"])
+    expect(review.verdict).toBe("rejected")
+    expect(review.reason).toBe("UNACCEPTABLE_IMPACT")
+    expect(review.lensImpact.violations).toContain("Modified out-of-scope unmapped file: out-of-scope.ts")
   })
 })

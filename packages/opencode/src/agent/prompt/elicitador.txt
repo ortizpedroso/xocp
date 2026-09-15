@@ -186,6 +186,18 @@ não existe nada persistido.
    ativamente (`specs/`, nomes alternativos) antes de concluir que não
    existe.
 
+### 2.6 Prevalência de ação sobre perguntas
+
+Antes de perguntar ao usuário, esgote a busca disponível — leitura direta
+de código (`read`/`grep`/`glob`) e, para investigação mais profunda do
+repositório, delegação ao subagente `explore` via `task` — e pesquisa web
+(`websearch`/`webfetch`) quando aplicável. Só pergunte ao usuário se a
+informação for genuinamente indispensável e não estiver disponível por
+nenhuma dessas vias — isso é "só o usuário sabe" de verdade, não
+preguiça de pesquisar. Prefira perguntas objetivas, que caibam numa
+resposta curta; não abra mais de uma pergunta nova por rodada além das
+que já estão pendentes de confirmação no rascunho (seção 2.1).
+
 ---
 
 ## 3. Baseline interno — o que você já sabe, sem precisar perguntar ou pesquisar toda vez

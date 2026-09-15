@@ -28,11 +28,38 @@ export interface DualLensReviewResult {
   }
 }
 
+const DEFAULT_BASE_BRANCH = "main"
+
 export interface DualLensRunnerOptions {
   directory: string
   brief: TechnicalBriefV2
-  diffFiles: string[] // List of files modified in git diff
+  baseBranch?: string // Defaults to DEFAULT_BASE_BRANCH; only used when diffFiles is omitted.
+  // Files modified since baseBranch. When omitted, computed via `git diff <baseBranch>...HEAD`
+  // (the full cumulative diff of the task, not just the active cycle's commit) — this is what
+  // prevents an executor from "salami-slicing" a large out-of-scope change across cycles.
+  diffFiles?: string[]
   shellRunner?: (command: string) => Promise<{ success: boolean; output: string }>
+}
+
+/**
+ * Files changed since `baseBranch`, computed via `git diff <baseBranch>...HEAD --name-only`.
+ * Comparing against the branch point (not just HEAD's own commit or the active cycle's diff)
+ * is what makes this immune to salami-slicing across correction cycles.
+ */
+export async function computeCumulativeDiffFiles(
+  directory: string,
+  baseBranch: string = DEFAULT_BASE_BRANCH,
+): Promise<string[]> {
+  const proc = Bun.spawnSync(["git", "diff", "--name-only", `${baseBranch}...HEAD`], { cwd: directory })
+  if (proc.exitCode !== 0) {
+    const stderr = proc.stderr ? Buffer.from(proc.stderr).toString() : ""
+    throw new Error(`git diff against "${baseBranch}...HEAD" failed in ${directory}: ${stderr.trim()}`)
+  }
+  const stdout = proc.stdout ? Buffer.from(proc.stdout).toString() : ""
+  return stdout
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
 }
 
 /**
@@ -44,7 +71,8 @@ export interface DualLensRunnerOptions {
  * - Approved only if BOTH Lens 1 and Lens 2 pass with 100% compliance.
  */
 export async function evaluateDualLens(options: DualLensRunnerOptions): Promise<DualLensReviewResult> {
-  const { directory, brief, diffFiles } = options
+  const { directory, brief } = options
+  const diffFiles = options.diffFiles ?? (await computeCumulativeDiffFiles(directory, options.baseBranch ?? DEFAULT_BASE_BRANCH))
 
   // 1. Blind Validation: analyze brief and diff independently
   const expectedModifications = [...brief.files_scope.allow_modify]
