@@ -168,6 +168,17 @@ it.instance("analista agent allows edits only in .opencode/briefs/*.yaml", () =>
   }),
 )
 
+it.instance(
+  "Tarefa 11: analista can delegate to workflow-executor via task (parallel sub-Brief dispatch)",
+  () =>
+    Effect.gen(function* () {
+      const analista = yield* load((svc) => svc.get("analista"))
+      expect(Permission.evaluate("task", "workflow-executor", analista!.permission).action).toBe("allow")
+      expect(analista?.prompt).toContain("REGRA DE DIVISÃO PARA PARALELISMO REAL")
+      expect(analista?.prompt).toContain("Teto de 4")
+    }),
+)
+
 it.instance("workflow-executor agent denies approval tools and requires gate in prompt", () =>
   Effect.gen(function* () {
     const executor = yield* load((svc) => svc.get("workflow-executor"))

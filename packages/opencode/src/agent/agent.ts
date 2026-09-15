@@ -258,6 +258,7 @@ const layer = Layer.effect(
                 task: {
                   general: "deny",
                   explore: "allow",
+                  "workflow-executor": "allow",
                 },
                 edit: {
                   "*": "deny",
