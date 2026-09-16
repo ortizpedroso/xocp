@@ -168,6 +168,17 @@ it.instance("analista agent allows edits only in .opencode/briefs/*.yaml", () =>
   }),
 )
 
+it.instance(
+  "Tarefa 11: analista can delegate to workflow-executor via task (parallel sub-Brief dispatch)",
+  () =>
+    Effect.gen(function* () {
+      const analista = yield* load((svc) => svc.get("analista"))
+      expect(Permission.evaluate("task", "workflow-executor", analista!.permission).action).toBe("allow")
+      expect(analista?.prompt).toContain("REGRA DE DIVISÃO PARA PARALELISMO REAL")
+      expect(analista?.prompt).toContain("Teto de 4")
+    }),
+)
+
 it.instance("workflow-executor agent denies approval tools and requires gate in prompt", () =>
   Effect.gen(function* () {
     const executor = yield* load((svc) => svc.get("workflow-executor"))
@@ -211,6 +222,26 @@ it.instance(
       expect(avaliadorDisabled.has("self_test_tracker")).toBe(true)
       expect(executorDisabled.has("self_test_tracker")).toBe(false)
     }),
+)
+
+it.instance("pattern-auditor agent is registered read-only, same shape as baseline-auditor", () =>
+  Effect.gen(function* () {
+    const patternAuditor = yield* load((svc) => svc.get("pattern-auditor"))
+    expect(patternAuditor).toBeDefined()
+    expect(patternAuditor?.mode).toBe("subagent")
+    expect(evalPerm(patternAuditor, "edit")).toBe("deny")
+    expect(evalPerm(patternAuditor, "write")).toBe("deny")
+    expect(evalPerm(patternAuditor, "bash")).toBe("deny")
+    expect(Permission.evaluate("pattern_recurrence_read", "*", patternAuditor!.permission).action).toBe("allow")
+    expect(Permission.evaluate("read", "*", patternAuditor!.permission).action).toBe("allow")
+  }),
+)
+
+it.instance("avaliador can delegate to pattern-auditor via task", () =>
+  Effect.gen(function* () {
+    const avaliador = yield* load((svc) => svc.get("avaliador"))
+    expect(Permission.evaluate("task", "pattern-auditor", avaliador!.permission).action).toBe("allow")
+  }),
 )
 
 it.instance(

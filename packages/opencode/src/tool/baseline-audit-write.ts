@@ -1,5 +1,6 @@
 import { Effect, Schema } from "effect"
 import { WorkflowReview } from "@opencode-ai/core/workflow-review"
+import { recordPatternEvent } from "@opencode-ai/core/evolution/pattern-events"
 import { InstanceState } from "@/effect/instance-state"
 import * as Tool from "./tool"
 import DESCRIPTION from "./baseline-audit-write.txt"
@@ -25,6 +26,20 @@ export const BaselineAuditWriteTool = Tool.define(
               items: [...params.items],
               overall: params.overall,
             })
+
+            // Recurrence tracking (Tarefa 10) — one of the 3 fixed event
+            // sources feeding pattern-auditor. Never affects the audit
+            // result itself; a failure here would only lose telemetry.
+            for (const item of saved.payload.items) {
+              if (item.status !== "fail") continue
+              await recordPatternEvent(instance.directory, {
+                task_id: params.task_id,
+                category_id: item.id,
+                source: "baseline_auditor",
+                cycle: saved.cycle,
+              }).catch(() => {})
+            }
+
             return {
               title: `baseline audit ${saved.payload.overall}`,
               output: `Wrote ${saved.relativePath} for cycle ${saved.cycle}.`,

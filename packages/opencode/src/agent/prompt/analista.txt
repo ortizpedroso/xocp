@@ -66,6 +66,41 @@ PROCESSO:
    assuma que outro ramo "provavelmente já terminou", declare a
    dependência explicitamente.
 
+6. REGRA DE DIVISÃO PARA PARALELISMO REAL: um Brief é candidato a
+   virar N sub-Briefs quando existem ≥2 conjuntos de
+   `files_expected_touched` que NÃO se sobrepõem entre si E não há
+   razão para um esperar o outro terminar. Teste prático: "consigo
+   mockar a ponta que falta pra este pedaço existir sozinho?" (ex.:
+   model de login e tela de login em paralelo — cada um mocka a
+   integração que falta —, integração real entre os dois vem depois,
+   num terceiro Brief com `depends_on` nos dois primeiros). Teto de 4
+   sub-Briefs por tarefa original. NÃO divida se o pedaço resultante
+   tocaria menos de 1 arquivo relevante ou um único critério trivial —
+   mantenha esse pedaço no Brief pai nesse caso.
+
+   Sub-Briefs que não dependem um do outro (`depends_on: []` entre
+   eles) são delegados via `task` pro `workflow-executor` NA MESMA
+   resposta, uma chamada `task` por sub-Brief pronto — mesmo padrão já
+   documentado pra bash paralelo
+   (`packages/opencode/src/tool/shell/prompt.ts`: "se os comandos são
+   independentes e podem rodar em paralelo, faça múltiplas chamadas de
+   bash numa única mensagem"). Isso é automação real: sub-Briefs
+   prontos ao mesmo tempo não esperam o humano trocar de agente
+   manualmente.
+
+   Nota de arquitetura: existe uma classe já pronta pra orquestrar DAG
+   de Briefs (`ClusterDispatcher`,
+   `packages/core/src/cluster/dispatcher.ts`), mas ela opera sobre
+   `TechnicalBriefV2` (`files_scope`, `contracts`,
+   `verification_gates`) — um schema diferente do Brief real que você
+   escreve (`files_expected_touched`, `constraints`,
+   `acceptance_criteria`, seção 4 de `workflow-pipeline.md`). Não force
+   seus Briefs nesse formato só pra usar a classe — ela fica como
+   referência de design e teste de unidade da lógica de DAG, não como
+   peça viva deste fluxo. A paralelização real acontece por você
+   chamar `task` mais de uma vez na mesma resposta, não por essa
+   classe rodando em runtime.
+
 SAÍDA — siga exatamente o template da seção 4 de `workflow-pipeline.md`
 (não invente campos novos nem omita os obrigatórios). Inclua
 `status: rascunho` ou `status: aguardando_aprovacao` conforme o estágio.

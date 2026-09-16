@@ -19,6 +19,7 @@ import PROMPT_AVALIADOR from "./prompt/avaliador.txt"
 import PROMPT_EXPLORE from "./prompt/explore.txt"
 import PROMPT_GRAPHIFY_EXPLORER from "./prompt/graphify-explorer.txt"
 import PROMPT_BASELINE_AUDITOR from "./prompt/baseline-auditor.txt"
+import PROMPT_PATTERN_AUDITOR from "./prompt/pattern-auditor.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
 import { Permission } from "@/permission"
@@ -257,6 +258,7 @@ const layer = Layer.effect(
                 task: {
                   general: "deny",
                   explore: "allow",
+                  "workflow-executor": "allow",
                 },
                 edit: {
                   "*": "deny",
@@ -319,6 +321,7 @@ const layer = Layer.effect(
                   explore: "allow",
                   "workflow-executor": "allow",
                   "baseline-auditor": "allow",
+                  "pattern-auditor": "allow",
                 },
                 external_directory: readonlyExternalDirectory,
               }),
@@ -408,6 +411,27 @@ const layer = Layer.effect(
             description:
               "Subagent dedicado a checar as 11 regras fixas do Baseline Global (specs/xocp/baseline-global.md) contra o código. Read-only, nunca edita código.",
             prompt: PROMPT_BASELINE_AUDITOR,
+            options: {},
+            mode: "subagent",
+            native: true,
+          },
+          "pattern-auditor": {
+            name: "pattern-auditor",
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                read: "allow",
+                pattern_recurrence_read: "allow",
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            description:
+              "Subagent dedicado a relatar recorrência de padrões (erro recorrente vs rotina recorrente) a partir de review_checklist, baseline-auditor e escalações de autoteste. Read-only, nunca edita código nem implementa a melhoria sozinho.",
+            prompt: PROMPT_PATTERN_AUDITOR,
             options: {},
             mode: "subagent",
             native: true,

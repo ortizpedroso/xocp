@@ -1,0 +1,3 @@
+Reads the project-wide recurrence report: criteria/rules that failed (review_checklist or baseline-auditor) across ≥3 distinct completed tasks within the last 20 completed tasks or 30 days (whichever window is smaller), plus self-test escalations from Tarefa 8. No task_id needed — this looks at the whole project, not one task.
+
+Separates two categories: "erro recorrente" (a criterion/rule repeatedly failing — candidate for a new baseline rule or a prompt fix) and "rotina recorrente" (the same kind of manual work repeating without any rejection — candidate for a new tool/skill). The second category is a documented, known-empty limitation in this version — no existing signal in the codebase supports it yet; do not invent findings to fill it.

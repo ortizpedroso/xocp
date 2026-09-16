@@ -25,14 +25,18 @@ gate obrigatório do fluxo real — isso passou a ser verdade a partir da
 Tarefa 8 (`specs/xocp/prompt-implementacao-melhorias-xocp-v2.md`); ver
 §5.3 para os detalhes de conexão e a nota histórica.
 
-## 1. Os 14 agentes nativos
+## 1. Os 15 agentes nativos
 
-Fonte: `packages/opencode/src/agent/agent.ts`, objeto `agents` (linhas
-148–461). A coluna **Model tier** é uma recomendação deste documento, não
-algo configurado no código — nenhum dos 14 agentes fixa um `model` em
-`agent.ts` (o campo `model` existe no schema, linha 53–58, mas não é
-usado em nenhuma das 14 entradas); todos herdam o modelo padrão da sessão
-ou o override do usuário em `opencode.json`.
+Fonte: `packages/opencode/src/agent/agent.ts`, objeto `agents`. A coluna
+**Model tier** é uma recomendação deste documento, não algo configurado
+no código — nenhum dos 15 agentes fixa um `model` em `agent.ts` (o campo
+`model` existe no schema, linha 53–58, mas não é usado em nenhuma das 15
+entradas); todos herdam o modelo padrão da sessão ou o override do
+usuário em `opencode.json`.
+
+**Nota (Tarefa 10):** o 15º agente é `pattern-auditor`
+(`agent.ts:418-438`), somado aos 14 originais documentados abaixo — ver
+linha da tabela e §1.2.
 
 | Agente | Modo | Pipeline? | Model tier (recomendado) | O que faz | Resumo do prompt real |
 |---|---|---|---|---|---|
@@ -47,6 +51,7 @@ ou o override do usuário em `opencode.json`.
 | `explore` | subagent | Não | Tier baixo/rápido (busca, não geração) | Busca rápida em código por padrão/keyword/pergunta estrutural, com 3 níveis de profundidade declarados por quem chama. | Especialista em glob/grep/read; nunca cria arquivo nem roda bash mutável (`explore.txt:1-18`). |
 | `graphify-explorer` | subagent | Não | Tier baixo/rápido | Perguntas estruturais de código (chamadas, imports, herança, caminhos de dependência) via `graphify_query`. | Sempre usa `graphify_query` para pergunta estrutural, nunca adivinha por nome de arquivo (`graphify-explorer.txt:1-17`). |
 | `baseline-auditor` | subagent | Não | Tier médio (mistura mecânico + julgamento) | Audita as 11 regras fixas do Baseline Global (`specs/xocp/baseline-global.md`) contra o código. Read-only, nunca edita. | 6 regras de segurança majoritariamente mecânicas (grep por padrão) + 5 regras de UI/UX que misturam mecânico e julgamento; marca `not_applicable` explicitamente quando não se aplica, nunca omite da lista (`baseline-auditor.txt:9-59`). |
+| `pattern-auditor` | subagent | Não (apoio ao pipeline, chamado pelo `avaliador`) | Tier médio (síntese de dados + julgamento de "isso é candidato a regra nova?") | Relata recorrência de padrões no pipeline — mesmo perfil read-only de `baseline-auditor` (`agent.ts:420-431`: `"*": "deny"` + `grep`/`glob`/`read`/`pattern_recurrence_read`/`external_directory` liberados). Nunca implementa, nunca edita, nunca abre delegação própria de correção. | Chama `pattern_recurrence_read` (sem parâmetros, relatório do projeto inteiro) e separa SEMPRE em duas categorias, nunca misturadas: "erro recorrente" (mesmo critério/regra reprovando em ≥3 tarefas distintas — candidato a regra nova ou ajuste de prompt, mas só sugere) e "rotina recorrente" (candidato a tool/skill nova; nesta versão vem vazia com limitação documentada, nunca preenchida por heurística forçada) (`pattern-auditor.txt:14-41`). Princípio citado explicitamente do próprio prompt: "o sistema aprende via spec mais afiada, não via modelo mudando sozinho" (`pattern-auditor.txt:4-7`, ecoando `workflow-pipeline-v2.md` §8). |
 | `compaction` | primary, oculto | Não | Tier baixo/rápido (alto volume, tarefa mecânica) | Interno — resume conversa longa num formato estruturado pra outro agente continuar. | Segue exatamente a estrutura pedida, nunca continua a conversa nem responde perguntas (`compaction.txt:1-5`). |
 | `title` | primary, oculto | Não | Tier baixo/rápido | Interno — gera título de sessão (≤50 caracteres, uma linha). | Regras rígidas de formato + exemplos; nunca usa tools (`title.txt:1-44`). |
 | `summary` | primary, oculto | Não | Tier baixo/rápido | Interno — gera resumo de sessão em 2-3 frases, estilo descrição de PR. | Primeira pessoa, não menciona testes/builds, preserva pergunta pendente se houver (`summary.txt:1-11`). |
@@ -57,9 +62,9 @@ ou o override do usuário em `opencode.json`.
 |---|---|
 | `elicitador` | `explore`, `graphify-explorer`, `workflow-executor` (nega `general`) — `agent.ts:203-208` |
 | `workflow-triador` | nenhum — permissão é `"*": "deny"` com só `grep/glob/list/bash/webfetch/websearch/read` liberados; `task` nunca é liberado (`agent.ts:229-239`) |
-| `analista` | `explore` (nega `general`) — `agent.ts:257-260` |
+| `analista` | `explore`, `workflow-executor` (nega `general`) — `agent.ts:258-262`. O `workflow-executor` foi adicionado na Tarefa 11 (ver §1.2) especificamente para disparo paralelo de sub-Briefs prontos, não para o caminho sequencial normal (que segue manual — ver observação 2 da seção 2). |
 | `workflow-executor` | `explore`, `avaliador`, `baseline-auditor` — `agent.ts:285-289` |
-| `avaliador` | `explore`, `workflow-executor`, `baseline-auditor` (nega `general`) — `agent.ts:317-322` |
+| `avaliador` | `explore`, `workflow-executor`, `baseline-auditor`, `pattern-auditor` (nega `general`) — `agent.ts:319-325`. O `pattern-auditor` foi adicionado na Tarefa 10, condicionado ao marcador `<recurrence_report_trigger>` no output de `review_checklist_write` (ver §1.2). |
 
 **Ressalva verificada, não no pedido original mas relevante para não
 enganar quem for editar `agent.ts`:** a avaliação de permissão
@@ -80,6 +85,113 @@ lista é de fato negado. Na prática isso não importa porque nenhum prompt
 instrui esses agentes a chamar algo fora da lista documentada acima — mas
 é uma diferença real de enforcement entre os dois grupos, não um detalhe
 cosmético.
+
+### 1.2 Três mecanismos novos (Tarefas 9, 10, 11)
+
+**Tarefa 9 — diário de bordo do Executor.** Arquivo por tarefa,
+`.opencode/execution-log/<task_id>.md`, texto livre técnico (não JSON),
+append-only, uma seção por ciclo (`## Ciclo N / O que fiz / Por que
+escolhi essa abordagem / O que ficou em dúvida`). Escrito pelo
+`workflow-executor` no mesmo turno de `execution_summary_write`
+(`workflow-executor.txt:110-120`) e lido por ele mesmo no início do
+próximo ciclo, ANTES de reagir ao veredito do Avaliador
+(`workflow-executor.txt:25-36`, novo passo 3, antes do passo 4 de leitura
+do `review_checklist_read`) — memória de raciocínio próprio, não um
+checklist estruturado. Gitignored com o mesmo padrão de
+`.opencode/briefs/.gitignore` (`*` + `!.gitignore`, verificado antes de
+criar — não assumido por convenção). Nunca lido pelo Avaliador ou pelo
+humano por padrão; sem shielding de permissão como o autoteste da
+Tarefa 8 porque não há requisito de sigilo aqui, só de não poluir os
+outros fluxos (nenhuma tool nova foi criada — `edit`/`write` já bastam).
+
+**Tarefa 10 — registro de recorrência / auto-evolução.** Três fontes de
+evento fixas, gravadas via `recordPatternEvent`
+(`packages/core/src/evolution/pattern-events.ts:52-60`, tabela
+`pattern_events` em `.opencode/pattern-events.db`, padrão `bun:sqlite`
+idêntico a `cycle-tracker.ts`/`self-test-tracker.ts` — banco próprio,
+nunca reaproveita as tabelas desses dois):
+1. `review_checklist_write` grava um evento por critério reprovado
+   (`packages/opencode/src/tool/review-checklist-write.ts:47`).
+2. `baseline-audit-write` grava um evento por item reprovado
+   (`packages/opencode/src/tool/baseline-audit-write.ts:35`).
+3. `self_test_tracker` grava um evento (`category_id:
+   "self_test_exhausted"`) quando o autoteste da Tarefa 8 esgota as 3
+   tentativas (`packages/opencode/src/tool/self-test-tracker.ts:49`).
+
+Alerta de "erro recorrente": mesmo `category_id`+`source` reprovando em
+≥3 **tarefas distintas** (não ciclos de retentativa dentro da mesma
+tarefa — isso já é o que `cycle_tracker` cobre) dentro de uma janela de
+20 tarefas concluídas OU 30 dias, o que vier primeiro
+(`pattern-events.ts:12-14,95-107,118-144`). Contador cumulativo de
+tarefas concluídas: não existia nenhum antes desta tarefa (verificado —
+o único candidato era o contador em memória, por-execução, nunca
+persistido de `ClusterDispatcher`, `cluster/dispatcher.ts:67`, inútil
+entre sessões); criado do zero como tabela `task_completions`
+(`pattern-events.ts:42-46,68-81`), incrementado por
+`recordTaskCompletion` a cada `verdict: "approved"` em
+`review_checklist_write` (`review-checklist-write.ts:57`). A cada
+múltiplo de 10, o output da tool inclui um bloco
+`<recurrence_report_trigger>` (`review-checklist-write.ts:60-61`), que
+`avaliador.txt:75-81` (passo 9, novo) instrui a virar delegação via
+`task` pro `pattern-auditor` na mesma resposta — automático, sem esperar
+pedido do humano.
+
+O relatório (`pattern_recurrence_read`,
+`packages/opencode/src/tool/pattern-recurrence-read.ts`) sempre separa
+duas categorias, nunca mistura: "erro recorrente" (populada, com
+`category_id`, contagem de tarefas distintas e sugestão textual — nunca
+implementa a correção) e "rotina recorrente" (deliberadamente vazia
+nesta primeira versão, com uma limitação documentada em vez de heurística
+forçada — `pattern-events.ts:156-165,171-175`: nada no código hoje
+registra o que o Executor efetivamente tocou por Brief de forma
+comparável entre tarefas não relacionadas, `files_expected_touched` é só
+a estimativa do Analista). O agente `pattern-auditor` (subagent, mesmo
+perfil read-only de `baseline-auditor`, ver tabela da seção 1) nunca
+implementa a melhoria sozinho — só relata, mesmo princípio de
+`workflow-pipeline-v2.md` §8 já citado no próprio prompt
+(`pattern-auditor.txt:4-7,43-46`).
+
+**Tarefa 11 — paralelismo real entre Briefs independentes.** Decisão de
+arquitetura resolvida por investigação, não suposição: existe uma classe
+pronta pra orquestrar DAG de Briefs, `ClusterDispatcher`
+(`packages/core/src/cluster/dispatcher.ts:20`, já documentada como
+subsistema sem caller em §5.1), mas ela opera sobre `TechnicalBriefV2`
+(`files_scope`/`contracts`/`verification_gates`), um schema diferente do
+Brief real (`files_expected_touched`/`constraints`/`acceptance_criteria`,
+seção 4 de `workflow-pipeline.md`). Confirmado também que
+`ctx.extra.promptOps` — o mecanismo que permitiria uma tool comum
+disparar `task` internamente — é populado genericamente pra qualquer
+tool em `packages/opencode/src/session/tools.ts:64`, não só pra
+`task.ts` (`packages/opencode/src/tool/task.ts:197-198`); ou seja, a
+Rota 1 (tool nova que usa o `executor` do `ClusterDispatcher`
+internamente) era tecnicamente viável. Optou-se pela Rota 2 mesmo assim,
+por dois motivos combinados: o desalinhamento de schema já citado (forçar
+o Brief real no formato `TechnicalBriefV2` só pra usar a classe seria
+duplicação de schema, contra a regra do próprio `analista.txt:25-28`) e a
+existência de um precedente já documentado no projeto pro mesmo padrão —
+bash paralelo em `packages/opencode/src/tool/shell/prompt.ts:108,159,208`
+("se os comandos são independentes... múltiplas chamadas numa única
+mensagem"). `ClusterDispatcher` fica como está — referência de design e
+teste de unidade da lógica de DAG (`packages/core/test/cluster/dispatcher.test.ts`,
+inalterado por esta tarefa, 2/2 passando), não peça viva do fluxo.
+
+Regra de divisão nova em `analista.txt:69-102` (passo 6): candidato a N
+sub-Briefs quando ≥2 conjuntos de `files_expected_touched` não se
+sobrepõem E não há razão de espera entre eles (teste prático: "consigo
+mockar a ponta que falta pra este pedaço existir sozinho?"); teto de 4
+sub-Briefs por tarefa original; não divide se o pedaço resultante tocaria
+menos de 1 arquivo relevante ou um único critério trivial. Sub-Briefs sem
+dependência entre si são delegados via múltiplas chamadas `task` pro
+`workflow-executor` na mesma resposta do Analista — por isso
+`"workflow-executor": "allow"` foi somado ao `task` allow-list do
+`analista` (`agent.ts:261`, tabela da seção 1.1). Isso fecha parcialmente
+o gap descrito na observação 2 da seção 2 e no achado 5.4: continua não
+existindo delegação automática no caminho sequencial normal
+Analista→Executor (a troca de agente ainda é manual pra um Brief único
+aprovado), mas para o caso específico de sub-Briefs paralelos e
+independentes, a automação agora existe e está testada
+(`packages/opencode/test/agent/agent.test.ts`, "Tarefa 11: analista can
+delegate to workflow-executor via task (parallel sub-Brief dispatch)").
 
 ## 2. Fluxo ponta a ponta
 
@@ -140,21 +252,27 @@ são necessárias pra ele não mentir:**
    decisão explícita). Só `DIVIDIR` entra no pipeline completo
    (Analista → Brief → workflow-executor → Avaliador).
 2. **O caminho `workflow-triador` → `analista` → `workflow-executor` não
-   tem delegação automática documentada nem permitida por `task`** —
-   diferente do caminho `elicitador` → `workflow-executor`, que É
-   automático (`elicitador.txt:305-314`, confirmado pela permissão
-   `task: { workflow-executor: allow }` em `agent.ts:207`).
-   `workflow-triador` não tem permissão `task` alguma (`agent.ts:229-239`)
-   e `analista` não tem `workflow-executor` no seu `task` allow-list
-   (`agent.ts:257-260`) nem instrução de delegação em `analista.txt` —
-   comparar com a instrução explícita equivalente em `elicitador.txt:305-314`,
-   que não tem par em `analista.txt`. Isso é uma extensão natural da
-   limitação #4 da seção 5 (não existe orquestrador determinístico) — aqui
-   o gap é mais forte: não é "o agente pode ignorar a instrução", é "a
-   instrução de auto-delegação simplesmente não existe pra esse caminho
-   no prompt atual". Depois de um Brief aprovado, o `workflow-executor`
-   precisa ser acionado manualmente (seleção de agente pelo usuário, ou
-   outro mecanismo fora do que os prompts descrevem hoje).
+   tem delegação automática pro caso sequencial normal** — diferente do
+   caminho `elicitador` → `workflow-executor`, que É automático
+   (`elicitador.txt:305-314`, confirmado pela permissão `task: {
+   workflow-executor: allow }` em `agent.ts:207`). `workflow-triador` não
+   tem permissão `task` alguma (`agent.ts:229-239`). **Parcialmente
+   fechado na Tarefa 11** para o caso específico de sub-Briefs paralelos
+   e independentes: `analista` agora tem `workflow-executor` no seu
+   `task` allow-list (`agent.ts:258-262`) e `analista.txt:69-102` (passo
+   6) instrui a delegar via `task`, uma chamada por sub-Brief pronto, na
+   mesma resposta — mas só quando o Brief foi dividido em sub-Briefs sem
+   dependência entre si (regra de divisão da Tarefa 11, ver §1.2). Para
+   um Brief único, não dividido, continua sem instrução de
+   auto-delegação em `analista.txt` — comparar com a instrução explícita
+   equivalente em `elicitador.txt:305-314`, que segue sem par pra esse
+   caso. Isso é uma extensão natural da limitação #4 da seção 5 (não
+   existe orquestrador determinístico) — pro Brief único o gap
+   permanece: não é "o agente pode ignorar a instrução", é "a instrução
+   de auto-delegação simplesmente não existe pra esse caso no prompt
+   atual". Depois de um Brief único aprovado, o `workflow-executor`
+   ainda precisa ser acionado manualmente (seleção de agente pelo
+   usuário, ou outro mecanismo fora do que os prompts descrevem hoje).
 
 ## 3. Os 3 únicos pontos de intervenção humana no fluxo automático
 
@@ -271,7 +389,10 @@ Schema: `packages/opencode/src/tool/task.ts:44-49`.
 Destas 4, 5.1/5.2/5.4 existem no código mas **não estão conectadas ao
 fluxo real** — documentadas aqui como limitação, não como feature. 5.3 foi
 resolvida na Tarefa 8 (ver nota na própria seção) e fica registrada como
-histórico, não como limitação atual.
+histórico, não como limitação atual. 5.4 permanece uma limitação real,
+mas parcialmente atenuada pela Tarefa 11 para o caso de sub-Briefs
+paralelos (ver nota na própria seção e §1.2) — não confundir "atenuada
+num caso específico" com "resolvida", que é o status de 5.3.
 
 ### 5.1 `ClusterDispatcher` / `TechnicalBriefV2.files_scope` — subsistema paralelo sem caller em produção
 
@@ -335,8 +456,15 @@ garantia."* Tecnicamente, a permissão (`task: { workflow-executor: allow
 é o texto do prompt, interpretado por um modelo de linguagem — não há
 verificação de máquina de estados em código forçando elicitador → executor
 → avaliador. A seção 2 deste documento mostra um caso concreto disso: o
-caminho `workflow-triador`/`analista` nem tem a instrução de
-auto-delegação que o caminho `elicitador` tem.
+caminho `workflow-triador`/`analista` para um Brief único ainda não tem a
+instrução de auto-delegação que o caminho `elicitador` tem (a Tarefa 11
+fechou esse gap só para o caso de sub-Briefs paralelos, não para o Brief
+único — ver §1.2 e observação 2 da seção 2). O mesmo limite se aplica ao
+`pattern-auditor` da Tarefa 10: a delegação do `avaliador` pra ele
+também depende do texto do prompt (`avaliador.txt:75-81`) reagir
+corretamente ao marcador `<recurrence_report_trigger>` — nenhuma máquina
+de estados força essa chamada, só a convenção de leitura do próprio
+output da tool anterior.
 
 ## 6. Metodologia de verificação
 

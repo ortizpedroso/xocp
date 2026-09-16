@@ -1,5 +1,10 @@
 import { Effect, Schema } from "effect"
 import { WorkflowReview } from "@opencode-ai/core/workflow-review"
+import {
+  recordPatternEvent,
+  recordTaskCompletion,
+  REPORT_EVERY_N_COMPLETIONS,
+} from "@opencode-ai/core/evolution/pattern-events"
 import { InstanceState } from "@/effect/instance-state"
 import * as Tool from "./tool"
 import { sanitizeHandoffSummary } from "./handoff-sanitize"
@@ -33,9 +38,33 @@ export const ReviewChecklistWriteTool = Tool.define(
               verdict: params.verdict,
               timestamp: params.timestamp,
             })
+
+            // Recurrence tracking (Tarefa 10) — one of the 3 fixed event
+            // sources feeding pattern-auditor. Never affects the review
+            // result itself; a failure here would only lose telemetry.
+            for (const criterion of saved.payload.criteria) {
+              if (criterion.status !== "fail") continue
+              await recordPatternEvent(instance.directory, {
+                task_id: params.task_id,
+                category_id: criterion.id,
+                source: "review_checklist",
+                cycle: saved.cycle,
+              }).catch(() => {})
+            }
+
+            let output = `Wrote ${saved.relativePath} for cycle ${saved.cycle}.`
+            if (saved.payload.verdict === "approved") {
+              const completions = await recordTaskCompletion(instance.directory, params.task_id).catch(
+                () => undefined,
+              )
+              if (completions !== undefined && completions > 0 && completions % REPORT_EVERY_N_COMPLETIONS === 0) {
+                output += `\n\n<recurrence_report_trigger>\n${completions} tarefas concluídas ao todo — chame, via \`task\`, o \`pattern-auditor\` (não precisa de task_id específico, ele analisa o projeto inteiro) para gerar o relatório de recorrência desta leva de 10.\n</recurrence_report_trigger>`
+              }
+            }
+
             return {
               title: `review ${saved.payload.verdict}`,
-              output: `Wrote ${saved.relativePath} for cycle ${saved.cycle}.`,
+              output,
               metadata: {},
             }
           } catch (error) {

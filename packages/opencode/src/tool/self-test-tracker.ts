@@ -7,6 +7,7 @@ import {
   writeSelfTestEscalation,
   SelfTestCycleLimitExceeded,
 } from "@opencode-ai/core/workflow-executor/self-test-tracker"
+import { recordPatternEvent } from "@opencode-ai/core/evolution/pattern-events"
 import { InstanceState } from "@/effect/instance-state"
 import * as Tool from "./tool"
 import DESCRIPTION from "./self-test-tracker.txt"
@@ -40,6 +41,17 @@ export const SelfTestTrackerTool = Tool.define(
                 last_exit_code: last?.exitCode ?? -1,
                 test_file_path: last?.testFilePath ?? params.test_file_path,
               })
+              // Recurrence tracking (Tarefa 10) — the 3rd of the 3 fixed
+              // event sources. Fixed category_id: self-test escalations
+              // don't have a Brief/Spec criterion ID of their own, so all
+              // of them bucket under one category for recurrence purposes
+              // ("this task keeps exhausting its self-test budget").
+              await recordPatternEvent(instance.directory, {
+                task_id: params.task_id,
+                category_id: "self_test_exhausted",
+                source: "self_test_escalation",
+                cycle: error.cycle,
+              }).catch(() => {})
               return {
                 title: "self-test limit reached",
                 output: `Self-test cycle limit (3) exceeded for task_id "${params.task_id}" — do NOT call execution_summary_write, do NOT delegate to the avaliador (it must never learn this loop ran). Escalate directly to the human now via a chat message, using the last self-test output from this conversation. Minimal record saved to ${escalation.relativePath}.`,

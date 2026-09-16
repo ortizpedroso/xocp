@@ -25,6 +25,7 @@ import { ReviewChecklistWriteTool } from "./review-checklist-write"
 import { ReviewChecklistReadTool } from "./review-checklist-read"
 import { BaselineAuditWriteTool } from "./baseline-audit-write"
 import { BaselineAuditReadTool } from "./baseline-audit-read"
+import { PatternRecurrenceReadTool } from "./pattern-recurrence-read"
 import { SpecStatusWriteTool } from "./spec-status-write"
 import { GraphifyQueryTool } from "./graphify-query"
 import { InvalidTool } from "./invalid"
@@ -123,6 +124,7 @@ const layer = Layer.effect(
     const reviewChecklistRead = yield* ReviewChecklistReadTool
     const baselineAuditWrite = yield* BaselineAuditWriteTool
     const baselineAuditRead = yield* BaselineAuditReadTool
+    const patternRecurrenceRead = yield* PatternRecurrenceReadTool
     const specStatusWrite = yield* SpecStatusWriteTool
     const graphifyQuery = yield* GraphifyQueryTool
     const invalid = yield* InvalidTool
@@ -255,6 +257,7 @@ const layer = Layer.effect(
           reviewChecklistRead: Tool.init(reviewChecklistRead),
           baselineAuditWrite: Tool.init(baselineAuditWrite),
           baselineAuditRead: Tool.init(baselineAuditRead),
+          patternRecurrenceRead: Tool.init(patternRecurrenceRead),
           specStatusWrite: Tool.init(specStatusWrite),
           graphifyQuery: Tool.init(graphifyQuery),
           search: Tool.init(websearch),
@@ -291,6 +294,7 @@ const layer = Layer.effect(
             tool.reviewChecklistRead,
             tool.baselineAuditWrite,
             tool.baselineAuditRead,
+            tool.patternRecurrenceRead,
             tool.specStatusWrite,
             tool.graphifyQuery,
             tool.search,
