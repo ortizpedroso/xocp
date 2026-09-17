@@ -244,6 +244,35 @@ it.instance("avaliador can delegate to pattern-auditor via task", () =>
   }),
 )
 
+for (const lead of ["core-lead", "backend-lead", "frontend-lead", "integration-lead"]) {
+  it.instance(`${lead} agent is registered as read-only cluster supervisor`, () =>
+    Effect.gen(function* () {
+      const agent = yield* load((svc) => svc.get(lead))
+      expect(agent).toBeDefined()
+      expect(agent?.mode).toBe("subagent")
+      expect(agent?.native).toBe(true)
+      expect(agent?.prompt).toContain("dag_orchestrator")
+      expect(evalPerm(agent, "edit")).toBe("deny")
+      expect(evalPerm(agent, "write")).toBe("deny")
+      expect(evalPerm(agent, "bash")).toBe("deny")
+      expect(Permission.evaluate("read", "*", agent!.permission).action).toBe("allow")
+      expect(Permission.evaluate("dag_orchestrator", "*", agent!.permission).action).toBe("allow")
+      expect(Permission.evaluate("task", "workflow-executor", agent!.permission).action).toBe("allow")
+      expect(Permission.evaluate("task", "general", agent!.permission).action).toBe("deny")
+    }),
+  )
+}
+
+it.instance("workflow-triador can auto-delegate DIVIDIR to analista via task", () =>
+  Effect.gen(function* () {
+    const triador = yield* load((svc) => svc.get("workflow-triador"))
+    expect(triador).toBeDefined()
+    expect(Permission.evaluate("task", "analista", triador!.permission).action).toBe("allow")
+    expect(triador?.prompt).toContain("delegue imediatamente via ferramenta `task`")
+    expect(triador?.prompt).toContain("subagent_type: \"analista\"")
+  }),
+)
+
 it.instance(
   "user permission can allow the general subagent from plan mode",
   () =>

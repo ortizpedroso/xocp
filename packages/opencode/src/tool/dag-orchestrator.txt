@@ -1,0 +1,8 @@
+Orquestrador de DAG do pipeline XOCP. Abre o DagOrchestrator do diretório atual: carrega os briefs aprovados (`.opencode/briefs/*.yaml` com `status: aprovada`), hidrata o estado persistido (`.opencode/dag.db`) e mapeia cada brief pro seu cluster (inferido de `files_expected_touched`).
+
+Ações (parâmetro `action`):
+- `status`: lista cada nó do DAG (brief_id, cluster, status, depends_on, verdict) e as "ready waves" — briefs prontos pra executar em paralelo, agrupados sem sobreposição de `allow_modify` (waves em ordem de execução). Pura leitura, não altera o DAG.
+- `mark_running <brief_id>`: reserva o brief pra execução e persiste o estado `running`. Retorna o contexto do worker (cluster, delegation depth = 1) pra repassar à chamada `task` de delegação.
+- `apply_verdicts`: relê os review_checklist do disco (`.opencode/reviews/<task_id>/cycle-N.json`) e aplica os vereditos (approved → complete + desbloqueia dependentes; rejected/failed → para aquele ramo). Retorna quantos foram aplicados e as waves atualizadas.
+
+Como dirigir o runtime: chame `status` → pegue `readyWaves()[0]` → para cada brief da wave chame `mark_running` e delegue via `task` ao `workflow-executor` (uma chamada `task` por brief) → depois do Avaliador gravar o review_checklist, chame `apply_verdicts` pra avançar o DAG e repetir nas próximas waves.

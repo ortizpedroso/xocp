@@ -54,6 +54,10 @@ import PROMPT_WORKFLOW_TRIADOR from "./workflow-triador.txt"
 import PROMPT_ANALISTA from "./analista.txt"
 import PROMPT_WORKFLOW_EXECUTOR from "./workflow-executor.txt"
 import PROMPT_AVALIADOR from "./avaliador.txt"
+import PROMPT_CORE_LEAD from "./core-lead.txt"
+import PROMPT_BACKEND_LEAD from "./backend-lead.txt"
+import PROMPT_FRONTEND_LEAD from "./frontend-lead.txt"
+import PROMPT_INTEGRATION_LEAD from "./integration-lead.txt"
 
 const PROMPT_COMPACTION = `You are a context summarization agent. You are given a conversation between a user and an agent. Your goal is to produce a structured summary matching the format specified so another coding agent can continue the work.
 
@@ -212,6 +216,7 @@ export const Plugin = define({
               { action: "webfetch", resource: "*", effect: "allow" },
               { action: "websearch", resource: "*", effect: "allow" },
               { action: "read", resource: "*", effect: "allow" },
+              { action: "task", resource: "analista", effect: "allow" },
             ],
             readonlyExternalDirectory,
           ),
@@ -345,6 +350,90 @@ export const Plugin = define({
               { action: "glob", resource: "*", effect: "allow" },
               { action: "read", resource: "*", effect: "allow" },
               { action: "baseline_audit_write", resource: "*", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("core-lead"), (item) => {
+        item.description =
+          "Supervisora do Domain Cluster core (database schemas, migrações, modelos de domínio): dirige a execução dos Briefs do cluster via DagOrchestrator e delega ao workflow-executor. Read-only."
+        item.system = PROMPT_CORE_LEAD
+        item.mode = "subagent"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+              { action: "dag_orchestrator", resource: "*", effect: "allow" },
+              { action: "task", resource: "workflow-executor", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("backend-lead"), (item) => {
+        item.description =
+          "Supervisora do Domain Cluster backend (rotas, endpoints, serviços de negócio): dirige a execução dos Briefs do cluster via DagOrchestrator e delega ao workflow-executor. Read-only."
+        item.system = PROMPT_BACKEND_LEAD
+        item.mode = "subagent"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+              { action: "dag_orchestrator", resource: "*", effect: "allow" },
+              { action: "task", resource: "workflow-executor", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("frontend-lead"), (item) => {
+        item.description =
+          "Supervisora do Domain Cluster frontend (componentes, views, design tokens, estado de cliente): dirige a execução dos Briefs do cluster via DagOrchestrator e delega ao workflow-executor. Read-only."
+        item.system = PROMPT_FRONTEND_LEAD
+        item.mode = "subagent"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+              { action: "dag_orchestrator", resource: "*", effect: "allow" },
+              { action: "task", resource: "workflow-executor", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("integration-lead"), (item) => {
+        item.description =
+          "Supervisora do Domain Cluster integration (pacotes de contratos, e2e, fiação cross-boundary): dirige a execução dos Briefs do cluster via DagOrchestrator e delega ao workflow-executor. Read-only."
+        item.system = PROMPT_INTEGRATION_LEAD
+        item.mode = "subagent"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+              { action: "dag_orchestrator", resource: "*", effect: "allow" },
+              { action: "task", resource: "workflow-executor", effect: "allow" },
             ],
             readonlyExternalDirectory,
           ),

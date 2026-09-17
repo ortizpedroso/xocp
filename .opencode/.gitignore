@@ -5,3 +5,13 @@ bun.lock
 .gitignore
 package-lock.json
 references/
+
+# Runtime workflow state (bun:sqlite engines) - local, regenerable, not source code
+dag.db
+dag.db-*
+pattern-events.db
+pattern-events.db-*
+self-test-cycles.db
+self-test-cycles.db-*
+workflow-cycles.db
+workflow-cycles.db-*

@@ -1,7 +1,7 @@
 import { Schema } from "effect"
 import type { TechnicalBriefV2 } from "../brief/types"
 
-export type DomainClusterId = "core" | "backend" | "frontend"
+export type DomainClusterId = "core" | "backend" | "frontend" | "integration"
 
 export interface DomainClusterDefinition {
   id: DomainClusterId
@@ -62,6 +62,24 @@ export const DOMAIN_CLUSTERS: Record<DomainClusterId, DomainClusterDefinition> =
       "**/components/**",
       "**/pages/**",
       "**/views/**",
+    ],
+  },
+  integration: {
+    id: "integration",
+    name: "Integration Domain Cluster",
+    description: "Cross-boundary glue: shared contract packages, protocol/schema packages, and end-to-end flows that stitch the other clusters together. The only cluster allowed to cross cluster boundaries — it is the sole consumer of two-or-more parallel branches (contract-first root, or n-th brief after its dependencies)",
+    responsibilities: [
+      "Shared contract packages (protocol, schema)",
+      "End-to-end integration tests",
+      "Contract-first wiring between two or more parallel branches",
+      "Cross-cluster consistency invariants",
+    ],
+    filePatterns: [
+      "packages/protocol/**",
+      "packages/schema/**",
+      "e2e/**",
+      "**/integration/**",
+      "**/contracts/**",
     ],
   },
 }

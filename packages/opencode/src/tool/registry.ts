@@ -28,6 +28,7 @@ import { BaselineAuditReadTool } from "./baseline-audit-read"
 import { PatternRecurrenceReadTool } from "./pattern-recurrence-read"
 import { SpecStatusWriteTool } from "./spec-status-write"
 import { GraphifyQueryTool } from "./graphify-query"
+import { DagOrchestratorTool } from "./dag-orchestrator"
 import { InvalidTool } from "./invalid"
 import { SkillTool } from "./skill"
 import * as Tool from "./tool"
@@ -127,6 +128,7 @@ const layer = Layer.effect(
     const patternRecurrenceRead = yield* PatternRecurrenceReadTool
     const specStatusWrite = yield* SpecStatusWriteTool
     const graphifyQuery = yield* GraphifyQueryTool
+    const dagOrchestrator = yield* DagOrchestratorTool
     const invalid = yield* InvalidTool
     const task = yield* TaskTool
     const read = yield* ReadTool
@@ -260,6 +262,7 @@ const layer = Layer.effect(
           patternRecurrenceRead: Tool.init(patternRecurrenceRead),
           specStatusWrite: Tool.init(specStatusWrite),
           graphifyQuery: Tool.init(graphifyQuery),
+          dagOrchestrator: Tool.init(dagOrchestrator),
           search: Tool.init(websearch),
           skill: Tool.init(skilltool),
           patch: Tool.init(patchtool),
@@ -297,6 +300,7 @@ const layer = Layer.effect(
             tool.patternRecurrenceRead,
             tool.specStatusWrite,
             tool.graphifyQuery,
+            tool.dagOrchestrator,
             tool.search,
             tool.skill,
             tool.patch,

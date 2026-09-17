@@ -88,18 +88,24 @@ PROCESSO:
    prontos ao mesmo tempo não esperam o humano trocar de agente
    manualmente.
 
-   Nota de arquitetura: existe uma classe já pronta pra orquestrar DAG
-   de Briefs (`ClusterDispatcher`,
-   `packages/core/src/cluster/dispatcher.ts`), mas ela opera sobre
-   `TechnicalBriefV2` (`files_scope`, `contracts`,
-   `verification_gates`) — um schema diferente do Brief real que você
-   escreve (`files_expected_touched`, `constraints`,
-   `acceptance_criteria`, seção 4 de `workflow-pipeline.md`). Não force
-   seus Briefs nesse formato só pra usar a classe — ela fica como
-   referência de design e teste de unidade da lógica de DAG, não como
-   peça viva deste fluxo. A paralelização real acontece por você
-   chamar `task` mais de uma vez na mesma resposta, não por essa
-   classe rodando em runtime.
+   Nota de arquitetura: o pipeline agora é orquestrado em runtime por um
+   DagOrchestrator vivo (`packages/core/src/cluster/orchestrator.ts` +
+   `packages/core/src/cluster/dispatcher.ts`), exposto aos agentes pela
+   ferramenta `dag_orchestrator` (status / mark_running / apply_verdicts).
+   Ele carrega os Briefs aprovados (`.opencode/briefs/*.yaml`), infere o
+   cluster de cada um via `files_expected_touched`, hidrata o estado
+   (.opencode/dag.db) e agrupa briefs prontos em "ready waves" sem
+   sobreposição de `allow_modify`. Os Cluster Leads (core/backend/
+   frontend/integration) dirigem a execução: `mark_running` + delegam via
+   `task` pro `workflow-executor`, e após o Avaliador gravar o
+   review_checklist chamam `apply_verdicts` pra avançar o DAG. Seu papel
+   não muda: você escreve o Brief real (schema da seção 4 de
+   `workflow-pipeline.md`); a conversão pra `TechnicalBriefV2` e a
+   paralelização das waves acontecem dentro do DagOrchestrator. Quando
+   você decide dividir, continue delegando sub-Briefs prontos via `task`
+   na mesma resposta (paralelismo real); o orquestrador gere as
+   dependências (`depends_on`) e as ondas de execução a partir dos
+   Briefs que você grava.
 
 SAÍDA — siga exatamente o template da seção 4 de `workflow-pipeline.md`
 (não invente campos novos nem omita os obrigatórios). Inclua

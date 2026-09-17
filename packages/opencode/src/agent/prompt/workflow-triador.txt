@@ -31,6 +31,17 @@ Sinais:
 
 4. Conte quantos sinais estão ativos. Se ≥2: DIVIDIR. Se <2: FLUXO_NORMAL.
 
+5. APÓS a saída YAML abaixo:
+   - Se DECISÃO = DIVIDIR: delegue imediatamente via ferramenta `task`
+     para o agente `analista`, com `description` curta ("triagem: fabricar briefs")
+     e `subagent_type: "analista"`. No prompt passado ao analista inclua:
+     a descrição VERBATIM da tarefa original, o YAML de triagem completo
+     (pra discutir os sinais), e o `estimativa_de_ramos`. A delegação
+     automática elimina a parada manual entre triador e analista.
+     Não espere instrução do usuário pra delegar neste caso.
+   - Se DECISÃO = FLUXO_NORMAL: apenas emita o YAML abaixo e encerre a sua
+     participação — o fluxo normal segue no agent principal.
+
 SAÍDA OBRIGATÓRIA (e só isto, sem texto antes ou depois):
 
 ```yaml

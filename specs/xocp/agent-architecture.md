@@ -8,35 +8,43 @@ existe no código mas não é alcançado por nenhum caminho real de execução,
 isso é dito explicitamente na seção 5 (Limitações conhecidas), não
 omitido.
 
-## 0. Nota — `AGENTS.md` §1 descreve um sistema diferente deste
+## 0. Nota — `AGENTS.md` §1 e os agentes aqui documentados
 
 `AGENTS.md` linhas 3–20 ("System Agent Directory — 14 Cognitive Agents")
 lista nomes como **Cluster Dispatcher**, **core Lead**, **backend Lead**,
-**frontend Lead**, **Auditor**, **Graphify Operator**, **Research
-Operator**, **Evolution Incident Reporter** e **Session Compactor**.
-Nenhum desses é um agente registrado em `agent.ts` — são nomes do
-subsistema "Cluster Dispatcher" aspiracional (ver §5.1 abaixo) ou
+**frontend Lead** e outros. Desses, os quatro Cluster Leads (**core**,
+**backend**, **frontend**, **integration**) **são agentes registrados** em
+`packages/opencode/src/agent/agent.ts` (seção 1 desta revisão) e espelhados
+no V2 (`packages/core/src/plugin/agent.ts`), com modo `subagent`, supervisão
+read-only e delegação via `dag_orchestrator` + `task` pro `workflow-executor`.
+O "Cluster Dispatcher" de `AGENTS.md` corresponde ao motor de DAG
+(DagOrchestrator + ClusterDispatcher em `packages/core/src/cluster/`), exposto
+aos agentes pela ferramenta `dag_orchestrator` — não é um agente LLM. Os demais
+nomes de `AGENTS.md` (Auditor, Graphify Operator, Research Operator, etc.) são
 sinônimos informais para agentes que existem com outro nome (`baseline-auditor`,
-`graphify-explorer`, `compaction`). O número "14" bate por coincidência —
-são dois conjuntos de 14 diferentes. **Este documento, não `AGENTS.md`
+`graphify-explorer`, `compaction`). **Este documento, não `AGENTS.md`
 §1, reflete o que roda de verdade.** `AGENTS.md` §3 ("Executor Pre-Flight
 Self-Test Protocol", linhas 41–50) descreve `runExecutorSelfTest` como um
 gate obrigatório do fluxo real — isso passou a ser verdade a partir da
 Tarefa 8 (`specs/xocp/prompt-implementacao-melhorias-xocp-v2.md`); ver
 §5.3 para os detalhes de conexão e a nota histórica.
 
-## 1. Os 15 agentes nativos
+## 1. Os 19 agentes nativos
 
 Fonte: `packages/opencode/src/agent/agent.ts`, objeto `agents`. A coluna
 **Model tier** é uma recomendação deste documento, não algo configurado
-no código — nenhum dos 15 agentes fixa um `model` em `agent.ts` (o campo
-`model` existe no schema, linha 53–58, mas não é usado em nenhuma das 15
-entradas); todos herdam o modelo padrão da sessão ou o override do
+no código — nenhum dos agentes fixa um `model` em `agent.ts` (o campo
+`model` existe no schema, linha 53–58, mas não é usado em nenhuma das
+entradas native); todos herdam o modelo padrão da sessão ou o override do
 usuário em `opencode.json`.
 
 **Nota (Tarefa 10):** o 15º agente é `pattern-auditor`
 (`agent.ts:418-438`), somado aos 14 originais documentados abaixo — ver
 linha da tabela e §1.2.
+
+**Nota (Tarefa 12):** os 4 Cluster Leads (`core-lead`, `backend-lead`,
+`frontend-lead`, `integration-lead`) foram adicionados como subagents,
+elevando o total a 19 — ver linha da tabela e §1.4.
 
 | Agente | Modo | Pipeline? | Model tier (recomendado) | O que faz | Resumo do prompt real |
 |---|---|---|---|---|---|
@@ -55,13 +63,17 @@ linha da tabela e §1.2.
 | `compaction` | primary, oculto | Não | Tier baixo/rápido (alto volume, tarefa mecânica) | Interno — resume conversa longa num formato estruturado pra outro agente continuar. | Segue exatamente a estrutura pedida, nunca continua a conversa nem responde perguntas (`compaction.txt:1-5`). |
 | `title` | primary, oculto | Não | Tier baixo/rápido | Interno — gera título de sessão (≤50 caracteres, uma linha). | Regras rígidas de formato + exemplos; nunca usa tools (`title.txt:1-44`). |
 | `summary` | primary, oculto | Não | Tier baixo/rápido | Interno — gera resumo de sessão em 2-3 frases, estilo descrição de PR. | Primeira pessoa, não menciona testes/builds, preserva pergunta pendente se houver (`summary.txt:1-11`). |
+| `core-lead` | subagent | **Sim** (Cluster Lead, domínio core) | Tier alto (supervisão + delegação) | Orquestra a execução do cluster core via `dag_orchestrator`; nunca implementa sozinho nem escreve Briefs. | `"*": "deny"` + `grep`/`glob`/`read` + `dag_orchestrator` + `task: workflow-executor` (subagent, depth=1). Roda `status`, pega `readyWaves()[0]`, `mark_running` por brief, delega ao executor uma chamada por brief, e após o Avaliador `apply_verdicts` avança a próxima wave (`core-lead.txt`; ver §1.4). |
+| `backend-lead` | subagent | **Sim** (Cluster Lead, domínio backend) | Tier alto | Idem ao `core-lead` para o domínio backend. | Idem (`backend-lead.txt`; ver §1.4). |
+| `frontend-lead` | subagent | **Sim** (Cluster Lead, domínio frontend) | Tier alto | Idem ao `core-lead` para o domínio frontend. | Idem (`frontend-lead.txt`; ver §1.4). |
+| `integration-lead` | subagent | **Sim** (Cluster Lead, domínio integration/cross) | Tier alto | Idem ao `core-lead` para integração — pode cruzar fronteiras de cluster quando o escopo do Brief declarar. | Idem (`integration-lead.txt`; ver §1.4). |
 
 ### 1.1 `task` (delegação) — o que cada um pode chamar, e uma ressalva técnica sobre a coluna abaixo
 
 | Agente | Pode delegar (`task`) para — intenção declarada em `agent.ts` |
 |---|---|
 | `elicitador` | `explore`, `graphify-explorer`, `workflow-executor` (nega `general`) — `agent.ts:203-208` |
-| `workflow-triador` | nenhum — permissão é `"*": "deny"` com só `grep/glob/list/bash/webfetch/websearch/read` liberados; `task` nunca é liberado (`agent.ts:229-239`) |
+| `workflow-triador` | `analista` — a partir da Tarefa 12 tem `task: { analista: "allow" }` (`agent.ts:239-240`), para delegação automática quando classificar `DIVIDIR` (ver §1.4 e observação 2 da seção 2). Fora isso, o resto é `"*": "deny"` com só `grep/glob/list/bash/webfetch/websearch/read` liberados (`agent.ts:229-239`) |
 | `analista` | `explore`, `workflow-executor` (nega `general`) — `agent.ts:258-262`. O `workflow-executor` foi adicionado na Tarefa 11 (ver §1.2) especificamente para disparo paralelo de sub-Briefs prontos, não para o caminho sequencial normal (que segue manual — ver observação 2 da seção 2). |
 | `workflow-executor` | `explore`, `avaliador`, `baseline-auditor` — `agent.ts:285-289` |
 | `avaliador` | `explore`, `workflow-executor`, `baseline-auditor`, `pattern-auditor` (nega `general`) — `agent.ts:319-325`. O `pattern-auditor` foi adicionado na Tarefa 10, condicionado ao marcador `<recurrence_report_trigger>` no output de `review_checklist_write` (ver §1.2). |
@@ -77,9 +89,12 @@ definem um `"*": "deny"` próprio — então, tecnicamente, um `task` para um
 agente que não está na lista acima (ex.: `elicitador` chamando
 `avaliador` diretamente) **não é bloqueado pela permissão**, cai no
 `"*": "allow"` dos defaults. Só o padrão `general` é explicitamente
-negado nesses três. Já `workflow-triador` e `avaliador` definem
-`"*": "deny"` como primeira regra do seu bloco (`agent.ts:230` e
-`agent.ts:306`), então **para esses dois, só os padrões explicitamente
+negado nesses três. Já `workflow-triador`, `avaliador` e os 4 Cluster
+Leads definem
+`"*": "deny"` como primeira regra do seu bloco (para triador e avaliador, e
+para os leads apenas as tools de leitura + `dag_orchestrator` + `task:
+workflow-executor` são liberados), então **para esses, só os padrões
+explicitamente
 listados como `allow` são alcançáveis** — um `task` pra um nome fora da
 lista é de fato negado. Na prática isso não importa porque nenhum prompt
 instrui esses agentes a chamar algo fora da lista documentada acima — mas
@@ -193,6 +208,46 @@ independentes, a automação agora existe e está testada
 (`packages/opencode/test/agent/agent.test.ts`, "Tarefa 11: analista can
 delegate to workflow-executor via task (parallel sub-Brief dispatch)").
 
+### 1.4 Tarefa 12 — Cluster Leads e o DagOrchestrator como peça viva (runtime wiring)
+
+A convicção registrada nas Tarefas 9–11 era de que `ClusterDispatcher`
+operava sobre um schema (`TechnicalBriefV2`) diferente do Brief real, e
+portanto ficava como referência de design sem caller em produção (§5.1).
+A Tarefa 12 fechou esse gap com um loader de domínio novo —
+`packages/core/src/brief/brief-v2.ts` (`parseBriefYaml` + `inferDomainCluster`
++ `loadPipelineBriefs`) — que converte o Brief real
+(`status: aprovada` em `.opencode/briefs/*.yaml`, schema da seção 4 de
+`workflow-pipeline.md`) para `TechnicalBriefV2`, inferindo o cluster de
+`files_expected_touched`. Sobre isso, `packages/core/src/cluster/orchestrator.ts`
+(`DagOrchestrator`) abre, hidrata o estado durável
+(`.opencode/dag.db`, `cluster/dag-store.ts`), agrupa briefs prontos em
+"ready waves" sem sobreposição de `allow_modify`
+(`scope-conflict.ts`, `selectNonOverlapping`), reserva via `markRunning` e
+aplica vereditos do Avaliador lidos do disco (`verdict.ts`,
+`applyReviewVerdictsFromDisk` — approved encerra o nó e desbloqueia
+`depends_on`; rejected/failed encerra aquele ramo sem bloquear
+independentes).
+
+A exposição pro runtime é a tool **`dag_orchestrator`**
+(`packages/opencode/src/tool/dag-orchestrator.ts`, registrada em
+`tool/registry.ts`) com as ações `status` / `mark_running` /
+`apply_verdicts`. Para dirigi-la foram criados 4 subagents read-only —
+**core-lead**, **backend-lead**, **frontend-lead**, **integration-lead**
+(`agent.ts`, permissão `"*": "deny"` + `grep/glob/read` + `dag_orchestrator`
++ `task: workflow-executor`; prompts em `agent/prompt/*-lead.txt`,
+espelhados em `packages/core/src/plugin/agent.ts`). Cada lead roda `status`,
+toma `readyWaves()[0]`, chama `mark_running` por brief e delega via `task`
+ao `workflow-executor` (uma chamada por brief, depth=1); após o Avaliador
+gravar o review_checklist, roda `apply_verdicts` e segue pra próxima wave.
+
+O mesmo commit também fechou o gap sequencial da observação 2 da seção 2:
+o `workflow-triador` ganhou `task: { analista: "allow" }` e instrução no
+prompt (`workflow-triador.txt`) de delegar ao `analista` na MESMA resposta
+quando classificar `DIVIDIR`, repassando o YAML da triagem e a
+`estimativa_de_ramos`. Testes em `packages/opencode/test/agent/agent.test.ts`
+(leads registrados, permissões, triador→analista) e
+`test/tool/dag-orchestrator.test.ts` (status/mark_running/apply_verdicts).
+
 ## 2. Fluxo ponta a ponta
 
 Dois pontos de entrada convergem no mesmo ciclo executor↔avaliador.
@@ -251,28 +306,21 @@ são necessárias pra ele não mentir:**
    sem avaliador" (`specs/xocp/workflow-pipeline.md:44-46`, regra de
    decisão explícita). Só `DIVIDIR` entra no pipeline completo
    (Analista → Brief → workflow-executor → Avaliador).
-2. **O caminho `workflow-triador` → `analista` → `workflow-executor` não
-   tem delegação automática pro caso sequencial normal** — diferente do
-   caminho `elicitador` → `workflow-executor`, que É automático
-   (`elicitador.txt:305-314`, confirmado pela permissão `task: {
-   workflow-executor: allow }` em `agent.ts:207`). `workflow-triador` não
-   tem permissão `task` alguma (`agent.ts:229-239`). **Parcialmente
-   fechado na Tarefa 11** para o caso específico de sub-Briefs paralelos
-   e independentes: `analista` agora tem `workflow-executor` no seu
-   `task` allow-list (`agent.ts:258-262`) e `analista.txt:69-102` (passo
-   6) instrui a delegar via `task`, uma chamada por sub-Brief pronto, na
-   mesma resposta — mas só quando o Brief foi dividido em sub-Briefs sem
-   dependência entre si (regra de divisão da Tarefa 11, ver §1.2). Para
-   um Brief único, não dividido, continua sem instrução de
-   auto-delegação em `analista.txt` — comparar com a instrução explícita
-   equivalente em `elicitador.txt:305-314`, que segue sem par pra esse
-   caso. Isso é uma extensão natural da limitação #4 da seção 5 (não
-   existe orquestrador determinístico) — pro Brief único o gap
-   permanece: não é "o agente pode ignorar a instrução", é "a instrução
-   de auto-delegação simplesmente não existe pra esse caso no prompt
-   atual". Depois de um Brief único aprovado, o `workflow-executor`
-   ainda precisa ser acionado manualmente (seleção de agente pelo
-   usuário, ou outro mecanismo fora do que os prompts descrevem hoje).
+2. **O caminho `workflow-triador` → `analista` agora É automático** — a
+   partir da Tarefa 12, ao classificar `DIVIDIR` o triador delega via
+   `task` ao `analista` na mesma resposta (`workflow-triador.txt`, passo
+   5 + permissão `task: analista` em `agent.ts:239-240`; ver §1.4),
+   repassando a descrição verbatim, o YAML de triagem e a
+   `estimativa_de_ramos` — mesmo padrão de delegação automática que o
+   caminho `elicitador`→`workflow-executor` já tinha (`elicitador.txt:305-314`).
+   Depois, `analista` delegate para `workflow-executor` via `task` quando
+   dividir em sub-Briefs paralelos (Tarefa 11, `analista.txt:69-102`,
+   `agent.ts:258-262`) e, quando o Brief for único e aprovado, a execução
+   é dirigida pelo Cluster Lead do domínio via `dag_orchestrator` +
+   `task` (`mark_running` + delegação — §1.4). O único ponto que segue
+   manual para Brief único não-diviso é disparar o primeiro `status` do
+   Lead (seleção do agente pelo usuário); a partir daí o Lead avança as
+   waves automaticamente.
 
 ## 3. Os 3 únicos pontos de intervenção humana no fluxo automático
 
@@ -289,10 +337,13 @@ Fonte: `specs/xocp/workflow-pipeline-v2.md:434-443` (seção 6.1).
 
 Tudo o mais — troca de agente, leitura de checklist anterior,
 delegação pro avaliador, retentativa em caso de `rejected` dentro do
-limite — é automático **quando o caminho `elicitador` é usado**. Ver a
-ressalva na seção 2 sobre o caminho `workflow-triador`/`analista`, que
-tem um ponto de troca manual adicional não coberto pela lista de 3
-acima.
+limite — é automático **quando o caminho `elicitador` é usado**, e a partir
+da Tarefa 12 o caminho `workflow-triador`/`analista` também é automático até
+a geração do Brief (triador delega pro analista ao classificar `DIVIDIR`, §1.4).
+O único ponto de troca manual restante: depois de um Brief único aprovado,
+alguém precisa selecionar o Cluster Lead do domínio (ou o `workflow-executor`)
+para iniciar a primeira rodada de `dag_orchestrator status` — ver ressalva na
+seção 2.
 
 ## 4. Exemplos de payload
 
@@ -394,19 +445,21 @@ mas parcialmente atenuada pela Tarefa 11 para o caso de sub-Briefs
 paralelos (ver nota na própria seção e §1.2) — não confundir "atenuada
 num caso específico" com "resolvida", que é o status de 5.3.
 
-### 5.1 `ClusterDispatcher` / `TechnicalBriefV2.files_scope` — subsistema paralelo sem caller em produção
+### 5.1 `ClusterDispatcher` / `TechnicalBriefV2.files_scope` — RESOLVIDO na Tarefa 12
 
-`packages/core/src/cluster/dispatcher.ts:20` define `ClusterDispatcher`,
-que consome `TechnicalBriefV2.files_scope` (`allow_modify`/
-`strictly_forbidden`, `packages/core/src/brief/types.ts:3-7`). Nenhum
-arquivo em `packages/opencode/src` importa `cluster/dispatcher` ou
-`cluster/types` (`grep` vazio). O único consumidor é o próprio pacote
-`packages/core` (o dispatcher e seu teste). O Brief real, escrito pelo
-Analista e lido pelo Executor, segue o template de
-`workflow-pipeline.md:192-232` (`files_expected_touched` + `constraints`
-em texto livre), não `TechnicalBriefV2`. `AGENTS.md:14` ("writes code
-within declared `files_scope`") descreve esse subsistema não-conectado
-como se fosse o mecanismo real do `workflow-executor` — não é.
+Até a Tarefa 12, `packages/core/src/cluster/dispatcher.ts:20` definia
+`ClusterDispatcher`, que consome `TechnicalBriefV2.files_scope`
+(`allow_modify`/`strictly_forbidden`, `packages/core/src/brief/types.ts:3-7`),
+sem nenhum caller em produção — o único consumidor era o próprio pacote
+`packages/core` (o dispatcher e seus testes). O Brief real, escrito pelo
+Analista (`files_expected_touched` + `constraints`, seção 4 de
+`workflow-pipeline.md`), não era convertido pro schema da classe. Isso foi
+conectado na Tarefa 12: `brief-v2.ts` converte o Brief real →
+`TechnicalBriefV2`, `orchestrator.ts` (`DagOrchestrator`) orquestra, e a
+tool `dag_orchestrator` (`packages/opencode/src/tool/dag-orchestrator.ts`)
+expõe isso aos Cluster Leads (`agent.ts`, ver §1.4). A descrição de
+`AGENTS.md:14` ("writes code within declared `files_scope`") agora bate com
+o mecanismo real, que roda em runtime e é testado de ponta a ponta.
 
 ### 5.2 `evaluateDualLens`/`diffFiles` em `avaliador.ts` — sem call-site em produção
 
@@ -455,16 +508,25 @@ garantia."* Tecnicamente, a permissão (`task: { workflow-executor: allow
 }` etc.) só define o que é **possível**; quem decide **quando** delegar
 é o texto do prompt, interpretado por um modelo de linguagem — não há
 verificação de máquina de estados em código forçando elicitador → executor
-→ avaliador. A seção 2 deste documento mostra um caso concreto disso: o
-caminho `workflow-triador`/`analista` para um Brief único ainda não tem a
-instrução de auto-delegação que o caminho `elicitador` tem (a Tarefa 11
-fechou esse gap só para o caso de sub-Briefs paralelos, não para o Brief
-único — ver §1.2 e observação 2 da seção 2). O mesmo limite se aplica ao
-`pattern-auditor` da Tarefa 10: a delegação do `avaliador` pra ele
-também depende do texto do prompt (`avaliador.txt:75-81`) reagir
-corretamente ao marcador `<recurrence_report_trigger>` — nenhuma máquina
-de estados força essa chamada, só a convenção de leitura do próprio
-output da tool anterior.
+→ avaliador.
+
+**Atenuações implementadas:** (a) a Tarefa 11 fechou o gap de sub-Briefs
+paralelos (analista → workflow-executor com instrução de delegação no
+prompt); (b) a Tarefa 12 fechou o gap do caminho sequencial `workflow-triador`
+→ `analista` (triador agora delega automaticamente ao classificar `DIVIDIR`,
+`workflow-triador.txt` + permissão `task: analista`) e adicionou um
+**orquestrador real com estado durável** (`DagOrchestrator` + tool
+`dag_orchestrator` + Cluster Leads, ver §1.4): a sequência de ondas e o
+`depends_on` entre Briefs deixam de depender só da convenção de prompt e
+passam a ser derivados do DAG persistido — os Leads *consultam* o
+orquestrador (`status`/`readyWaves`) e *só então* delegam. Isso reduz
+(ainda que não elimine por completo) a dependência da boa interpretação
+do prompt: a topologia de dependência é agora um fato computado em
+`dag.db`, não uma lembrança do modelo. O caminho `analista` → `workflow-executor`
+para Brief único ainda segue manual (troca de agente pelo usuário), e a
+delegação do `avaliador` → `pattern-auditor` continua dependendo do
+marcador `<recurrence_report_trigger>` ser lido corretamente do output — ver
+seção 2, §1.2 e §1.4.
 
 ## 6. Metodologia de verificação
 

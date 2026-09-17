@@ -20,6 +20,10 @@ import PROMPT_EXPLORE from "./prompt/explore.txt"
 import PROMPT_GRAPHIFY_EXPLORER from "./prompt/graphify-explorer.txt"
 import PROMPT_BASELINE_AUDITOR from "./prompt/baseline-auditor.txt"
 import PROMPT_PATTERN_AUDITOR from "./prompt/pattern-auditor.txt"
+import PROMPT_CORE_LEAD from "./prompt/core-lead.txt"
+import PROMPT_BACKEND_LEAD from "./prompt/backend-lead.txt"
+import PROMPT_FRONTEND_LEAD from "./prompt/frontend-lead.txt"
+import PROMPT_INTEGRATION_LEAD from "./prompt/integration-lead.txt"
 import PROMPT_SUMMARY from "./prompt/summary.txt"
 import PROMPT_TITLE from "./prompt/title.txt"
 import { Permission } from "@/permission"
@@ -237,6 +241,9 @@ const layer = Layer.effect(
                 websearch: "allow",
                 read: "allow",
                 external_directory: readonlyExternalDirectory,
+                task: {
+                  analista: "allow",
+                },
               }),
               user,
             ),
@@ -432,6 +439,102 @@ const layer = Layer.effect(
             description:
               "Subagent dedicado a relatar recorrência de padrões (erro recorrente vs rotina recorrente) a partir de review_checklist, baseline-auditor e escalações de autoteste. Read-only, nunca edita código nem implementa a melhoria sozinho.",
             prompt: PROMPT_PATTERN_AUDITOR,
+            options: {},
+            mode: "subagent",
+            native: true,
+          },
+          "core-lead": {
+            name: "core-lead",
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                read: "allow",
+                dag_orchestrator: "allow",
+                task: {
+                  "workflow-executor": "allow",
+                },
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            description:
+              "Supervisora do Domain Cluster core (database schemas, migrações, modelos de domínio): dirige a execução dos Briefs do cluster via DagOrchestrator e delega ao workflow-executor. Read-only.",
+            prompt: PROMPT_CORE_LEAD,
+            options: {},
+            mode: "subagent",
+            native: true,
+          },
+          "backend-lead": {
+            name: "backend-lead",
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                read: "allow",
+                dag_orchestrator: "allow",
+                task: {
+                  "workflow-executor": "allow",
+                },
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            description:
+              "Supervisora do Domain Cluster backend (rotas, endpoints, serviços de negócio): dirige a execução dos Briefs do cluster via DagOrchestrator e delega ao workflow-executor. Read-only.",
+            prompt: PROMPT_BACKEND_LEAD,
+            options: {},
+            mode: "subagent",
+            native: true,
+          },
+          "frontend-lead": {
+            name: "frontend-lead",
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                read: "allow",
+                dag_orchestrator: "allow",
+                task: {
+                  "workflow-executor": "allow",
+                },
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            description:
+              "Supervisora do Domain Cluster frontend (componentes, views, design tokens, estado de cliente): dirige a execução dos Briefs do cluster via DagOrchestrator e delega ao workflow-executor. Read-only.",
+            prompt: PROMPT_FRONTEND_LEAD,
+            options: {},
+            mode: "subagent",
+            native: true,
+          },
+          "integration-lead": {
+            name: "integration-lead",
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                read: "allow",
+                dag_orchestrator: "allow",
+                task: {
+                  "workflow-executor": "allow",
+                },
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            description:
+              "Supervisora do Domain Cluster integration (pacotes de contratos, e2e, fiação cross-boundary): dirige a execução dos Briefs do cluster via DagOrchestrator e delega ao workflow-executor. Read-only.",
+            prompt: PROMPT_INTEGRATION_LEAD,
             options: {},
             mode: "subagent",
             native: true,
