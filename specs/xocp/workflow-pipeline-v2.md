@@ -134,9 +134,8 @@ Espelham o padrão do Handoff (`handoff-read` / `latest`), mais determinístico 
 
 | Agente | Permissão |
 |--------|-----------|
-| `workflow-triador` | = `explore` (read-only) |
 | `analista` | leitura + `edit` restrito a `.opencode/briefs/*.yaml` (mesmo molde do Elicitador em `.opencode/specs/*.md`) |
-| `elicitador` | (permissão já existente) + `task: { workflow-executor: allow }` — **novo**, seção 6.1 |
+| `elicitador` | `edit` em `.opencode/specs/*.md` + `.opencode/briefs/*.yaml` (produtor do Brief draft) + `task: { analista: allow }` — a partir da Tarefa 14 delega ao `analista`, não mais ao executor |
 | `workflow-executor` | = `build` restrito + ferramentas de pipeline (`task_approval_check`, `execution_summary_write`, `cycle_tracker`, `execution_summary_read`, `review_checklist_read`) + `task: { avaliador: allow }` — **novo**, seção 6.1; instrução de prompt: chamar `task_approval_check` antes de editar código — **limite honesto:** convenção reforçada por ferramenta, não bloqueio de permissão de arquivo no OS |
 | `avaliador` | = `explore` + `review_checklist_write` + `execution_summary_read` + `review_checklist_read` + `task: { workflow-executor: allow }` |
 
@@ -178,10 +177,14 @@ implementado, o que foi verificado, e com qual evidência".
 
 | Agente | v1 | v2 |
 |--------|----|----|
-| `workflow-triador` | Papel via skill sobre `explore` | Agente nativo, permissão = `explore` |
-| `analista` | Papel via skill sobre `explore` | Agente nativo, read + `edit` só em `.opencode/briefs/*.yaml` |
+| `analista` | Papel via skill sobre `explore` | Agente nativo, read + `edit` só em `.opencode/briefs/*.yaml`; a partir da Tarefa 14 lê/valida/dividi Briefs já produzidos |
 | `workflow-executor` | Literalmente `build` + prompt extra | Agente nativo **separado** do `build` |
 | `avaliador` | Papel via skill sobre `explore` | Agente nativo, read + `review_checklist_write` + delegação ao `workflow-executor` |
+
+> **Nota (Tarefa 14):** o `workflow-triador` (agente nativo na v2, permissão
+> = `explore`) foi **removido**. A triagem de entrada e a produção do Brief
+> draft são do `elicitador`; a régua S1–S4 passou a ser aplicada pelo
+> `analista` sobre Briefs já gravados.
 
 **Por que `workflow-executor` separado do `build`:** permite recusar trabalho não
 aprovado e obrigar trilha de auditoria **sem** afetar uso livre do produto via

@@ -1,5 +1,19 @@
 # XOCP System Architecture Specification
 
+> **DEPRECADO — DOCUMENTO HISTÓRICO.**
+> Este documento está **desatualizado** e não reflete o runtime real: descreve
+> apenas 5 agentes enquanto o sistema opera com **19+ agentes**, além de não
+> cobrir os mecanismos concretos implementados (revisão por review_checklist,
+> cycle_tracker, auto-evolução via pattern-events, DAG de Briefs, fontes de
+> pesquisa, telemetria de incidentes, mapa de estado). Ele foi mantido
+> apenas como registro histórico.
+> **A fonte de verdade única da arquitetura é `specs/xocp/agent-architecture.md`** —
+> que descreve agentes, permissões, estado e diagrams atuais, com cada
+> afirmação ancorada em `arquivo:linha` do código. Qualquer decisão nova deve
+> ser feita contra esse documento, nunca contra este. Se encontrar uma
+> divergência entre os dois, o código vence e este arquivo deve ser
+> corrigido ou deletado (não "atualizado em paralelo").
+
 ## 1. Executive Summary & Architectural Vision
 XOCP (**eXtensible Open Code Platform**) is an autonomous multi-agent software engineering runtime engineered for zero-drift execution, high-assurance orchestration, and deterministic validation. Built on **Bun (>= 1.3.14)**, **Effect-TS**, and **SQLite internals**, XOCP enforces rigorous boundaries across agents, execution contexts, and persistent storage layers.
 
@@ -19,21 +33,17 @@ The core execution lifecycle orchestrates tasks through five specialized cogniti
 │                         Elicitador                          │
 │  - Requirements elicitation & intent grounding             │
 │  - Queries .opencode/sources.db via FTS5 BM25              │
+│  - Sole Brief producer (draft) — entry agent               │
 └────────────────────────────┬────────────────────────────────┘
-                             │ (Elicited Spec)
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      workflow-triador                       │
-│  - Intent triage: SPEC, BRIEF, or DIVIDIR                   │
-│  - Heuristic Graphify trigger (multi-module refactoring)    │
-└────────────────────────────┬────────────────────────────────┘
-                             │ (Triage Action)
+                             │ (Spec + Brief draft)
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                          Analista                           │
-│  - Structured Technical Brief generation (YAML v2.0)        │
-│  - DAG dependency declaration (depends_on)                  │
-│  - Explicit scope boundaries (files_scope)                  │
+│  - Validates/refines the Brief draft (never from scratch)  │
+│  - Confirms real files_expected_touched paths              │
+│  - Structured Technical Brief generation (YAML v2.0)       │
+│  - DAG dependency declaration (depends_on)                 │
+│  - Explicit scope boundaries (files_scope)                 │
 └────────────────────────────┬────────────────────────────────┘
                              │ (Technical Briefs DAG)
                              ▼

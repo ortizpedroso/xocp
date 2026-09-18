@@ -6,6 +6,11 @@
 
 ## 1. Decisão do workflow-triador
 
+> **Nota histórica (Tarefa 14):** na época deste relatório a triagem era
+> feita pelo `workflow-triador`. Esse agente foi **removido**; a régua
+> S1–S4 passou a ser aplicada pelo `analista` sobre Briefs já gravados
+> pelo `elicitador`. O bloco abaixo é registro histórico do piloto.
+
 ```yaml
 triagem:
   decisao: DIVIDIR

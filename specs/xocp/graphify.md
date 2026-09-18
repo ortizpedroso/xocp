@@ -68,5 +68,5 @@ Três endpoints em `packages/protocol/src/groups/graphify.ts`:
 ## Referências
 
 - Implementação: `packages/core/src/graphify/`
-- Arquitetura: `specs/xocp/architecture.md`
+- Arquitetura: `specs/xocp/agent-architecture.md`
 - Telemetria: `specs/xocp/telemetry.md`

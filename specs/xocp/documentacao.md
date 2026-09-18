@@ -162,4 +162,4 @@ Detalhes: `specs/xocp/workflow.md` e `README.md`.
 - `specs/v2/session.md` — especificação SessionV2
 - `AGENTS.md` — regras de desenvolvimento XOCP
 - `specs/xocp/workflow.md` — fluxo local vs Cloud Agent
-- `specs/xocp/architecture.md` — arquitetura técnica completa (público interno/dev)
+- `specs/xocp/agent-architecture.md` — arquitetura vigente: agentes, permissões, estado (público interno/dev). (`specs/xocp/architecture.md` é histórico deprecated).

@@ -18,8 +18,8 @@ A instalação operacional é global em `~/.config/opencode/skills/elicitador-sp
 
 | Papel já existente | Continua servindo pra |
 |---|---|
-| `workflow-triador` | Decidir dividir ou não uma tarefa **dentro** de um projeto já em andamento |
-| Analista / brief | Investigar código **existente** e especificar um pedaço de trabalho |
+| Elicitador / Brief draft | Produzir o Brief rascunho a partir de uma demanda, e delegar ao Analista |
+| Analista / brief | Validar/confirmar caminhos e especificar um pedaço de trabalho |
 | Executor / Avaliador | Implementar e checar contra brief ou contra Spec |
 
 | Papel novo | Serve pra |
@@ -34,33 +34,33 @@ ciclos.
 
 ## 1. Triagem de entrada — quando o Elicitador entra em ação
 
-Isto roda **antes** de qualquer elicitação, baseado só na primeira mensagem
-do usuário depois de um gatilho (ex.: botão "site/app" na UI, ou o usuário
-mencionar espontaneamente "quero criar um sistema/app/site").
+O Elicitador é o **agente de entrada único**. A triagem roda em dois
+estágios, baseada só na mensagem do usuário (e no repositório):
 
 ```
-se a mensagem NÃO descreve, nem vagamente, um sistema a construir:
-    NÃO entra em modo Elicitador
-    se for pergunta solta -> responde normal, como qualquer conversa
-    se for pedido pontual (ex.: "corrige esse botão") -> cai no
-        pipeline já existente (workflow-triador -> brief, se aplicável)
+[ESTÁGIO A] a mensagem descreve um sistema a construir?
+    se NÃO descreve sistema nenhum:
+        -> conversa normal (nada de Spec, nada de Brief por enquanto)
+    se é ambígua:
+        UMA pergunta de confirmação, não mais que isso:
+        "Parece que você quer construir algo novo — é isso mesmo, ou
+         era outra coisa?"
+    se descreve claramente um sistema:
+        verifica PRIMEIRO se já existe uma Spec pra este projeto
+        se já existe Spec:
+            NÃO inicia elicitação nova — isto é um INCREMENTO.
+            Segue o ciclo Build -> Review na Spec já existente
+            (seção 6 abaixo).
+        se não existe Spec:
+            entra em modo Elicitador de verdade (seção 2) → gera a Spec.
 
-se a mensagem é ambígua (pode ser sistema novo, pode ser engano):
-    UMA pergunta de confirmação, não mais que isso:
-    "Parece que você quer construir algo novo — é isso mesmo, ou
-     era outra coisa?"
-
-se a mensagem já descreve claramente um sistema:
-    verifica PRIMEIRO se já existe uma Spec pra este projeto
-    (arquivo de spec no projeto atual)
-
-    se já existe Spec:
-        NÃO inicia elicitação nova — isto é um INCREMENTO.
-        Segue o ciclo Build -> Review na Spec já existente
-        (seção 6 abaixo), não este documento de elicitação do zero.
-
-    se não existe Spec:
-        entra em modo Elicitador de verdade (seção 2)
+[ESTÁGIO B] o pedido implica MUDANÇA EM CÓDIGO?
+    verbos: implementar, criar, corrigir, adicionar, ajustar, refatorar,
+    expor, integrar, remover, otimizar, configurar, migrar, tela/endpoint/schema
+        -> tarefa demandada: produz Brief draft (produced_by: elicitador)
+           e delega ao Analista
+    perguntas, explicações, opiniões, dúvidas:
+        -> continua a conversa normal. NUNCA cria Brief.
 ```
 
 ---

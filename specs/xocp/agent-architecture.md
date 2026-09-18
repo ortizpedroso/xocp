@@ -38,28 +38,34 @@ no código — nenhum dos agentes fixa um `model` em `agent.ts` (o campo
 entradas native); todos herdam o modelo padrão da sessão ou o override do
 usuário em `opencode.json`.
 
-**Nota (Tarefa 10):** o 15º agente é `pattern-auditor`
-(`agent.ts:418-438`), somado aos 14 originais documentados abaixo — ver
+**Nota (Tarefa 10):** o `pattern-auditor`
+(`agent.ts:418-438`) foi somado aos agentes documentados abaixo — ver
 linha da tabela e §1.2.
 
 **Nota (Tarefa 12):** os 4 Cluster Leads (`core-lead`, `backend-lead`,
 `frontend-lead`, `integration-lead`) foram adicionados como subagents,
-elevando o total a 19 — ver linha da tabela e §1.4.
+elevando o total a 18 — ver linha da tabela e §1.4.
+
+**Nota (Tarefa 14):** o `workflow-triador` foi **removido**. A triagem de
+entrada (sistema novo / conversa normal / tarefa demandada) e a produção
+do Brief draft passaram para o `elicitador` (agente de entrada único e
+único produtor de Briefs); o `analista` deixou de especificar do zero e
+passou a **ler/validar/dividir** Briefs já gravados (`produced_by:
+elicitador`). Ver §1.5.
 
 | Agente | Modo | Pipeline? | Model tier (recomendado) | O que faz | Resumo do prompt real |
 |---|---|---|---|---|---|
 | `build` | primary | Não | Depende da tarefa (padrão do usuário) | Agente genérico padrão, executa qualquer tool conforme permissão configurada. Sem prompt customizado (`agent.ts:149-164`, sem campo `prompt`). | — (usa o system prompt genérico do OpenCode, não um `.txt` do pipeline XOCP) |
 | `plan` | primary | Não | Depende da tarefa | Modo somente-leitura/planejamento — `edit`/`write`/`apply_patch` bloqueados por padrão, só `.opencode/plans/*.md` liberado (`agent.ts:165-191`). | — (idem, sem prompt customizado) |
-| `elicitador` | primary | **Sim** | Tier alto (ambiguidade, julgamento, conversas longas) | Conduz elicitação de requisitos do zero e gera Spec completa em `specs/<slug>.md`. Nunca implementa nem edita código fora de `specs/*.md`. | 3 fases: (1) triagem inicial decide se é elicitação nova, incremento ou fluxo pontual (`elicitador.txt:25-59`); (2) conduz a conversa por rascunho-e-confirmação, não formulário (`:63-104`); (3) baseline interno de 6 regras técnicas travadas + stack recomendada + checagem de frescor via busca (`:191-282`). Regra dura: sempre entrega uma Spec, nunca recomenda não construir (`:139-162`); Spec só existe se gravada em arquivo (`:164-187`). |
-| `workflow-triador` | primary | **Sim** | Tier baixo (classificação mecânica, sem geração de conteúdo) | Classifica a tarefa como `DIVIDIR` ou `FLUXO_NORMAL` pela régua de 4 sinais S1–S4. Read-only puro — nunca escreve Brief nem implementa. | Avalia S1 (≥3 superfícies de deploy), S2 (≥3 critérios independentes de natureza distinta), S3 (≥8 arquivos em ≥2 dirs não-adjacentes), S4 (≥2 fases sequenciais); ≥2 sinais ativos → `DIVIDIR` (`workflow-triador.txt:23-32`). Saída é só um bloco YAML de triagem, nada mais (`:34-47`). |
-| `analista` | primary | **Sim** | Tier alto (investigação + especificação verificável) | Investiga o repositório e escreve Briefs YAML em `.opencode/briefs/<brief_id>.yaml`. Nunca implementa. | Fluxo obrigatório antes de escrever: confirmar o que já existe na branch remota, mapear arquivos reais via busca, checar padrão duplicado, cortar escopo por domínio, definir comando de verificação exato (`analista.txt:17-34`). Nunca edita brief in-place — incrementa `version` + `history` (`:73-84`); limite de 2 rodadas de esclarecimento antes de escalar (`:86-88`). |
+| `elicitador` | primary | **Sim** | Tier alto (ambiguidade, julgamento, conversas longas) | **Agente de entrada único e único produtor de Briefs (draft).** Tria (estágio A: é sistema novo? estágio B: verbo de mudança?) e, se aplicável, conduz elicitação do zero e gera Spec em `specs/<slug>.md`; depois de aprovada, grava o Brief draft (`produced_by: elicitador`) e delega ao `analista`. Nunca implementa código. | 3 fases: (1) triagem em dois estágios — 1.1 "é sistema novo?" e 1.2 gatilho por verbo (`elicitador.txt:25-...`); (2) conduz a conversa por rascunho-e-confirmação, não formulário; (3) baseline interno de 6 regras técnicas travadas + stack recomendada + checagem de frescor via busca. Seção 4 (Produção de Briefs) define a situação A (derivado de Spec, `spec_id`) e a situação B (tarefa demandada), sempre `status: rascunho` e delegação final ao `analista` (seção 4.3). |
+| `analista` | primary | **Sim** | Tier alto (investigação + validação verificável) | **Lê, avalia, valida e divide Briefs já produzidos** pelo `elicitador` — nunca especifica do zero. Confirma os caminhos reais de `files_expected_touched`, decide dividir via régua S1–S4, marca `validated_by: analista` + `status: aguardando_aprovacao` e despacha ao `workflow-executor`. Nunca implementa. | Invariante: só inicia atividade se existir `.opencode/briefs/*.yaml`. Fluxo obrigatório: confirmar o que já existe na branch remota, mapear arquivos reais, checar padrão duplicado, cortar escopo por domínio, definir comando de verificação exato. Nunca edita brief in-place — incrementa `version` + `history`; máximo 2 rodadas de devolução do brief ao `elicitador` antes de escalar. |
 | `workflow-executor` | primary | **Sim** | Tier alto (implementação de código real) | Implementa Briefs/Specs já aprovados, com trilha de auditoria (`cycle_tracker`, `self_test_tracker`, `execution_summary_write`). | Sequência fixa por ciclo: `cycle_tracker.increment` → `task_approval_check` → ler `review_checklist_read` do ciclo anterior se `rejected` → implementar → loop de autoteste obrigatório via `self_test_tracker` (contador isolado do `cycle_tracker`, máx. 3 tentativas, escalação separada se estourar — Tarefa 8) → opcionalmente `baseline-auditor` → `execution_summary_write` → delegar `avaliador` na mesma resposta (`workflow-executor.txt:7-100`, numeração após a regra de primeiro passo e o passo de autoteste adicionados nesta e na revisão anterior). Nunca chama `edit`/`write`/`apply_patch`/bash mutável antes do `task_approval_check` passar (`:105-106`). |
 | `avaliador` | primary | **Sim** | Tier alto (julgamento independente, adversarial) | Revisa a entrega do executor de forma independente — nunca aceita o autorrelato sem verificação própria — e grava `review_checklist`. Read-only no código. | Lê `execution_summary_read`, mas isso nunca basta sozinho — sempre roda teste/lê diff/confere critério por critério (`avaliador.txt:5-13`); item `completed` com `external_source` nunca conta como verificado internamente (`:15-22`); sempre chama `baseline-auditor` de novo, mesmo que o executor já tenha rodado (`:31-42`); `rejected` volta pro executor se ciclo ≤3, `failed` sempre escala direto pro humano mesmo com ciclo livre (`:44-69`). |
 | `general` | subagent | Não | Tier médio | Propósito geral, pesquisa/execução multi-step em paralelo. Sem prompt customizado (`agent.ts:332-345`). | — |
 | `explore` | subagent | Não | Tier baixo/rápido (busca, não geração) | Busca rápida em código por padrão/keyword/pergunta estrutural, com 3 níveis de profundidade declarados por quem chama. | Especialista em glob/grep/read; nunca cria arquivo nem roda bash mutável (`explore.txt:1-18`). |
 | `graphify-explorer` | subagent | Não | Tier baixo/rápido | Perguntas estruturais de código (chamadas, imports, herança, caminhos de dependência) via `graphify_query`. | Sempre usa `graphify_query` para pergunta estrutural, nunca adivinha por nome de arquivo (`graphify-explorer.txt:1-17`). |
 | `baseline-auditor` | subagent | Não | Tier médio (mistura mecânico + julgamento) | Audita as 11 regras fixas do Baseline Global (`specs/xocp/baseline-global.md`) contra o código. Read-only, nunca edita. | 6 regras de segurança majoritariamente mecânicas (grep por padrão) + 5 regras de UI/UX que misturam mecânico e julgamento; marca `not_applicable` explicitamente quando não se aplica, nunca omite da lista (`baseline-auditor.txt:9-59`). |
-| `pattern-auditor` | subagent | Não (apoio ao pipeline, chamado pelo `avaliador`) | Tier médio (síntese de dados + julgamento de "isso é candidato a regra nova?") | Relata recorrência de padrões no pipeline — mesmo perfil read-only de `baseline-auditor` (`agent.ts:420-431`: `"*": "deny"` + `grep`/`glob`/`read`/`pattern_recurrence_read`/`external_directory` liberados). Nunca implementa, nunca edita, nunca abre delegação própria de correção. | Chama `pattern_recurrence_read` (sem parâmetros, relatório do projeto inteiro) e separa SEMPRE em duas categorias, nunca misturadas: "erro recorrente" (mesmo critério/regra reprovando em ≥3 tarefas distintas — candidato a regra nova ou ajuste de prompt, mas só sugere) e "rotina recorrente" (candidato a tool/skill nova; nesta versão vem vazia com limitação documentada, nunca preenchida por heurística forçada) (`pattern-auditor.txt:14-41`). Princípio citado explicitamente do próprio prompt: "o sistema aprende via spec mais afiada, não via modelo mudando sozinho" (`pattern-auditor.txt:4-7`, ecoando `workflow-pipeline-v2.md` §8). |
+| `pattern-auditor` | subagent | Não (apoio ao pipeline, chamado pelo `avaliador`) | Tier médio (síntese de dados + julgamento de "isso é candidato a regra nova?") | Relata recorrência de padrões no pipeline — mesmo perfil read-only de `baseline-auditor` (`agent.ts:420-431`: `"*": "deny"` + `grep`/`glob`/`read`/`pattern_recurrence_read`/`external_directory` liberados). Nunca implementa, nunca edita, nunca abre delegação própria de correção. | Chama `pattern_recurrence_read` (sem parâmetros, relatório do projeto inteiro) e separa SEMPRE em duas categorias, nunca misturadas: "erro recorrente" (mesmo critério/regra reprovando em ≥3 tarefas distintas — candidato a regra nova ou ajuste de prompt, mas só sugere) e "rotina recorrente" (candidato a tool/skill nova, sinalizada quando ≥5 tarefas distintas rotulam o mesmo `rotina_id` via `record_rotina_event`; limiar acima do erro e nunca preenchida por heurística forçada) (`pattern-auditor.txt:29-38`). Princípio citado explicitamente do próprio prompt: "o sistema aprende via spec mais afiada, não via modelo mudando sozinho" (`pattern-auditor.txt:4-7`, ecoando `workflow-pipeline-v2.md` §8). |
 | `compaction` | primary, oculto | Não | Tier baixo/rápido (alto volume, tarefa mecânica) | Interno — resume conversa longa num formato estruturado pra outro agente continuar. | Segue exatamente a estrutura pedida, nunca continua a conversa nem responde perguntas (`compaction.txt:1-5`). |
 | `title` | primary, oculto | Não | Tier baixo/rápido | Interno — gera título de sessão (≤50 caracteres, uma linha). | Regras rígidas de formato + exemplos; nunca usa tools (`title.txt:1-44`). |
 | `summary` | primary, oculto | Não | Tier baixo/rápido | Interno — gera resumo de sessão em 2-3 frases, estilo descrição de PR. | Primeira pessoa, não menciona testes/builds, preserva pergunta pendente se houver (`summary.txt:1-11`). |
@@ -72,9 +78,8 @@ elevando o total a 19 — ver linha da tabela e §1.4.
 
 | Agente | Pode delegar (`task`) para — intenção declarada em `agent.ts` |
 |---|---|
-| `elicitador` | `explore`, `graphify-explorer`, `workflow-executor` (nega `general`) — `agent.ts:203-208` |
-| `workflow-triador` | `analista` — a partir da Tarefa 12 tem `task: { analista: "allow" }` (`agent.ts:239-240`), para delegação automática quando classificar `DIVIDIR` (ver §1.4 e observação 2 da seção 2). Fora isso, o resto é `"*": "deny"` com só `grep/glob/list/bash/webfetch/websearch/read` liberados (`agent.ts:229-239`) |
-| `analista` | `explore`, `workflow-executor` (nega `general`) — `agent.ts:258-262`. O `workflow-executor` foi adicionado na Tarefa 11 (ver §1.2) especificamente para disparo paralelo de sub-Briefs prontos, não para o caminho sequencial normal (que segue manual — ver observação 2 da seção 2). |
+| `elicitador` | `explore`, `graphify-explorer`, `analista` (nega `general`) — `agent.ts:203-208`. O `analista` substitui o antigo `workflow-executor` como destino da delegação final (Tarefa 14); `analista` é quem despacha ao Executor. |
+| `analista` | `explore`, `workflow-executor` (nega `general`) — `agent.ts:258-262`. O `workflow-executor` é usado no despacho paralelo de sub-Briefs validados (não para o caminho sequencial normal). |
 | `workflow-executor` | `explore`, `avaliador`, `baseline-auditor` — `agent.ts:285-289` |
 | `avaliador` | `explore`, `workflow-executor`, `baseline-auditor`, `pattern-auditor` (nega `general`) — `agent.ts:319-325`. O `pattern-auditor` foi adicionado na Tarefa 10, condicionado ao marcador `<recurrence_report_trigger>` no output de `review_checklist_write` (ver §1.2). |
 
@@ -89,9 +94,9 @@ definem um `"*": "deny"` próprio — então, tecnicamente, um `task` para um
 agente que não está na lista acima (ex.: `elicitador` chamando
 `avaliador` diretamente) **não é bloqueado pela permissão**, cai no
 `"*": "allow"` dos defaults. Só o padrão `general` é explicitamente
-negado nesses três. Já `workflow-triador`, `avaliador` e os 4 Cluster
+negado nesses três. Já `avaliador` e os 4 Cluster
 Leads definem
-`"*": "deny"` como primeira regra do seu bloco (para triador e avaliador, e
+`"*": "deny"` como primeira regra do seu bloco (para o avaliador, e
 para os leads apenas as tools de leitura + `dag_orchestrator` + `task:
 workflow-executor` são liberados), então **para esses, só os padrões
 explicitamente
@@ -155,12 +160,14 @@ O relatório (`pattern_recurrence_read`,
 `packages/opencode/src/tool/pattern-recurrence-read.ts`) sempre separa
 duas categorias, nunca mistura: "erro recorrente" (populada, com
 `category_id`, contagem de tarefas distintas e sugestão textual — nunca
-implementa a correção) e "rotina recorrente" (deliberadamente vazia
-nesta primeira versão, com uma limitação documentada em vez de heurística
-forçada — `pattern-events.ts:156-165,171-175`: nada no código hoje
-registra o que o Executor efetivamente tocou por Brief de forma
-comparável entre tarefas não relacionadas, `files_expected_touched` é só
-a estimativa do Analista). O agente `pattern-auditor` (subagent, mesmo
+implementa a correção) e "rotina recorrente" (populada desde a Tarefa 12: o Executor rotula, via
+`record_rotina_event`, uma rotina reutilizada em ≥5 tarefas distintas —
+fonte `executor_rotina`, limiar acima do erro (3) porque repetição
+voluntária e sem reprovação precisa de mais evidência; nunca preenchida
+por heurística forçada — `pattern-events.ts`: `queryRecurringRoutines` /
+`routineProgress`; tool em
+`packages/opencode/src/tool/record-rotina-event.ts`, invisível pro
+Avaliador por blindagem de permissão). O agente `pattern-auditor` (subagent, mesmo
 perfil read-only de `baseline-auditor`, ver tabela da seção 1) nunca
 implementa a melhoria sozinho — só relata, mesmo princípio de
 `workflow-pipeline-v2.md` §8 já citado no próprio prompt
@@ -241,12 +248,13 @@ ao `workflow-executor` (uma chamada por brief, depth=1); após o Avaliador
 gravar o review_checklist, roda `apply_verdicts` e segue pra próxima wave.
 
 O mesmo commit também fechou o gap sequencial da observação 2 da seção 2:
-o `workflow-triador` ganhou `task: { analista: "allow" }` e instrução no
-prompt (`workflow-triador.txt`) de delegar ao `analista` na MESMA resposta
-quando classificar `DIVIDIR`, repassando o YAML da triagem e a
-`estimativa_de_ramos`. Testes em `packages/opencode/test/agent/agent.test.ts`
-(leads registrados, permissões, triador→analista) e
-`test/tool/dag-orchestrator.test.ts` (status/mark_running/apply_verdicts).
+o `workflow-triador` (hoje **removido** na Tarefa 14) ganhou
+`task: { analista: "allow" }` e instrução no prompt de delegar ao
+`analista` na MESMA resposta quando classificar `DIVIDIR`, repassando o
+YAML da triagem e a `estimativa_de_ramos`. Testes em
+`packages/opencode/test/agent/agent.test.ts` (leads registrados,
+permissões, triador→analista) e `test/tool/dag-orchestrator.test.ts`
+(status/mark_running/apply_verdicts).
 
 ## 2. Fluxo ponta a ponta
 
@@ -259,23 +267,27 @@ pipeline), `specs/xocp/workflow-pipeline-v2.md:396-421` (ciclo),
 
 ```mermaid
 flowchart TD
-    U[Pedido do usuário] --> Entry{Sistema novo do zero,<br/>ou tarefa pontual/existente?}
+    U[Pedido do usuário] --> ELI[elicitador<br/>agente de entrada único]
 
-    Entry -->|"sistema novo<br/>(elicitador.txt:27-56)"| ELI[elicitador]
-    Entry -->|"pontual/existente<br/>(entrada manual ou<br/>agente padrão do usuário)"| TRI[workflow-triador]
+    ELI -->|"estágio A: é sistema novo?<br/>(elicitador.txt §1.1)"| NOVO{é sistema novo?}
+    NOVO -->|"sim, sem Spec"| SPEC[elicitador conduz elicitação<br/>e escreve Spec em specs/slug.md]
+    NOVO -->|"não — conversa normal<br/>(elicitador.txt §2.7)"| CONV[conversa normal<br/>sem brief]
+    CONV -->|"estágio B: verbo de mudança<br/>(elicitador.txt §1.2)"| DEMANDA[tarefa demandada]
 
-    ELI -->|"Spec escrita em specs/slug.md,<br/>usuário aprova via spec_status_write"| SPECOK{aprovado?}
+    SPEC --> SPECOK{aprovado?<br/>spec_status_write}
     SPECOK -->|"não aprovado"| ELI
-    SPECOK -->|"aprovado — delegação automática<br/>elicitador.txt:305-314"| EXEC
+    SPECOK -->|"aprovado — §4.1"| DRAFT[elicitador grava Brief draft<br/>produced_by: elicitador<br/>spec_id / status: rascunho]
+    DEMANDA -->|"§4.2"| DRAFT
 
-    TRI -->|"regra S1-S4, workflow-pipeline.md:37-46"| Sinais{sinais_ativos >= 2?}
-    Sinais -->|"FLUXO_NORMAL —<br/>sai do pipeline formal,<br/>sem brief, sem avaliador"| BUILD[agente build genérico<br/>trabalha direto, sem trilha de auditoria]
-    Sinais -->|DIVIDIR| ANA[analista]
+    DRAFT -->|"delegação automática<br/>(elicitador.txt §4.3)"| ANA[analista]
 
-    ANA -->|"Brief YAML em<br/>.opencode/briefs/*.yaml"| BRIEFOK{aprovado?<br/>task_approval_check}
-    BRIEFOK -->|"não aprovado"| ANA
-    BRIEFOK -->|"aprovado — SEM delegação automática:<br/>analista não tem workflow-executor<br/>no seu task allow-list (agent.ts:257-260).<br/>Troca de agente é manual aqui."| EXEC
+    ANA -->|"lê/avalia, confirma caminhos reais,<br/>divide via S1-S4 se necessário,<br/>marca validated_by: analista"| BRIEFOK{validado?}
+    BRIEFOK -->|"não — devolve ao elicitador<br/>(máx 2 rodadas)"| ELI
+    BRIEFOK -->|"sim — status: aguardando_aprovacao"| DISP{divide em sub-Briefs?}
+    DISP -->|"sim — despacho paralelo<br/>task por sub-Brief"| EXEC
+    DISP -->|"não — Brief único"| LEAD[Cluster Lead do domínio<br/>dag_orchestrator status + mark_running]
 
+    LEAD -->|"task (depth=1)"| EXEC
     EXEC["workflow-executor<br/>(ciclo N, max 3 — cycle-tracker.ts:8)"]
     EXEC -->|"1. cycle_tracker.increment<br/>2. task_approval_check<br/>3. lê review_checklist rejected anterior<br/>4. implementa<br/>5. execution_summary_write"| DELEG["delega avaliador<br/>na mesma resposta<br/>(automático)"]
     DELEG --> AVAL[avaliador]
@@ -293,7 +305,6 @@ flowchart TD
     ELI -.-> SUP1
     ELI -.-> SUP3[graphify-explorer]
 
-    style BUILD fill:#666,color:#fff
     style DONE fill:#2a6,color:#fff
     style ESCALATE fill:#a33,color:#fff
 ```
@@ -301,26 +312,23 @@ flowchart TD
 **Duas observações do diagrama que não estavam no pedido original, mas
 são necessárias pra ele não mentir:**
 
-1. **`FLUXO_NORMAL` sai do pipeline inteiramente** — não é "o mesmo
-   fluxo sem dividir em ramos", é literalmente "agente único, sem brief,
-   sem avaliador" (`specs/xocp/workflow-pipeline.md:44-46`, regra de
-   decisão explícita). Só `DIVIDIR` entra no pipeline completo
-   (Analista → Brief → workflow-executor → Avaliador).
-2. **O caminho `workflow-triador` → `analista` agora É automático** — a
-   partir da Tarefa 12, ao classificar `DIVIDIR` o triador delega via
-   `task` ao `analista` na mesma resposta (`workflow-triador.txt`, passo
-   5 + permissão `task: analista` em `agent.ts:239-240`; ver §1.4),
-   repassando a descrição verbatim, o YAML de triagem e a
-   `estimativa_de_ramos` — mesmo padrão de delegação automática que o
-   caminho `elicitador`→`workflow-executor` já tinha (`elicitador.txt:305-314`).
-   Depois, `analista` delegate para `workflow-executor` via `task` quando
-   dividir em sub-Briefs paralelos (Tarefa 11, `analista.txt:69-102`,
-   `agent.ts:258-262`) e, quando o Brief for único e aprovado, a execução
-   é dirigida pelo Cluster Lead do domínio via `dag_orchestrator` +
-   `task` (`mark_running` + delegação — §1.4). O único ponto que segue
-   manual para Brief único não-diviso é disparar o primeiro `status` do
-   Lead (seleção do agente pelo usuário); a partir daí o Lead avança as
-   waves automaticamente.
+1. **A conversa normal NÃO entra no pipeline** — o `elicitador` responde
+   como conversa normal (`elicitador.txt` §2.7) e nenhum Brief é criado.
+   Só uma **demanda de execução com verbo de mudança** (`elicitador.txt`
+   §1.2) gera Brief draft e entra no pipeline completo
+   (elicitador → analista → workflow-executor → avaliador). Não existe
+   mais o "FLUXO_NORMAL" do antigo `workflow-triador`.
+2. **O caminho `elicitador` → `analista` é automático** — depois de
+   gravar o Brief draft (situação A ou B), o `elicitador` delega ao
+   `analista` na mesma resposta (`elicitador.txt` §4.3, permissão
+   `task: analista`). O `analista` valida, confirma os caminhos reais,
+   decide dividir via S1–S4 e: para sub-Briefs paralelos, delega direto
+   ao `workflow-executor` via `task` (`analista.txt` §7); para Brief
+   único, a execução é dirigida pelo Cluster Lead do domínio via
+   `dag_orchestrator` + `task` (`mark_running` + delegação — §1.4). O
+   único ponto que segue manual para Brief único não-dividido é disparar
+   o primeiro `status` do Lead (seleção do agente pelo usuário); a partir
+   daí o Lead avança as waves automaticamente.
 
 ## 3. Os 3 únicos pontos de intervenção humana no fluxo automático
 
@@ -337,13 +345,13 @@ Fonte: `specs/xocp/workflow-pipeline-v2.md:434-443` (seção 6.1).
 
 Tudo o mais — troca de agente, leitura de checklist anterior,
 delegação pro avaliador, retentativa em caso de `rejected` dentro do
-limite — é automático **quando o caminho `elicitador` é usado**, e a partir
-da Tarefa 12 o caminho `workflow-triador`/`analista` também é automático até
-a geração do Brief (triador delega pro analista ao classificar `DIVIDIR`, §1.4).
-O único ponto de troca manual restante: depois de um Brief único aprovado,
-alguém precisa selecionar o Cluster Lead do domínio (ou o `workflow-executor`)
-para iniciar a primeira rodada de `dag_orchestrator status` — ver ressalva na
-seção 2.
+limite — é automático desde o `elicitador` (agente de entrada único):
+depois de gravar o Brief draft ele delega ao `analista` na mesma resposta
+(§1.5), e o `analista` despacha os sub-Briefs ao executor ou aciona o
+Cluster Lead. O único ponto de troca manual restante: depois de um Brief
+único validado, alguém precisa selecionar o Cluster Lead do domínio (ou o
+`workflow-executor`) para iniciar a primeira rodada de `dag_orchestrator
+status` — ver ressalva na seção 2.
 
 ## 4. Exemplos de payload
 
@@ -507,14 +515,14 @@ um orquestrador externo, determinístico, forçando a sequência."* A seção
 garantia."* Tecnicamente, a permissão (`task: { workflow-executor: allow
 }` etc.) só define o que é **possível**; quem decide **quando** delegar
 é o texto do prompt, interpretado por um modelo de linguagem — não há
-verificação de máquina de estados em código forçando elicitador → executor
-→ avaliador.
+verificação de máquina de estados em código forçando elicitador → analista
+→ executor → avaliador.
 
 **Atenuações implementadas:** (a) a Tarefa 11 fechou o gap de sub-Briefs
 paralelos (analista → workflow-executor com instrução de delegação no
-prompt); (b) a Tarefa 12 fechou o gap do caminho sequencial `workflow-triador`
-→ `analista` (triador agora delega automaticamente ao classificar `DIVIDIR`,
-`workflow-triador.txt` + permissão `task: analista`) e adicionou um
+prompt); (b) a Tarefa 12 fechou o gap do caminho sequencial
+triador→analista (agora removido: na Tarefa 14 o `elicitador` produz o
+Brief draft e delega ao `analista` diretamente) e adicionou um
 **orquestrador real com estado durável** (`DagOrchestrator` + tool
 `dag_orchestrator` + Cluster Leads, ver §1.4): a sequência de ondas e o
 `depends_on` entre Briefs deixam de depender só da convenção de prompt e
@@ -528,7 +536,128 @@ delegação do `avaliador` → `pattern-auditor` continua dependendo do
 marcador `<recurrence_report_trigger>` ser lido corretamente do output — ver
 seção 2, §1.2 e §1.4.
 
-## 6. Metodologia de verificação
+## 6. Mapa de Estado (Estado × Gravador)
+
+Fonte da verdade do que o runtime XOCP grava e onde. Toda linha cita o
+gravador real (`arquivo:linha`), não a convenção de nome. Contratos de
+trabalho (Brief/Spec) são **fontes de verdade de entrada** (lidos, não
+gravados pelo ciclo de execução); a trilha de revisão, os contadores e a
+telemetria são o que o ciclo **produz**.
+
+### 6.1 Contratos de entrada (onde vive o que está aprovado)
+
+| Caminho | Formato | Quem grava (ferramenta) | Resolução pela `task_id` |
+|---|---|---|---|
+| `.opencode/briefs/<id>.yaml` | YAML | `elicitador` (rascunho) / `analista` (valida/divide), via `edit`; transição de `status` via `spec_status_write` | `task-path.ts:16-21` (`contractRelativePath`) |
+| `specs/<slug>.md` (ou `.opencode/specs/<slug>.md`) | MD + frontmatter | `elicitador` via `edit`; `status` via `spec_status_write` | `SPEC_TASK_ID` em `task_path` (`task-path.ts:3`) |
+| `specs/xocp/baseline-global.md` | MD | humanos | lido por `baseline-auditor` (11 regras fixas) |
+
+Leitura de aprovação: `task_approval_check` resolve o contrato pelo
+`task_id` e recusa implementação se `status !== "aprovada"` (não é
+bloqueio de OS — é convenção reforçada por tool; §5.4).
+
+### 6.2 Trilha de revisão (`.opencode/reviews/<task_id>/`)
+
+`reviewsRelativeDir` em `task-path.ts:23-26` (sanitiza `task_id` para
+nomes de pasta seguros em Windows). Caminhos pelos contadores:
+
+| Arquivo | Ferramenta de escrita | Gravador real | Conteúdo |
+|---|---|---|---|
+| `cycle-count.txt` | `cycle_tracker` | `cycle-tracker.ts:105-110` (sync legacy) | Contador de ciclo (legacy, espelhado do SQLite) |
+| `cycle-<N>.json` | `review_checklist_write` | `review-checklist.ts:87` | Veredito + gates + critérios com evidência |
+| `execution-<N>.json` | `execution_summary_write` | `execution-summary.ts:66` | Resumo cumulativo da execução |
+| `baseline-<N>.json` | `baseline-audit-write` | `baseline-audit.ts:70` | Auditoria das 11 regras |
+| `self-test-escalation.json` | `self_test_tracker` | `self-test-tracker.ts:144-148` | Marcador de autoteste esgotado (Reviewer Blindness) |
+
+`N` vem apenas de `cycle_tracker` (invariante 0.5 do v2) — as ferramentas
+de escrita leem o contador no disco, não aceitam `N` manual.
+
+### 6.3 Contadores (Bancos SQLite, WAL, em `.opencode/`)
+
+Padrão `bun:sqlite` + `PRAGMA journal_mode = WAL` + `dbCache` por caminho,
+idêntico nos cinco. **Isolamento é deliberado**: cada um responde a um
+domínio e nenhum reaproveita tabela de outro.
+
+| Banco | Tabelas | Grava | Lê | Propósito |
+|---|---|---|---|---|
+| `workflow-cycles.db` | `task_cycles` | `cycle-tracker.ts:69-101` (`incrementCycle`) | `cycle-tracker.ts:41-67` (`readCycle`) | Ciclo por tarefa — teto de 3 (`MAX_CYCLES` :8) |
+| `self-test-cycles.db` | `self_test_cycles` | `self-test-tracker.ts:92-117` (`incrementSelfTestCycle`), :62-78 (`recordSelfTestAttempt`) | `self-test-tracker.ts:50-56`, :80-90 | Autoteste do executor, isolado do Avaliador (teto 3 :12) |
+| `pattern-events.db` | `pattern_events`, `task_completions` | `pattern-events.ts:60-68` (`recordPatternEvent`), :76-83 (`recordTaskCompletion`) | `pattern-events.ts:156-158`, `buildRecurrenceReport` :204-210 | Recorrência de erros/rotinas (auto-evolução) |
+| `dag.db` | `dag_nodes`, `dag_completed` | `dag-store.ts:59-82` (`save`, após cada transição do dispatcher) | `dag-store.ts:84-107` (`load`, hidratação) | Topologia de Briefs + ondas + vereditos aplicados |
+| `sources.db` | `sources`, `sources_fts` (FTS5) | `sources/index.ts:65-120` (`ingestSource`) via `sources_ingest` | `sources/index.ts:122-145` (`listSources`), `sources/index.ts:147` (`querySources`) | Memória de pesquisa (elicitador/analista) |
+
+**Os 3 eventos fixos de recorrência (fonte: `recordPatternEvent`):**
+
+| Ferramenta que grava | `category_id` | `source` | Linha |
+|---|---|---|---|
+| `review_checklist_write` (critério `fail`) | id do critério | `review_checklist` | `review-checklist-write.ts:47-52` |
+| `baseline-audit-write` (item `fail`) | id do item | `baseline_auditor` | `baseline-audit-write.ts:35` |
+| `self_test_tracker` (autoteste esgotado) | `self_test_exhausted` | `self_test_escalation` | `self-test-tracker.ts:49-54` |
+| `record_rotina_event` (rotina rotulada) | `rotina_id` | `executor_rotina` | `record-rotina-event.ts:29-33` |
+
+Leitura: `pattern_recurrence_read` (→ `pattern-auditor`), sempre separando
+"erro recorrente" (≥3 tarefas distintas) de "rotina recorrente" (≥5).
+
+### 6.4 Telemetria de incidentes (`.opencode/evolution/`)
+
+| Arquivo | Ferramenta de escrita | Gravador real | Quando |
+|---|---|---|---|
+| `incident-<id>.json` | `evolution_incident_write` | `evolution/incident.ts:36` (`recordIncident`) | Quando o Evolution Incident Reporter é invocado |
+| `incident-<id>.json` | **automático** | `cycle-tracker.ts:114-126` (`recordIncident` com `cycle_threshold_reached`) | Ao estourar o limite de ciclos |
+
+`recordIncident` é compartilhado (`incident.ts:15-38`): gera `id`/`timestamp`,
+grava em `.opencode/evolution/` e é chamado tanto pela tool manual quanto
+pelo `cycle_tracker` — os incidentes **não dependem** de um agente se
+lembrar de escrevê-los no limite.
+
+### 6.5 Memória de trabalho do executor (`.opencode/execution-log/<task_id>.md`)
+
+| Formato | Quem grava | Como | Conteúdo |
+|---|---|---|---|
+| Markdown append-only | `workflow-executor` | via `edit`/`write` direto (sem tool dedicada), instrução em `workflow-executor.txt:110-120` | `/ Ciclo N / O que fiz / Por que escolhi essa abordagem / O que ficou em dúvida` |
+
+Lido pelo próprio executor no ciclo seguinte, **antes** de reagir ao
+veredito do Avaliador (`workflow-executor.txt:25-36`). Memória de
+raciocínio própria; não é lido pelo Avaliador nem pelo humano por padrão.
+
+### 6.6 Fontes de pesquisa (`.opencode/sources/`)
+
+| Caminho | Quem grava | Formato |
+|---|---|---|
+| `<id>.<ext>` (raw) | `sources_ingest` | arquivo bruto (HTML/PDF/snippet/transcript) |
+| `normalized/<id>.md` | `sources_ingest` | Markdown normalizado (`sources/ingest.ts:148-159`) |
+| `sources.db` (FTS5) | `sources_ingest` (mesmo fluxo) | índice + metadados |
+
+### 6.7 Fora de `.opencode/`
+
+| Caminho | Grava | Propósito |
+|---|---|---|
+| `opencode.db` (dir de dados global) | núcleo opencode (`database/database.ts:53`) | sessões, mensagens, handoff |
+| `graphify-out/graph.json` | CLI `graphifyy` (via `graphify_q` da tool `graphify-query`) | grafo estrutural do projeto |
+| `specs/xocp/architecture.md` | **histórico deprecated** | fonte única vigente é `agent-architecture.md` (este documento) |
+
+### 6.8 Manutenção do espelho de prompts (core ↔ opencode)
+
+Os prompts dos agentes existem em dois lugares:
+`packages/opencode/src/agent/prompt/*.txt` (runtime V1, TUI) e
+`packages/core/src/plugin/*.txt` (plugin V2, servidor/API). Eles **devem**
+ser byte-idênticos; a verificação é por `git hash-object` (os 12 pares de
+agentes XOCP). O ponto de manutenção é: editar primeiro o V1 (runtime
+operacional), depois `Copy-Item`/re-edit para o V2 — nunca o inverso. Os
+dois `agent.ts` (registro V1 em `packages/opencode/src/agent/agent.ts`,
+registro V2 em `packages/core/src/plugin/agent.ts`) devem manter a mesma
+matriz de agentes, permissões (`list`/`bash`/`pattern_recurrence_read`)
+e diversos defaults (`doom_loop: ask`).
+
+Divergência estrutural aceita (única): o `title` do V1 declara
+`temperature: 0.5`; `AgentV2.Info` (`packages/schema/src/agent.ts:20-31`)
+não tem campo `temperature` — só `request.body`, que o compat
+(`packages/opencode/src/config/v2-compat.ts:404`) rebaixa para `options`,
+não para o `temperature` lido pelo runtime V1 (`session/llm/request.ts:122`).
+Espelhar exigiria adicionar o campo ao schema; mantido como divergência
+documentada em vez de simulada via `request.body`.
+
+## 7. Metodologia de verificação
 
 Toda afirmação de conexão ("X chama Y", "X está registrado") foi
 confirmada por `grep` direto no código nesta revisão — não por

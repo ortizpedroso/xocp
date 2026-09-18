@@ -8,6 +8,15 @@ como ponto de partida ajustável, não lei gravada em pedra. Depois de
 algumas rodadas reais, revise os números com dado — não continue usando
 por fé.
 
+**Nota (Tarefa 14) — este documento é histórico.** O agente
+`workflow-triador` foi **removido** e a régua S1–S4 (seção 1) passou a ser
+aplicada pelo `analista` sobre Briefs já gravados. A triagem de entrada
+(sistema novo / conversa normal / tarefa demandada) e a **produção do
+Brief draft** são do `elicitador` (agente de entrada único); o `analista`
+só lê/valida/dividi. A seção 2 (prompt do triador) descreve um agente que
+não existe mais — mantida por valor histórico. Ver
+`specs/xocp/agent-architecture.md` §1.5 para o desenho vigente.
+
 **Princípio de fundo, não negociável:** o padrão default do XOCP é
 conservador. Esse pipeline existe pra tarefas que genuinamente precisam
 dele — a maioria das tarefas **não** deveria passar por ele. Se você
@@ -196,6 +205,14 @@ brief_id: brief-<slug-curto>-<número de 2 dígitos>
 version: 1
 task_summary: "<uma linha, o que este brief entrega>"
 
+# Ciclo de vida (Tarefa 14): o elicitador grava o brief como `rascunho`
+# e o analista valida (confirma caminhos reais, decide dividir) marcando
+# `status: aguardando_aprovacao` + `validated_by: analista`.
+status: rascunho            # rascunho → aguardando_aprovacao
+produced_by: elicitador     # quem gravou o draft — sempre o elicitador
+validated_by: analista      # preenchido somente quando validado pelo analista
+spec_id: specs/<slug>.md    # situação A (sistema novo/incremento); omitido na situação B
+
 scope:
   included:
     - "<item específico incluído>"
@@ -218,16 +235,19 @@ depends_on:
   # lista vazia [] se não depende de nada
 
 files_expected_touched:
-  - "<caminho estimado pelo Analista — não é vinculante, é orientação>"
+  - "<caminho estimado — no draft pode ser intenção; confirmado pelo analista antes de validar>"
 
 risk_notes:
   - "<qualquer risco que o Analista identificou e quer que o Executor/Avaliador saibam>"
 
-created_by: analista
+created_by: elicitador
 created_at: "<ISO 8601>"
 history:
   - version: 1
-    change: "criação inicial"
+    change: "criação inicial (draft)"
+    by: elicitador
+  - version: 2
+    change: "validado: caminhos reais confirmados, status → aguardando_aprovacao"
     by: analista
 ```
 
@@ -641,6 +661,6 @@ produto voltado pro usuário final.
 
 ## Referências
 
-- `specs/xocp/architecture.md` — camada aditiva XOCP
+- `specs/xocp/agent-architecture.md` — arquitetura da camada aditiva XOCP
 - `specs/xocp/implementation-checklist.md` — validação de hipótese antes de automatizar clusters
 - `AGENTS.md` — typecheck por pacote, restrições SessionV2
