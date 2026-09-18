@@ -335,7 +335,7 @@ describe("session.retry.retryable", () => {
     expect(retryable).toEqual({ message: "Response decompression failed" })
   })
 
-  test("maps free limits to Go upsell action", () => {
+  test("FreeUsageLimitError is non-retryable (XOCP: upsell bloqueante removido)", () => {
     const error = Schema.decodeUnknownSync(SessionV1.APIError.Schema)(
       new SessionV1.APIError({
         message: "Free usage exceeded",
@@ -348,17 +348,9 @@ describe("session.retry.retryable", () => {
       }).toObject(),
     )
 
-    expect(SessionRetry.retryable(error, "opencode")).toEqual({
-      message: SessionRetry.GO_UPSELL_MESSAGE,
-      action: {
-        reason: "free_tier_limit",
-        provider: "opencode",
-        title: "Free limit reached",
-        message: "Subscribe to OpenCode Go for reliable access to the best open-source models for $10/month.",
-        label: "subscribe",
-        link: SessionRetry.GO_UPSELL_URL,
-      },
-    })
+    // XOCP: FreeUsageLimitError retorna undefined (não retryable) em vez de
+    // disparar o loop de upsell bloqueante para o OpenCode Go
+    expect(SessionRetry.retryable(error, "opencode")).toBeUndefined()
   })
 
   test("maps Go subscription limits to workspace PAYG upsell", () => {
