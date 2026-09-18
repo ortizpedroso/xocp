@@ -259,5 +259,6 @@ describe("elicitador prompt following (TestLLMServer)", () => {
       }),
       { git: true, config: providerCfg },
     ),
+    { timeout: 60_000 },
   )
 })

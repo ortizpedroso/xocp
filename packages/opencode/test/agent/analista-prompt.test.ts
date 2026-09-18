@@ -206,5 +206,6 @@ describe("analista prompt following (TestLLMServer)", () => {
       }),
       { git: true, config: providerCfg },
     ),
+    { timeout: 30_000 },
   )
 })

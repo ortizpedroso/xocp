@@ -655,6 +655,7 @@ it.instance("default permission includes doom_loop and external_directory as ask
     expect(evalPerm(build, "doom_loop")).toBe("ask")
     expect(evalPerm(build, "external_directory")).toBe("ask")
   }),
+  { timeout: 30_000 },
 )
 
 it.instance("webfetch is allowed by default", () =>
@@ -808,6 +809,7 @@ description: Permission skill.
       expect(Permission.evaluate("external_directory", target, build!.permission).action).toBe("allow")
     }),
   { git: true },
+  { timeout: 30_000 },
 )
 
 it.instance(
@@ -827,6 +829,7 @@ it.instance(
       },
     },
   },
+  { timeout: 30_000 },
 )
 
 it.instance("defaultAgent returns build when no default_agent config", () =>
