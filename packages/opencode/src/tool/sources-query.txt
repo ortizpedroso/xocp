@@ -1,0 +1,10 @@
+Consulta as fontes de conhecimento ingeridas em `.opencode/sources.db`.
+
+Duas modalidades:
+- `user_objective`: busca por intenção (querySourcesByIntent) — ranqueia chunks
+  pela relevância à meta declarada do usuário, suprimindo seções fora do tema.
+- `query`: busca full-text clássica (FTS5/BM25), com `source_id` opcional pra
+  restringir os resultados a uma única fonte.
+
+Permissões: apenas `elicitador` e `analista` têm acesso de leitura às fontes.
+`workflow-executor` e `avaliador` são bloqueados.

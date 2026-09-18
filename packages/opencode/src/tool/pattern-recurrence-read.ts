@@ -35,8 +35,10 @@ export const PatternRecurrenceReadTool = Tool.define(
             ? report.erroRecorrente.map(formatCategory).join("\n")
             : "Nenhum critério/regra atingiu o limiar de recorrência (≥3 tarefas distintas) na janela atual.",
           "",
-          "## Rotina recorrente (mesmo trabalho manual se repetindo, sem reprovação)",
-          `(vazio nesta versão) ${report.rotinaRecorrente.limitation}`,
+          "## Rotina recorrente (mesmo trabalho manual se repetindo, sem reprovação — candidata a tool/skill)",
+          report.rotinaRecorrente.length > 0
+            ? report.rotinaRecorrente.map(formatCategory).join("\n")
+            : "Nenhuma rotina atingiu o limiar de recorrência (≥5 tarefas distintas registradas pelo executor) na janela atual.",
         ]
 
         return {

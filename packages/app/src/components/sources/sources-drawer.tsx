@@ -8,7 +8,13 @@ export interface ActiveSourceItem {
   ingested_at: string
 }
 
-export function SourcesDrawer(props: { isOpen: boolean; onClose: () => void }) {
+type SourcesDrawerProps = {
+  isOpen: boolean
+  onClose: () => void
+  docked?: boolean
+}
+
+export function SourcesDrawer(props: SourcesDrawerProps) {
   const [activeTab, setActiveTab] = createSignal<"upload" | "links" | "snippet" | "active">("active")
 
   // Form states - zero-friction single fields
@@ -35,6 +41,15 @@ export function SourcesDrawer(props: { isOpen: boolean; onClose: () => void }) {
 
   const [sources, { refetch }] = createResource(fetchSources)
 
+  const readError = async (res: Response, fallback: string): Promise<string> => {
+    try {
+      const body = await res.json()
+      return body?.error || fallback
+    } catch {
+      return fallback
+    }
+  }
+
   const handleIngestJson = async (payload: {
     title?: string
     source_type?: string
@@ -52,8 +67,42 @@ export function SourcesDrawer(props: { isOpen: boolean; onClose: () => void }) {
         body: JSON.stringify(payload),
       })
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || "Failed to ingest source")
+        throw new Error(await readError(res, "Failed to ingest source"))
+      }
+      setStatusMessage("Source ingested and indexed successfully!")
+      refetch()
+      setActiveTab("active")
+    } catch (err: any) {
+      setStatusMessage(`Error: ${err.message}`)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleIngestMultipart = async (payload: {
+    title?: string
+    source_type?: string
+    original_uri?: string
+    raw_content: string
+    language?: string
+    summary?: string
+  }) => {
+    setIsSubmitting(true)
+    setStatusMessage(null)
+    try {
+      const formData = new FormData()
+      if (payload.title) formData.append("title", payload.title)
+      if (payload.source_type) formData.append("source_type", payload.source_type)
+      if (payload.original_uri) formData.append("original_uri", payload.original_uri)
+      formData.append("raw_content", payload.raw_content)
+      if (payload.language) formData.append("language", payload.language)
+      if (payload.summary) formData.append("summary", payload.summary)
+      const res = await fetch("/api/sources/ingest", {
+        method: "POST",
+        body: formData,
+      })
+      if (!res.ok) {
+        throw new Error(await readError(res, "Failed to ingest source"))
       }
       setStatusMessage("Source ingested and indexed successfully!")
       refetch()
@@ -82,8 +131,7 @@ export function SourcesDrawer(props: { isOpen: boolean; onClose: () => void }) {
           body: formData,
         })
         if (!res.ok) {
-          const err = await res.json()
-          throw new Error(err.error || `Failed to upload ${file.name}`)
+          throw new Error(await readError(res, `Failed to upload ${file.name}`))
         }
         count++
       }
@@ -108,19 +156,9 @@ export function SourcesDrawer(props: { isOpen: boolean; onClose: () => void }) {
     } catch {}
   }
 
-  return (
-    <Show when={props.isOpen}>
-      <div
-        id="sources-drawer-backdrop"
-        class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-end"
-        onClick={props.onClose}
-      >
-        <div
-          id="sources-drawer-panel"
-          class="w-full max-w-md bg-neutral-900 text-neutral-100 h-full shadow-2xl flex flex-col border-l border-neutral-800"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
+  const panelBody = (
+    <>
+      {/* Header */}
           <div class="flex items-center justify-between p-4 border-b border-neutral-800">
             <div>
               <h2 class="text-base font-semibold tracking-wide text-neutral-100">Research Sources</h2>
@@ -359,10 +397,18 @@ export function SourcesDrawer(props: { isOpen: boolean; onClose: () => void }) {
                 onSubmit={(e) => {
                   e.preventDefault()
                   if (!snippetCode().trim()) return
-                  handleIngestJson({
-                    source_type: "snippet",
-                    raw_content: snippetCode().trim(),
-                  })
+                  const content = snippetCode().trim()
+                  if (content.length > 64_000) {
+                    handleIngestMultipart({
+                      source_type: "snippet",
+                      raw_content: content,
+                    })
+                  } else {
+                    handleIngestJson({
+                      source_type: "snippet",
+                      raw_content: content,
+                    })
+                  }
                 }}
               >
                 <div>
@@ -386,12 +432,37 @@ export function SourcesDrawer(props: { isOpen: boolean; onClose: () => void }) {
                   class="w-full py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-medium text-xs rounded transition-colors"
                 >
                   {isSubmitting() ? "Normalizing..." : "Normalize & Ingest Snippet"}
-                </button>
-              </form>
-            </Show>
+</button>
+               </form>
+             </Show>
+</div>
+     </>
+   )
+
+  return (
+    <Show when={props.isOpen}>
+      <Show
+        when={props.docked}
+        fallback={
+          <div
+            id="sources-drawer-backdrop"
+            class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-end"
+            onClick={props.onClose}
+          >
+            <div
+              id="sources-drawer-panel"
+              class="w-full max-w-md bg-neutral-900 text-neutral-100 h-full shadow-2xl flex flex-col border-l border-neutral-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {panelBody}
+            </div>
           </div>
+        }
+      >
+        <div id="sources-drawer-panel" class="w-full bg-neutral-900 text-neutral-100 shadow-2xl flex flex-col border border-neutral-800 rounded-lg overflow-hidden max-h-[min(560px,70vh)]">
+          {panelBody}
         </div>
-      </div>
+      </Show>
     </Show>
   )
 }

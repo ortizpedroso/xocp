@@ -8,6 +8,8 @@ import {
   recordTaskCompletion,
   countCompletedTasks,
   queryRecurringCategories,
+  queryRecurringRoutines,
+  routineProgress,
   buildRecurrenceReport,
 } from "../../src/evolution/pattern-events"
 
@@ -135,7 +137,7 @@ describe("evolution/pattern-events", () => {
     expect(queryRecurringCategories(dir)).toHaveLength(0)
   })
 
-  test("buildRecurrenceReport separates erro recorrente from the documented rotina recorrente limitation", async () => {
+  test("buildRecurrenceReport separates erro recorrente from rotina recorrente", async () => {
     const dir = await tmpdir()
     for (const task_id of ["r1", "r2", "r3"]) {
       await recordTaskCompletion(dir, task_id)
@@ -146,7 +148,60 @@ describe("evolution/pattern-events", () => {
     expect(report.completedTasks).toBe(3)
     expect(report.erroRecorrente).toHaveLength(1)
     expect(report.erroRecorrente[0].category_id).toBe("G-SEC-1")
-    expect(report.rotinaRecorrente.items).toEqual([])
-    expect(report.rotinaRecorrente.limitation.length).toBeGreaterThan(0)
+    expect(report.rotinaRecorrente).toEqual([])
+  })
+
+  test("a routine recurring across 5 DISTINCT tasks is flagged", async () => {
+    const dir = await tmpdir()
+    for (const task_id of ["brief-1", "brief-2", "brief-3", "brief-4", "brief-5"]) {
+      await recordTaskCompletion(dir, task_id)
+      await recordPatternEvent(dir, { task_id, category_id: "consulta-sources-db", source: "executor_rotina", cycle: 1 })
+    }
+
+    const routines = queryRecurringRoutines(dir)
+    expect(routines).toHaveLength(1)
+    expect(routines[0]).toMatchObject({
+      category_id: "consulta-sources-db",
+      source: "executor_rotina",
+      distinctTasks: 5,
+    })
+  })
+
+  test("4 distinct tasks do NOT reach the rotina threshold (higher than erro's 3)", async () => {
+    const dir = await tmpdir()
+    for (const task_id of ["t1", "t2", "t3", "t4"]) {
+      await recordTaskCompletion(dir, task_id)
+      await recordPatternEvent(dir, { task_id, category_id: "reuso-padrao-teste", source: "executor_rotina", cycle: 1 })
+    }
+
+    // 4 distinct tasks would already flag an error criterion — a routine needs 5.
+    expect(queryRecurringCategories(dir)).toHaveLength(0)
+    expect(queryRecurringRoutines(dir)).toHaveLength(0)
+  })
+
+  test("routineProgress counts distinct tasks below the threshold, for live feedback", async () => {
+    const dir = await tmpdir()
+    await recordTaskCompletion(dir, "brief-a")
+    await recordPatternEvent(dir, { task_id: "brief-a", category_id: "consulta-sources-db", source: "executor_rotina", cycle: 1 })
+    // Re-labeling the same task in a later cycle adds an occurrence, not a distinct task.
+    await recordPatternEvent(dir, { task_id: "brief-a", category_id: "consulta-sources-db", source: "executor_rotina", cycle: 2 })
+    await recordTaskCompletion(dir, "brief-b")
+    await recordPatternEvent(dir, { task_id: "brief-b", category_id: "consulta-sources-db", source: "executor_rotina", cycle: 1 })
+
+    expect(routineProgress(dir, "consulta-sources-db")).toEqual({ distinctTasks: 2, occurrences: 3 })
+    expect(queryRecurringRoutines(dir)).toHaveLength(0)
+  })
+
+  test("buildRecurrenceReport surfaces recurrent routines when the threshold is met", async () => {
+    const dir = await tmpdir()
+    for (const task_id of ["b1", "b2", "b3", "b4", "b5"]) {
+      await recordTaskCompletion(dir, task_id)
+      await recordPatternEvent(dir, { task_id, category_id: "typecheck-por-pacote", source: "executor_rotina", cycle: 1 })
+    }
+
+    const report = buildRecurrenceReport(dir)
+    expect(report.erroRecorrente).toHaveLength(0)
+    expect(report.rotinaRecorrente).toHaveLength(1)
+    expect(report.rotinaRecorrente[0]).toMatchObject({ category_id: "typecheck-por-pacote", distinctTasks: 5 })
   })
 })

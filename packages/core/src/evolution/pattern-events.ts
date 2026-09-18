@@ -7,9 +7,17 @@ import { Database } from "bun:sqlite"
 // either of those two tables, so recurrence bookkeeping never interferes
 // with the Avaliador's or the Executor's own cycle counters.
 
-export type PatternEventSource = "review_checklist" | "baseline_auditor" | "self_test_escalation"
+export type PatternEventSource = "review_checklist" | "baseline_auditor" | "self_test_escalation" | "executor_rotina"
 
 const RECURRENCE_THRESHOLD = 3
+// The 3 fixed, auto-recorded error sources. Kept explicit (rather than
+// "everything except executor_rotina") so a future source must opt in
+// instead of silently leaking into the error recurrence count.
+const ERROR_SOURCES: PatternEventSource[] = ["review_checklist", "baseline_auditor", "self_test_escalation"]
+// Routines don't fail loudly like errors — a routine shows up only because
+// the executor chosen to label it, so a higher bar than the error threshold
+// filters forced/false-positive labeling. 5 distinct tasks = candidate.
+export const ROTINA_RECURRENCE_THRESHOLD = 5
 const WINDOW_TASKS = 20
 const WINDOW_DAYS = 30
 export const REPORT_EVERY_N_COMPLETIONS = 10
@@ -106,6 +114,36 @@ function windowStartISO(directory: string): string {
   return oldestOfTheTwenty > cutoffByDays ? oldestOfTheTwenty : cutoffByDays
 }
 
+// "Rotina recorrente" counts the same routine label across ≥5 DISTINCT
+// tasks in the window. Routines are signals the workflow-executor chooses
+// to label (source "executor_rotina"), so the threshold lives above the
+// error threshold (3): a labeled routine is a weaker signal than a hard
+// failing criterion and must clear a higher bar before being called a
+// candidate. The event itself is recorded via `recordPatternEvent` with
+// source "executor_rotina" and category_id = rotina_id — no new table needed.
+export function queryRecurringRoutines(directory: string): RecurringCategory[] {
+  return queryRecurring(directory, { sources: ["executor_rotina"], threshold: ROTINA_RECURRENCE_THRESHOLD })
+}
+
+// Same window semantics as the error recurrence, but without the minimum
+// threshold — lets the record_rotina_event tool report live progress toward
+// ROTINA_RECURRENCE_THRESHOLD ("n/5 tarefas distintas com esta rotina").
+export function routineProgress(
+  directory: string,
+  rotina_id: string,
+): { distinctTasks: number; occurrences: number } {
+  const db = getDb(directory)
+  const start = windowStartISO(directory)
+  const rows = db
+    .prepare(
+      `SELECT task_id FROM pattern_events
+       WHERE created_at >= ? AND source = 'executor_rotina' AND category_id = ?`,
+    )
+    .all(start, rotina_id) as { task_id: string }[]
+  const distinctTasks = new Set(rows.map((row) => row.task_id)).size
+  return { distinctTasks, occurrences: rows.length }
+}
+
 // "Erro recorrente" only — the same criterion/rule ID failing across ≥3
 // DISTINCT tasks (not ≥3 retry-cycles within a single task: that's already
 // what cycle_tracker's own per-task retry loop handles, and counting
@@ -116,6 +154,13 @@ function windowStartISO(directory: string): string {
 // actionable as "candidato a virar regra nova no baseline", documented
 // here and in agent-architecture.md.
 export function queryRecurringCategories(directory: string): RecurringCategory[] {
+  return queryRecurring(directory, { sources: ERROR_SOURCES, threshold: RECURRENCE_THRESHOLD })
+}
+
+function queryRecurring(
+  directory: string,
+  options: { sources?: PatternEventSource[]; threshold: number },
+): RecurringCategory[] {
   const db = getDb(directory)
   const start = windowStartISO(directory)
 
@@ -125,6 +170,7 @@ export function queryRecurringCategories(directory: string): RecurringCategory[]
 
   const grouped = new Map<string, RecurringCategory>()
   for (const row of rows) {
+    if (options.sources && !options.sources.includes(row.source)) continue
     const key = `${row.source}:${row.category_id}`
     let entry = grouped.get(key)
     if (!entry) {
@@ -139,7 +185,7 @@ export function queryRecurringCategories(directory: string): RecurringCategory[]
   }
 
   return [...grouped.values()]
-    .filter((entry) => entry.distinctTasks >= RECURRENCE_THRESHOLD)
+    .filter((entry) => entry.distinctTasks >= options.threshold)
     .toSorted((a, b) => b.distinctTasks - a.distinctTasks)
 }
 
@@ -147,31 +193,19 @@ export interface RecurrenceReport {
   completedTasks: number
   windowStart: string
   erroRecorrente: RecurringCategory[]
-  rotinaRecorrente: {
-    items: never[]
-    limitation: string
-  }
+  rotinaRecorrente: RecurringCategory[]
 }
 
-// "Rotina recorrente" (same kind of manual work repeating across unrelated
-// tasks with no rejection involved — candidate for a new tool/skill) needs a
-// signal this codebase doesn't emit anywhere yet: nothing records which
-// files/actions an Executor touched per Brief in a form comparable across
-// unrelated tasks (files_expected_touched is Analista's estimate, not a
-// record of what actually happened). Inventing a fuzzy similarity heuristic
-// to force this category to have content would produce noise, not signal —
-// per Tarefa 10's own instruction, documented here as a known limitation of
-// this first version instead. "Erro recorrente" has no such gap: it's built
-// entirely from the 3 fixed, already-ID'd event sources.
+// "Erro recorrente" comes entirely from the 3 fixed, auto-recorded event
+// sources (review_checklist, baseline_auditor, self_test_escalation).
+// "Rotina recorrente" comes from the workflow-executor's own labels
+// (source "executor_rotina") — a human-decided candidate to become a new
+// tool/skill, reported but never auto-implemented by the pattern-auditor.
 export function buildRecurrenceReport(directory: string): RecurrenceReport {
   return {
     completedTasks: countCompletedTasks(directory),
     windowStart: windowStartISO(directory),
     erroRecorrente: queryRecurringCategories(directory),
-    rotinaRecorrente: {
-      items: [],
-      limitation:
-        "Sem dado suficiente nesta primeira versão: nenhuma fonte existente registra o que o Executor efetivamente tocou por Brief de forma comparável entre tarefas não relacionadas (files_expected_touched é a estimativa do Analista, não um registro do que rodou). Ver specs/xocp/agent-architecture.md.",
-    },
+    rotinaRecorrente: queryRecurringRoutines(directory),
   }
 }

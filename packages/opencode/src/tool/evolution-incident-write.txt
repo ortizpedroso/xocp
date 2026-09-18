@@ -1,0 +1,7 @@
+Registra um incidente de evolução em `.opencode/evolution/incident-<id>.json`
+(telemetria de ciclo: escalações, falhas de execução e limiares atingidos).
+Escreve o payload com id/timestamp gerados e retorna o caminho do arquivo.
+
+Use quando uma execução escalar (ex.: limite de ciclos atingido) ou falhar.
+
+Permissões: `evolution-incident-reporter`.

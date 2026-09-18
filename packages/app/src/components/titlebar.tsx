@@ -40,6 +40,12 @@ import "./titlebar.css"
 import { newTabTooltipKeybind } from "./command-tooltip-keybind"
 import { normalizeSessionInfo } from "@/utils/session"
 import { SourcesDrawer } from "@/components/sources/sources-drawer"
+import {
+  closeSourcesPanel,
+  isSourcesComposerMounted,
+  isSourcesPanelOpen,
+  toggleSourcesPanel,
+} from "@/components/sources/sources-panel-store"
 
 const legacyTitlebarHeight = 40
 const v2TitlebarHeight = 36
@@ -607,8 +613,6 @@ type TitlebarV2RightState = {
 }
 
 function TitlebarV2Right(props: { state: TitlebarV2RightState }) {
-  const [sourcesOpen, setSourcesOpen] = createSignal(false)
-
   return (
     <div class="flex items-center gap-2 shrink-0 justify-end overflow-visible mr-2">
       <button
@@ -617,7 +621,7 @@ function TitlebarV2Right(props: { state: TitlebarV2RightState }) {
         title="Research Sources"
         aria-label="Open Research Sources Drawer"
         class="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md bg-neutral-800/80 hover:bg-neutral-700/80 text-neutral-300 hover:text-white border border-neutral-700/50 transition-colors shrink-0"
-        onClick={() => setSourcesOpen(true)}
+        onClick={toggleSourcesPanel}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
@@ -627,7 +631,9 @@ function TitlebarV2Right(props: { state: TitlebarV2RightState }) {
         <span>Sources</span>
       </button>
 
-      <SourcesDrawer isOpen={sourcesOpen()} onClose={() => setSourcesOpen(false)} />
+      <Show when={isSourcesPanelOpen() && !isSourcesComposerMounted()}>
+        <SourcesDrawer isOpen onClose={closeSourcesPanel} />
+      </Show>
 
       <Show when={props.state.update.visible}>
         <TitlebarUpdateIconButton state={props.state.update} />

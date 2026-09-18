@@ -1,0 +1,10 @@
+Ingere uma fonte externa de pesquisa em `.opencode/sources/` (normalizada em
+Markdown com frontmatter YAML) e indexa em `.opencode/sources.db` — tanto o
+catálogo/FTS5 quanto os chunks por heading (source_chunks) usados pela busca
+por intenção.
+
+`source_type` suportados: url, pdf, html, transcript, snippet. Para pdf, passe
+`raw_content` (texto extraído) ou `raw_buffer`; para transcript, prefira
+`transcript_segments` [{ timestamp, text }]; para snippet, informe `language`.
+
+Permissões: `elicitador`, `analista` e `research-operator`.

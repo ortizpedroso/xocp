@@ -1,4 +1,4 @@
-import { Show, type JSX } from "solid-js"
+import { Show, onCleanup, type JSX } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { SessionPermissionDock } from "@/pages/session/composer/session-permission-dock"
@@ -9,6 +9,12 @@ import { ElicitadorAmbiguityPrompt } from "@/pages/session/elicitador-ambiguity-
 import { GraphifySuggestion } from "@/pages/session/graphify-suggestion-ui"
 import { SessionRevertDock } from "@/pages/session/composer/session-revert-dock"
 import { SessionTodoDock } from "@/pages/session/composer/session-todo-dock"
+import { SourcesDrawer } from "@/components/sources/sources-drawer"
+import {
+  closeSourcesPanel,
+  isSourcesPanelOpen,
+  setSourcesComposerMounted,
+} from "@/components/sources/sources-panel-store"
 import type { SessionComposerRegionController } from "./session-composer-region-controller"
 
 export function SessionComposerRegion(props: {
@@ -27,6 +33,9 @@ export function SessionComposerRegion(props: {
     const revert = controller.revert()
     return revert?.items.length ? revert : undefined
   }
+  setSourcesComposerMounted(true)
+
+  onCleanup(() => setSourcesComposerMounted(false))
 
   return (
     <div
@@ -41,9 +50,12 @@ export function SessionComposerRegion(props: {
       <div
         classList={{
           "w-full px-3 pointer-events-auto": true,
-          "md:max-w-200 md:mx-auto 2xl:max-w-[1000px]": controller.centered(),
+          "md:max-w-200 md:mx-auto 2xl:max-w-[1000px]": controller.centered() && !isSourcesPanelOpen(),
+          "md:max-w-[1180px] 2xl:max-w-[1240px] md:mx-auto": controller.centered() && isSourcesPanelOpen(),
+          "flex flex-col md:flex-row items-end justify-center gap-3": isSourcesPanelOpen(),
         }}
       >
+        <div classList={{ "flex-1 min-w-0": true, "hidden": false }}>
         <Show when={controller.state.questionRequest()} keyed>
           {(request) => (
             <div>
@@ -181,6 +193,12 @@ export function SessionComposerRegion(props: {
               </Show>
             </div>
           </Show>
+        </Show>
+        </div>
+        <Show when={isSourcesPanelOpen() && controller.showComposer()}>
+          <div class="min-w-0 shrink-0 w-full md:w-96">
+            <SourcesDrawer isOpen docked onClose={closeSourcesPanel} />
+          </div>
         </Show>
       </div>
     </div>

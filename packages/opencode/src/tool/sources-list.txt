@@ -1,0 +1,5 @@
+Lista as fontes de conhecimento ingeridas em `.opencode/sources.db` (id,
+título, kind e created_at), da mais recente pra mais antiga.
+
+Permissões: apenas `elicitador` e `analista` têm acesso de leitura às fontes.
+`workflow-executor` e `avaliador` são bloqueados.

@@ -26,9 +26,14 @@ import { ReviewChecklistReadTool } from "./review-checklist-read"
 import { BaselineAuditWriteTool } from "./baseline-audit-write"
 import { BaselineAuditReadTool } from "./baseline-audit-read"
 import { PatternRecurrenceReadTool } from "./pattern-recurrence-read"
+import { RecordRotinaEventTool } from "./record-rotina-event"
 import { SpecStatusWriteTool } from "./spec-status-write"
 import { GraphifyQueryTool } from "./graphify-query"
 import { DagOrchestratorTool } from "./dag-orchestrator"
+import { SourcesQueryTool } from "./sources-query"
+import { SourcesListTool } from "./sources-list"
+import { SourcesIngestTool } from "./sources-ingest"
+import { EvolutionIncidentWriteTool } from "./evolution-incident-write"
 import { InvalidTool } from "./invalid"
 import { SkillTool } from "./skill"
 import * as Tool from "./tool"
@@ -126,9 +131,14 @@ const layer = Layer.effect(
     const baselineAuditWrite = yield* BaselineAuditWriteTool
     const baselineAuditRead = yield* BaselineAuditReadTool
     const patternRecurrenceRead = yield* PatternRecurrenceReadTool
+    const recordRotinaEvent = yield* RecordRotinaEventTool
     const specStatusWrite = yield* SpecStatusWriteTool
     const graphifyQuery = yield* GraphifyQueryTool
     const dagOrchestrator = yield* DagOrchestratorTool
+    const sourcesQuery = yield* SourcesQueryTool
+    const sourcesList = yield* SourcesListTool
+    const sourcesIngest = yield* SourcesIngestTool
+    const evolutionIncidentWrite = yield* EvolutionIncidentWriteTool
     const invalid = yield* InvalidTool
     const task = yield* TaskTool
     const read = yield* ReadTool
@@ -260,9 +270,14 @@ const layer = Layer.effect(
           baselineAuditWrite: Tool.init(baselineAuditWrite),
           baselineAuditRead: Tool.init(baselineAuditRead),
           patternRecurrenceRead: Tool.init(patternRecurrenceRead),
+          recordRotinaEvent: Tool.init(recordRotinaEvent),
           specStatusWrite: Tool.init(specStatusWrite),
           graphifyQuery: Tool.init(graphifyQuery),
           dagOrchestrator: Tool.init(dagOrchestrator),
+          sourcesQuery: Tool.init(sourcesQuery),
+          sourcesList: Tool.init(sourcesList),
+          sourcesIngest: Tool.init(sourcesIngest),
+          evolutionIncidentWrite: Tool.init(evolutionIncidentWrite),
           search: Tool.init(websearch),
           skill: Tool.init(skilltool),
           patch: Tool.init(patchtool),
@@ -298,9 +313,14 @@ const layer = Layer.effect(
             tool.baselineAuditWrite,
             tool.baselineAuditRead,
             tool.patternRecurrenceRead,
+            tool.recordRotinaEvent,
             tool.specStatusWrite,
             tool.graphifyQuery,
             tool.dagOrchestrator,
+            tool.sourcesQuery,
+            tool.sourcesList,
+            tool.sourcesIngest,
+            tool.evolutionIncidentWrite,
             tool.search,
             tool.skill,
             tool.patch,

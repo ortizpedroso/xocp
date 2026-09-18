@@ -1,11 +1,12 @@
 import { afterEach, describe, expect } from "bun:test"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { WorkflowReview } from "@opencode-ai/core/workflow-review"
-import { queryRecurringCategories, countCompletedTasks } from "@opencode-ai/core/evolution/pattern-events"
+import { queryRecurringCategories, routineProgress, countCompletedTasks } from "@opencode-ai/core/evolution/pattern-events"
 import { Effect } from "effect"
 import { ReviewChecklistWriteTool } from "../../src/tool/review-checklist-write"
 import { BaselineAuditWriteTool } from "../../src/tool/baseline-audit-write"
 import { PatternRecurrenceReadTool } from "../../src/tool/pattern-recurrence-read"
+import { RecordRotinaEventTool } from "../../src/tool/record-rotina-event"
 import { Truncate } from "@/tool/truncate"
 import { Agent } from "../../src/agent/agent"
 import { SessionID, MessageID } from "../../src/session/schema"
@@ -104,7 +105,28 @@ describe("pattern-events wiring (Tarefa 10)", () => {
       }),
   )
 
-  it.instance("pattern_recurrence_read separates erro recorrente from the rotina recorrente limitation", () =>
+  it.instance("record_rotina_event records an executor_rotina pattern event", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const tool = yield* (yield* RecordRotinaEventTool).init()
+
+      const result = yield* tool.execute(
+        { task_id: "brief-pe-rotina-01", rotina_id: "consulta-sources-db", ciclo: 2 },
+        ctx,
+      )
+
+      expect(result.output).toContain("consulta-sources-db")
+      expect(result.output).toContain("1 tarefa(s) distinta(s)")
+
+      const progress = yield* Effect.sync(() => routineProgress(test.directory, "consulta-sources-db"))
+      expect(progress).toEqual({ distinctTasks: 1, occurrences: 1 })
+      // Below threshold with one task — proves recording happened without
+      // asserting the (separately unit-tested) ≥5 threshold logic.
+      expect(queryRecurringCategories(test.directory)).toHaveLength(0)
+    }),
+  )
+
+  it.instance("pattern_recurrence_read renders both categories, empty state included", () =>
     Effect.gen(function* () {
       const test = yield* TestInstance
       const checklistTool = yield* (yield* ReviewChecklistWriteTool).init()
@@ -128,7 +150,7 @@ describe("pattern-events wiring (Tarefa 10)", () => {
       expect(result.output).toContain("Erro recorrente")
       expect(result.output).toContain("AC9")
       expect(result.output).toContain("Rotina recorrente")
-      expect(result.output).toContain("Sem dado suficiente")
+      expect(result.output).toContain("Nenhuma rotina atingiu")
     }),
   )
 })
