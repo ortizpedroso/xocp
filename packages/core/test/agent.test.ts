@@ -99,7 +99,7 @@ describe("AgentV2", () => {
     }),
   )
 
-  it.effect("does not ambiently opt built-in agents into bash", () =>
+  it.effect("mirrors the V1 agent matrix without ambient bash for read-only agents", () =>
     Effect.gen(function* () {
       const agent = yield* AgentV2.Service
       yield* AgentPlugin.Plugin.effect(
@@ -117,20 +117,36 @@ describe("AgentV2", () => {
       expect(agents.map((item) => String(item.id)).sort()).toEqual([
         "analista",
         "avaliador",
+        "backend-lead",
         "baseline-auditor",
         "build",
         "compaction",
+        "core-lead",
         "elicitador",
+        "evolution-incident-reporter",
         "explore",
+        "frontend-lead",
         "general",
         "graphify-explorer",
+        "integration-lead",
+        "pattern-auditor",
         "plan",
+        "research-operator",
         "summary",
         "title",
         "workflow-executor",
-        "workflow-triador",
       ])
+      // Mirrors the V1 runtime: bash is explicitly allowed only for the
+      // pipeline reviewer and the two exploration agents.
+      const bashAllowed = agents
+        .filter((item) =>
+          item.permissions.some((rule) => rule.action === "bash" && rule.effect === "allow"),
+        )
+        .map((item) => String(item.id))
+        .sort()
+      expect(bashAllowed).toEqual(["avaliador", "explore", "graphify-explorer"])
       for (const item of agents) {
+        if (bashAllowed.includes(String(item.id))) continue
         expect(item.permissions.some((rule) => rule.action === "bash" && rule.effect !== "deny")).toBe(false)
       }
     }),

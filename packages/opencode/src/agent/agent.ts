@@ -12,7 +12,6 @@ import { ProviderTransform } from "@/provider/transform"
 import PROMPT_GENERATE from "./generate.txt"
 import PROMPT_COMPACTION from "./prompt/compaction.txt"
 import PROMPT_ELICITADOR from "./prompt/elicitador.txt"
-import PROMPT_WORKFLOW_TRIADOR from "./prompt/workflow-triador.txt"
 import PROMPT_ANALISTA from "./prompt/analista.txt"
 import PROMPT_WORKFLOW_EXECUTOR from "./prompt/workflow-executor.txt"
 import PROMPT_AVALIADOR from "./prompt/avaliador.txt"
@@ -20,6 +19,8 @@ import PROMPT_EXPLORE from "./prompt/explore.txt"
 import PROMPT_GRAPHIFY_EXPLORER from "./prompt/graphify-explorer.txt"
 import PROMPT_BASELINE_AUDITOR from "./prompt/baseline-auditor.txt"
 import PROMPT_PATTERN_AUDITOR from "./prompt/pattern-auditor.txt"
+import PROMPT_RESEARCH_OPERATOR from "./prompt/research-operator.txt"
+import PROMPT_EVOLUTION_INCIDENT_REPORTER from "./prompt/evolution-incident-reporter.txt"
 import PROMPT_CORE_LEAD from "./prompt/core-lead.txt"
 import PROMPT_BACKEND_LEAD from "./prompt/backend-lead.txt"
 import PROMPT_FRONTEND_LEAD from "./prompt/frontend-lead.txt"
@@ -209,12 +210,13 @@ const layer = Layer.effect(
                   general: "deny",
                   explore: "allow",
                   "graphify-explorer": "allow",
-                  "workflow-executor": "allow",
+                  analista: "allow",
                 },
                 edit: {
                   "*": "deny",
                   [path.join(".opencode", "specs", "*.md")]: "allow",
                   "specs/*.md": "allow",
+                  [path.join(".opencode", "briefs", "*.yaml")]: "allow",
                 },
               }),
               user,
@@ -223,34 +225,6 @@ const layer = Layer.effect(
             native: true,
             pipeline: true,
             prompt: PROMPT_ELICITADOR,
-          },
-          "workflow-triador": {
-            name: "workflow-triador",
-            description:
-              "Classifica tarefas do pipeline XOCP como DIVIDIR ou FLUXO_NORMAL usando a régua S1–S4. Read-only.",
-            options: {},
-            permission: Permission.merge(
-              defaults,
-              Permission.fromConfig({
-                "*": "deny",
-                grep: "allow",
-                glob: "allow",
-                list: "allow",
-                bash: "allow",
-                webfetch: "allow",
-                websearch: "allow",
-                read: "allow",
-                external_directory: readonlyExternalDirectory,
-                task: {
-                  analista: "allow",
-                },
-              }),
-              user,
-            ),
-            mode: "primary",
-            native: true,
-            pipeline: true,
-            prompt: PROMPT_WORKFLOW_TRIADOR,
           },
           analista: {
             name: "analista",
@@ -439,6 +413,50 @@ const layer = Layer.effect(
             description:
               "Subagent dedicado a relatar recorrência de padrões (erro recorrente vs rotina recorrente) a partir de review_checklist, baseline-auditor e escalações de autoteste. Read-only, nunca edita código nem implementa a melhoria sozinho.",
             prompt: PROMPT_PATTERN_AUDITOR,
+            options: {},
+            mode: "subagent",
+            native: true,
+          },
+          "research-operator": {
+            name: "research-operator",
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                read: "allow",
+                webfetch: "allow",
+                websearch: "allow",
+                sources_ingest: "allow",
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            description:
+              "Ingere fontes externas de pesquisa (HTML, PDF, YouTube/transcripts, snippets) no repositório via sources_ingest. Read-only no código do projeto.",
+            prompt: PROMPT_RESEARCH_OPERATOR,
+            options: {},
+            mode: "subagent",
+            native: true,
+          },
+          "evolution-incident-reporter": {
+            name: "evolution-incident-reporter",
+            permission: Permission.merge(
+              defaults,
+              Permission.fromConfig({
+                "*": "deny",
+                grep: "allow",
+                glob: "allow",
+                read: "allow",
+                evolution_incident_write: "allow",
+                external_directory: readonlyExternalDirectory,
+              }),
+              user,
+            ),
+            description:
+              "Registra telemetria de escalações/incidentes do pipeline XOCP em .opencode/evolution/ via evolution_incident_write. Read-only no resto do projeto.",
+            prompt: PROMPT_EVOLUTION_INCIDENT_REPORTER,
             options: {},
             mode: "subagent",
             native: true,

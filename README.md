@@ -6,7 +6,7 @@ Autonomous, deterministic, multi-agent software engineering runtime built with *
 
 ## 🚀 Key Features
 
-- **Cognitive Pipeline Orchestration:** End-to-end task workflow through `Elicitador` -> `workflow-triador` -> `Analista` -> `Cluster Dispatcher` -> `Avaliador`.
+- **Cognitive Pipeline Orchestration:** End-to-end task workflow through `Elicitador` -> `Analista` -> `Cluster Dispatcher` -> `workflow-executor` -> `Avaliador`.
 - **DAG Cluster Dispatcher:** Simultaneous parallel execution of independent tasks (`depends_on: []`) in isolated worker contexts with zero cross-talk.
 - **Zero-Trust Dual-Lens Avaliador:** Independent blind evaluation of implementation proposals across **Lens 1 (Evidence - Deterministic Shell Checks)** and **Lens 2 (Impact - Scope & Graphify Boundary Enforcement)**.
 - **Local Knowledge Sources Engine:** Ingests HTML, PDF, YouTube transcripts, and code snippets into normalized Markdown with YAML frontmatter, indexed in SQLite FTS5 for intent-aligned query retrieval (`querySourcesByIntent`).

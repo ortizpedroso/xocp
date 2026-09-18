@@ -23,6 +23,7 @@ Guidelines:
 - Use Glob for broad file pattern matching
 - Use Grep for searching file contents with regex
 - Use Read when you know the specific file path you need to read
+- Use Bash for file operations like copying, moving, or listing directory contents
 - Adapt your search approach based on the thoroughness level specified by the caller
 - Return file paths as absolute paths in your final response
 - For clear communication, avoid using emojis
@@ -38,7 +39,7 @@ Your strengths:
 - Reporting source locations cited by the graph
 
 Guidelines:
-- Always use graphify_query for structural questions about how code connects
+- Always use \`graphify_query\` for structural questions about how code connects
 - Do not guess connections from filenames or grep alone when the graph can answer
 - If Graphify is disabled or unavailable, explain what the user must enable or install
 - If mapping is still running, ask the user to retry shortly
@@ -49,8 +50,8 @@ Guidelines:
 Complete the caller's structural question and report findings clearly from graph evidence.`
 
 import PROMPT_BASELINE_AUDITOR from "./baseline-auditor.txt"
+import PROMPT_PATTERN_AUDITOR from "./pattern-auditor.txt"
 import PROMPT_ELICITADOR from "./elicitador.txt"
-import PROMPT_WORKFLOW_TRIADOR from "./workflow-triador.txt"
 import PROMPT_ANALISTA from "./analista.txt"
 import PROMPT_WORKFLOW_EXECUTOR from "./workflow-executor.txt"
 import PROMPT_AVALIADOR from "./avaliador.txt"
@@ -58,6 +59,8 @@ import PROMPT_CORE_LEAD from "./core-lead.txt"
 import PROMPT_BACKEND_LEAD from "./backend-lead.txt"
 import PROMPT_FRONTEND_LEAD from "./frontend-lead.txt"
 import PROMPT_INTEGRATION_LEAD from "./integration-lead.txt"
+import PROMPT_RESEARCH_OPERATOR from "./research-operator.txt"
+import PROMPT_EVOLUTION_INCIDENT_REPORTER from "./evolution-incident-reporter.txt"
 
 const PROMPT_COMPACTION = `You are a context summarization agent. You are given a conversation between a user and an agent. Your goal is to produce a structured summary matching the format specified so another coding agent can continue the work.
 
@@ -74,7 +77,7 @@ Follow all rules in <rules>
 Use the <examples> so you know what a good title looks like.
 Your output must be:
 - A single line
-- <=50 characters
+- ≤50 characters
 - No explanations
 </task>
 
@@ -94,20 +97,20 @@ Your output must be:
 - DO NOT SAY YOU CANNOT GENERATE A TITLE OR COMPLAIN ABOUT THE INPUT
 - Always output something meaningful, even if the input is minimal.
 - If the user message is short or conversational (e.g. "hello", "lol", "what's up", "hey"):
-  -> create a title that reflects the user's tone or intent (such as Greeting, Quick check-in, Light chat, Intro message, etc.)
+  → create a title that reflects the user's tone or intent (such as Greeting, Quick check-in, Light chat, Intro message, etc.)
 </rules>
 
 <examples>
-"debug 500 errors in production" -> Debugging production 500 errors
-"refactor user service" -> Refactoring user service
-"why is app.js failing" -> app.js failure investigation
-"implement rate limiting" -> Rate limiting implementation
-"how do I connect postgres to my API" -> Postgres API connection
-"best practices for React hooks" -> React hooks best practices
-"@src/credential.ts can you add refresh token support" -> Credential refresh token support
-"@utils/parser.ts this is broken" -> Parser bug fix
-"look at @config.json" -> Config review
-"@App.tsx add dark mode toggle" -> Dark mode toggle in App
+"debug 500 errors in production" → Debugging production 500 errors
+"refactor user service" → Refactoring user service
+"why is app.js failing" → app.js failure investigation
+"implement rate limiting" → Rate limiting implementation
+"how do I connect postgres to my API" → Postgres API connection
+"best practices for React hooks" → React hooks best practices
+"@src/auth.ts can you add refresh token support" → Auth refresh token support
+"@utils/parser.ts this is broken" → Parser bug fix
+"look at @config.json" → Config review
+"@App.tsx add dark mode toggle" → Dark mode toggle in App
 </examples>`
 
 const PROMPT_SUMMARY = `Summarize what was done in this conversation. Write like a pull request description.
@@ -136,6 +139,7 @@ export const Plugin = define({
     ]
     const defaults: PermissionV2.Ruleset = [
       { action: "*", resource: "*", effect: "allow" },
+      { action: "doom_loop", resource: "*", effect: "ask" },
       ...readonlyExternalDirectory,
       { action: "question", resource: "*", effect: "deny" },
       { action: "plan_enter", resource: "*", effect: "deny" },
@@ -168,6 +172,7 @@ export const Plugin = define({
             { action: "question", resource: "*", effect: "allow" },
             { action: "plan_exit", resource: "*", effect: "allow" },
             { action: "graphify_query", resource: "*", effect: "deny" },
+            { action: "task", resource: "general", effect: "deny" },
             { action: "external_directory", resource: path.join(Global.Path.data, "plans", "*"), effect: "allow" },
             { action: "edit", resource: "*", effect: "deny" },
             { action: "edit", resource: path.join(".opencode", "plans", "*.md"), effect: "allow" },
@@ -193,33 +198,12 @@ export const Plugin = define({
             { action: "task", resource: "general", effect: "deny" },
             { action: "task", resource: "explore", effect: "allow" },
             { action: "task", resource: "graphify-explorer", effect: "allow" },
-            { action: "task", resource: "workflow-executor", effect: "allow" },
+            { action: "task", resource: "analista", effect: "allow" },
             { action: "edit", resource: "*", effect: "deny" },
             { action: "edit", resource: path.join(".opencode", "specs", "*.md"), effect: "allow" },
             { action: "edit", resource: "specs/*.md", effect: "allow" },
+            { action: "edit", resource: path.join(".opencode", "briefs", "*.yaml"), effect: "allow" },
           ]),
-        )
-      })
-
-      draft.update(AgentV2.ID.make("workflow-triador"), (item) => {
-        item.description =
-          "Classifica tarefas do pipeline XOCP como DIVIDIR ou FLUXO_NORMAL usando a régua S1–S4. Read-only."
-        item.system = PROMPT_WORKFLOW_TRIADOR
-        item.mode = "primary"
-        item.permissions.push(
-          ...PermissionV2.merge(
-            defaults,
-            [
-              { action: "*", resource: "*", effect: "deny" },
-              { action: "grep", resource: "*", effect: "allow" },
-              { action: "glob", resource: "*", effect: "allow" },
-              { action: "webfetch", resource: "*", effect: "allow" },
-              { action: "websearch", resource: "*", effect: "allow" },
-              { action: "read", resource: "*", effect: "allow" },
-              { action: "task", resource: "analista", effect: "allow" },
-            ],
-            readonlyExternalDirectory,
-          ),
         )
       })
 
@@ -234,6 +218,7 @@ export const Plugin = define({
             { action: "bash", resource: "*", effect: "deny" },
             { action: "task", resource: "general", effect: "deny" },
             { action: "task", resource: "explore", effect: "allow" },
+            { action: "task", resource: "workflow-executor", effect: "allow" },
             { action: "edit", resource: "*", effect: "deny" },
             { action: "edit", resource: path.join(".opencode", "briefs", "*.yaml"), effect: "allow" },
           ]),
@@ -270,6 +255,8 @@ export const Plugin = define({
               { action: "*", resource: "*", effect: "deny" },
               { action: "grep", resource: "*", effect: "allow" },
               { action: "glob", resource: "*", effect: "allow" },
+              { action: "list", resource: "*", effect: "allow" },
+              { action: "bash", resource: "*", effect: "allow" },
               { action: "webfetch", resource: "*", effect: "allow" },
               { action: "websearch", resource: "*", effect: "allow" },
               { action: "read", resource: "*", effect: "allow" },
@@ -280,6 +267,7 @@ export const Plugin = define({
               { action: "task", resource: "explore", effect: "allow" },
               { action: "task", resource: "workflow-executor", effect: "allow" },
               { action: "task", resource: "baseline-auditor", effect: "allow" },
+              { action: "task", resource: "pattern-auditor", effect: "allow" },
             ],
             readonlyExternalDirectory,
           ),
@@ -305,6 +293,8 @@ export const Plugin = define({
               { action: "*", resource: "*", effect: "deny" },
               { action: "grep", resource: "*", effect: "allow" },
               { action: "glob", resource: "*", effect: "allow" },
+              { action: "list", resource: "*", effect: "allow" },
+              { action: "bash", resource: "*", effect: "allow" },
               { action: "webfetch", resource: "*", effect: "allow" },
               { action: "websearch", resource: "*", effect: "allow" },
               { action: "read", resource: "*", effect: "allow" },
@@ -326,6 +316,8 @@ export const Plugin = define({
               { action: "*", resource: "*", effect: "deny" },
               { action: "grep", resource: "*", effect: "allow" },
               { action: "glob", resource: "*", effect: "allow" },
+              { action: "list", resource: "*", effect: "allow" },
+              { action: "bash", resource: "*", effect: "allow" },
               { action: "webfetch", resource: "*", effect: "allow" },
               { action: "websearch", resource: "*", effect: "allow" },
               { action: "read", resource: "*", effect: "allow" },
@@ -350,6 +342,68 @@ export const Plugin = define({
               { action: "glob", resource: "*", effect: "allow" },
               { action: "read", resource: "*", effect: "allow" },
               { action: "baseline_audit_write", resource: "*", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("pattern-auditor"), (item) => {
+        item.description =
+          "Subagent dedicado a relatar recorrência de padrões (erro recorrente vs rotina recorrente) a partir de review_checklist, baseline-auditor e escalações de autoteste. Read-only, nunca edita código nem implementa a melhoria sozinho."
+        item.system = PROMPT_PATTERN_AUDITOR
+        item.mode = "subagent"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+              { action: "pattern_recurrence_read", resource: "*", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("research-operator"), (item) => {
+        item.description =
+          "Ingere fontes externas de pesquisa (HTML, PDF, YouTube/transcripts, snippets) no repositório via sources_ingest. Read-only no código do projeto."
+        item.system = PROMPT_RESEARCH_OPERATOR
+        item.mode = "subagent"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+              { action: "webfetch", resource: "*", effect: "allow" },
+              { action: "websearch", resource: "*", effect: "allow" },
+              { action: "sources_ingest", resource: "*", effect: "allow" },
+            ],
+            readonlyExternalDirectory,
+          ),
+        )
+      })
+
+      draft.update(AgentV2.ID.make("evolution-incident-reporter"), (item) => {
+        item.description =
+          "Registra telemetria de escalações/incidentes do pipeline XOCP em .opencode/evolution/ via evolution_incident_write. Read-only no resto do projeto."
+        item.system = PROMPT_EVOLUTION_INCIDENT_REPORTER
+        item.mode = "subagent"
+        item.permissions.push(
+          ...PermissionV2.merge(
+            defaults,
+            [
+              { action: "*", resource: "*", effect: "deny" },
+              { action: "grep", resource: "*", effect: "allow" },
+              { action: "glob", resource: "*", effect: "allow" },
+              { action: "read", resource: "*", effect: "allow" },
+              { action: "evolution_incident_write", resource: "*", effect: "allow" },
             ],
             readonlyExternalDirectory,
           ),

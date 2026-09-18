@@ -29,7 +29,6 @@ const pipelineAgents = [
   { name: "build", mode: "primary", native: true },
   { name: "plan", mode: "primary", native: true },
   { name: "elicitador", mode: "primary", native: true, pipeline: true },
-  { name: "workflow-triador", mode: "primary", native: true, pipeline: true },
   { name: "analista", mode: "primary", native: true, pipeline: true },
   { name: "workflow-executor", mode: "primary", native: true, pipeline: true },
   { name: "avaliador", mode: "primary", native: true, pipeline: true },

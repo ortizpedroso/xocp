@@ -22,7 +22,6 @@ describe("@ mention agent filter", () => {
   test("excludes primary pipeline agents from @ suggestions", () => {
     const agents = [
       { name: "elicitador", mode: "primary", hidden: false },
-      { name: "workflow-triador", mode: "primary", hidden: false },
       { name: "explore", mode: "subagent", hidden: false },
       { name: "general", mode: "subagent", hidden: false },
     ]

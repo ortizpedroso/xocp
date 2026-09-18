@@ -1,12 +1,11 @@
 # XOCP Multi-Agent Directory & Execution Policy
 
-## 1. System Agent Directory (14 Cognitive Agents)
+## 1. System Agent Directory (13 Cognitive Agents)
 
 | Agent Name | Operational Domain | Primary Responsibility |
 |:---|:---|:---|
-| **Elicitador** | Pipeline Gateway | Requirements gathering, ambiguity resolution, user intent elicitation, source querying. |
-| **workflow-triador** | Pipeline Gateway | Semantic intent classification (`SPEC`, `BRIEF`, `DIVIDIR`), Graphify trigger evaluation. |
-| **Analista** | Specification Engine | System modeling, Technical Brief v2 generation, DAG dependency graph construction. |
+| **Elicitador** | Pipeline Gateway | Requirements elicitation, ambiguity resolution, source querying; sole Brief producer (draft, `produced_by: elicitador`) and entry agent (normal chat vs. new system vs. demanded task). |
+| **Analista** | Specification Engine | Reads/validates/divides Briefs already produced (`validated_by: analista`); confirms real `files_expected_touched` paths; dispatches validated Briefs. Never specifies from scratch. |
 | **Cluster Dispatcher** | Orchestration Lead | DAG execution engine, parallel context manager, worker context isolation. |
 | **core Lead** | Domain Cluster | Oversees runtime protocols, data contracts, schemas, and persistence primitives. |
 | **backend Lead** | Domain Cluster | Oversees server routes, API endpoints, microservices, and database connectors. |

@@ -5,7 +5,6 @@ import PROMPT_ANALISTA from "@/agent/prompt/analista.txt"
 import PROMPT_WORKFLOW_EXECUTOR from "@/agent/prompt/workflow-executor.txt"
 import PROMPT_AVALIADOR from "@/agent/prompt/avaliador.txt"
 import PROMPT_ELICITADOR from "@/agent/prompt/elicitador.txt"
-import PROMPT_WORKFLOW_TRIADOR from "@/agent/prompt/workflow-triador.txt"
 
 describe("User Question & Clarification Handling", () => {
   it("includes clear question handling guidelines in all pipeline agent prompts", () => {
@@ -14,7 +13,6 @@ describe("User Question & Clarification Handling", () => {
       { name: "workflow-executor", prompt: PROMPT_WORKFLOW_EXECUTOR },
       { name: "avaliador", prompt: PROMPT_AVALIADOR },
       { name: "elicitador", prompt: PROMPT_ELICITADOR },
-      { name: "workflow-triador", prompt: PROMPT_WORKFLOW_TRIADOR },
     ]
 
     for (const { name, prompt } of prompts) {

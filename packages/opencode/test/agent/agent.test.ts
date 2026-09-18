@@ -51,7 +51,6 @@ it.instance("returns default native agents when no config", () =>
     expect(names).toContain("build")
     expect(names).toContain("plan")
     expect(names).toContain("elicitador")
-    expect(names).toContain("workflow-triador")
     expect(names).toContain("analista")
     expect(names).toContain("workflow-executor")
     expect(names).toContain("avaliador")
@@ -128,21 +127,20 @@ it.instance("elicitador agent denies bash and allows explore subagent", () =>
   }),
 )
 
-it.instance("workflow-triador agent is primary read-only like explore", () =>
+it.instance("elicitador can author Brief drafts and delegate to analista via task", () =>
   Effect.gen(function* () {
-    const triador = yield* load((svc) => svc.get("workflow-triador"))
-    expect(triador).toBeDefined()
-    expect(triador?.mode).toBe("primary")
-    expect(triador?.native).toBe(true)
-    expect(triador?.prompt).toContain("DIVIDIR")
-    expect(evalPerm(triador, "edit")).toBe("deny")
-    expect(evalPerm(triador, "read")).toBe("allow")
+    const elicitador = yield* load((svc) => svc.get("elicitador"))
+    expect(elicitador).toBeDefined()
+    expect(Permission.evaluate("edit", ".opencode/briefs/brief-x-01.yaml", elicitador!.permission).action).toBe(
+      "allow",
+    )
+    expect(Permission.evaluate("task", "analista", elicitador!.permission).action).toBe("allow")
   }),
 )
 
 it.instance("XOCP pipeline agents are marked pipeline and OpenCode primaries are not", () =>
   Effect.gen(function* () {
-    const pipeline = ["elicitador", "workflow-triador", "analista", "workflow-executor", "avaliador"]
+    const pipeline = ["elicitador", "analista", "workflow-executor", "avaliador"]
     for (const name of pipeline) {
       const agent = yield* load((svc) => svc.get(name))
       expect(agent?.pipeline).toBe(true)
@@ -206,7 +204,7 @@ it.instance("avaliador agent allows review tools and workflow-executor delegatio
 )
 
 it.instance(
-  "Reviewer Blindness: self_test_tracker is never visible to avaliador, but is visible to workflow-executor",
+  "Reviewer Blindness: self_test_tracker and record_rotina_event are never visible to avaliador, but are visible to workflow-executor",
   () =>
     Effect.gen(function* () {
       const avaliador = yield* load((svc) => svc.get("avaliador"))
@@ -217,10 +215,13 @@ it.instance(
       // Mirrors the real tool-visibility filter in session/llm/request.ts (resolveTools):
       // a tool id is hidden from an agent iff its permission ruleset resolves to a
       // blanket "*"-pattern "deny" for that tool id.
-      const avaliadorDisabled = Permission.disabled(["self_test_tracker"], avaliador!.permission)
-      const executorDisabled = Permission.disabled(["self_test_tracker"], executor!.permission)
+      const hidden = ["self_test_tracker", "record_rotina_event"]
+      const avaliadorDisabled = Permission.disabled(hidden, avaliador!.permission)
+      const executorDisabled = Permission.disabled(hidden, executor!.permission)
       expect(avaliadorDisabled.has("self_test_tracker")).toBe(true)
+      expect(avaliadorDisabled.has("record_rotina_event")).toBe(true)
       expect(executorDisabled.has("self_test_tracker")).toBe(false)
+      expect(executorDisabled.has("record_rotina_event")).toBe(false)
     }),
 )
 
@@ -262,16 +263,6 @@ for (const lead of ["core-lead", "backend-lead", "frontend-lead", "integration-l
     }),
   )
 }
-
-it.instance("workflow-triador can auto-delegate DIVIDIR to analista via task", () =>
-  Effect.gen(function* () {
-    const triador = yield* load((svc) => svc.get("workflow-triador"))
-    expect(triador).toBeDefined()
-    expect(Permission.evaluate("task", "analista", triador!.permission).action).toBe("allow")
-    expect(triador?.prompt).toContain("delegue imediatamente via ferramenta `task`")
-    expect(triador?.prompt).toContain("subagent_type: \"analista\"")
-  }),
-)
 
 it.instance(
   "user permission can allow the general subagent from plan mode",
@@ -936,7 +927,6 @@ it.instance(
         build: { disable: true },
         plan: { disable: true },
         elicitador: { disable: true },
-        "workflow-triador": { disable: true },
         analista: { disable: true },
         "workflow-executor": { disable: true },
         avaliador: { disable: true },

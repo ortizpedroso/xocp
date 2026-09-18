@@ -25,7 +25,7 @@ type Hit = { body: Record<string, unknown> }
 
 const ANALISTA_RULE_MARKERS = [
   "CORTE O ESCOPO PRA UM DOMÍNIO SÓ",
-  "proponha dividir, não misturar num ciclo só",
+  "divida, não deixe num ciclo só",
 ]
 
 const MULTI_DOMAIN_TASK =
