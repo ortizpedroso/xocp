@@ -7,6 +7,7 @@ import { createHomeScrollController } from "./home/home-scroll-controller"
 import { createHomeSessionSearchController } from "./home/home-session-search-controller"
 import { createHomeSessionsController } from "./home/home-sessions-controller"
 import { HomeSessions } from "./home/home-sessions"
+import { PersistentSidebar } from "@/components/persistent-sidebar"
 
 export function NewHome() {
   const home = createHomeController()
@@ -15,12 +16,14 @@ export function NewHome() {
   const search = createHomeSessionSearchController(home, sessions)
   const scroll = createHomeScrollController(sessions.data.groups)
   return (
-    <div
-      class={`
-        m-2 min-h-0 flex-1 self-stretch overflow-hidden rounded-[10px]
-        bg-v2-background-bg-base shadow-[var(--v2-elevation-raised)]
-      `}
-    >
+    <div class="min-h-0 flex-1 self-stretch flex overflow-hidden">
+      <PersistentSidebar home={home} />
+      <div
+        class={`
+          m-2 min-h-0 flex-1 self-stretch overflow-hidden rounded-[10px]
+          bg-v2-background-bg-base shadow-[var(--v2-elevation-raised)]
+        `}
+      >
       <ScrollView
         class="h-full [container-type:size]"
         thumbContainer={scroll.viewport.thumbTrack}
@@ -46,6 +49,7 @@ export function NewHome() {
           />
         </div>
       </ScrollView>
+      </div>
     </div>
   )
 }
