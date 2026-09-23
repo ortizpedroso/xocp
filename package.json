@@ -27,7 +27,9 @@
     "sso": "aws sso login --sso-session=opencode --no-browser",
     "generate:xocp-docs": "bun ./script/generate-xocp-docs.ts",
     "check:xocp-docs": "bun ./script/generate-xocp-docs.ts --check",
-    "test": "echo 'do not run tests from root' && exit 1"
+    "test": "echo 'do not run tests from root' && exit 1",
+    "governance:check": "bun scripts/pre-commit-governance.ts",
+    "governance:cleanup": "sh scripts/cleanup-runtime-artifacts.sh"
   },
   "workspaces": {
     "packages": [

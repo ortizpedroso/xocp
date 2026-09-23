@@ -13,3 +13,5 @@ node_modules/
 # .opencode/reviews/
 # .opencode/evolution/
 # .opencode/governance-skips.log
+
+.opencode/governance-reports/

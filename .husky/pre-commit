@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# XOCP Meta-Governance — Pre-Commit Hook
+# Bloqueia mudanças internas do XOCP sem Brief de Governança.
+# Skip auditável: XOCP_SKIP_GOVERNANCE=1 (bloqueado em arquivos críticos).
+
+if command -v bun >/dev/null 2>&1; then
+  bun scripts/pre-commit-governance.ts
+else
+  echo "⚠️  bun não encontrado no PATH — pulando validação de governança." >&2
+  exit 0
+fi

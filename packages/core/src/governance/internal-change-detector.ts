@@ -50,7 +50,7 @@ async function calculateFileHash(filePath: string): Promise<string> {
 /**
  * Verifica se um arquivo é crítico (parte do XOCP)
  */
-function isCriticalFile(filePath: string): boolean {
+export function isCriticalFile(filePath: string): boolean {
   return CRITICAL_PATTERNS.some(pattern => 
     filePath.startsWith(pattern) || filePath.includes(pattern)
   );

@@ -3,9 +3,30 @@
  * Valida se mudanças internas do XOCP possuem artefatos de governança obrigatórios
  */
 
-import { existsSync, readdirSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
 import type { FileChange } from './internal-change-detector.js';
+
+/**
+ * Extrai a lista de arquivos cobertos por um brief de governança.
+ * Convenção: seção "## Arquivos Afetados" com itens de lista `- caminho`.
+ */
+export function extractCoveredFiles(briefContent: string): string[] {
+  const covered: string[] = [];
+  let inSection = false;
+  for (const line of briefContent.split('\n')) {
+    if (/^#{1,3}\s*arquivos\s+afetados/i.test(line.trim())) {
+      inSection = true;
+      continue;
+    }
+    if (inSection) {
+      if (/^#{1,3}\s/.test(line.trim())) break; // próxima seção
+      const match = line.trim().match(/^[-*]\s*`?([^`\s]+)`?/);
+      if (match && match[1]) covered.push(match[1]);
+    }
+  }
+  return covered;
+}
 
 export interface ValidationResult {
   valid: boolean;
@@ -46,15 +67,21 @@ function findRecentArtifacts(artifactType: 'brief' | 'review' | 'evolution'): Go
       if (!file.endsWith('.md')) continue;
 
       const filePath = join(dirPath, file);
-      const stats = require('fs').statSync(filePath);
+      const stats = statSync(filePath);
       const age = now - stats.mtimeMs;
 
       if (age <= twentyFourHours) {
+        let coversFiles: string[] = [];
+        try {
+          coversFiles = extractCoveredFiles(readFileSync(filePath, 'utf-8'));
+        } catch {
+          // arquivo ilegível — segue sem cobertura declarada
+        }
         artifacts.push({
           type: artifactType,
           path: filePath,
           timestamp: new Date(stats.mtime),
-          coversFiles: [], // Seria preenchido ao parsear o arquivo
+          coversFiles,
         });
       }
     }

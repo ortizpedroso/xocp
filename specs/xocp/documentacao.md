@@ -34,7 +34,7 @@ já em funcionamento, incluindo a **Arquitetura de Contratos Aninhados**:
 | 6 | Avaliador Dual-Lens | Análise independente em duas lentes (Evidência + Impacto) com 3 Travas cognitivas | **Ativo** |
 | 7 | State Snapshot | Persistência de estado para continuidade entre ciclos e escalações | **Ativo** |
 | 8 | Classificação L1/L2/L3 | Intervenção humana escalonada por severidade objetiva | **Ativo** |
-| 9 | Meta-Governança | Auto-compliance: XOCP segue suas próprias regras de mudança | **Pendente** |
+| 9 | Meta-Governança | Auto-compliance: XOCP segue suas próprias regras de mudança | **Ativo** |
 | 10 | Auditabilidade Seletiva | Artefatos de governança versionados, runtime regenerável gitignored | **Parcial** |
 
 ---
@@ -277,6 +277,10 @@ Detalhes: `specs/xocp/workflow.md` e `README.md`.
 - `scripts/pre-commit-governance.ts` — hook de pre-commit com bloqueio de mudanças internas sem Brief
 - Skip auditável via `XOCP_SKIP_GOVERNANCE=1` com registro persistente em `.opencode/governance-skips.log`; skip é **bloqueado** em arquivos críticos (`packages/core/`, `packages/opencode/`, `AGENTS.md`, `specs/xocp/`)
 - `scripts/cleanup-runtime-artifacts.sh` — limpeza apenas de artefatos de runtime
+- **Hook ATIVADO**: `.husky/pre-commit` executa `bun scripts/pre-commit-governance.ts` em todo commit (fallback seguro se bun ausente do PATH)
+- Scripts npm utilitários: `bun run governance:check` e `bun run governance:cleanup`
+- Cobertura de briefs validada por parse real da seção "Arquivos Afetados" (`extractCoveredFiles`)
+- Brief de ativação versionado para auditoria: `.opencode/briefs/2026-09-24-fase-c-ativacao-governanca.md`
 
 ## Consistência V1/V2 (Fase B)
 - Prompts canônicos vivem em `packages/opencode/src/agent/prompt/*.txt` (V1) e são espelhados em `packages/core/src/plugin/*.txt` (V2)
