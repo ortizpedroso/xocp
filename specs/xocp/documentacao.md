@@ -270,11 +270,18 @@ Detalhes: `specs/xocp/workflow.md` e `README.md`.
 - `.opencode/execution-log/` — Logs de execução
 - `.opencode/dag.db*` — Banco de dados do grafo
 
-### Meta-Governança (Pendente)
-- Internal Change Detector
-- Governance Validator
-- Pre-commit hooks com bloqueio de críticos
-- Skip auditável com registro persistente
+### Meta-Governança (Implementado — Fase C)
+- `packages/core/src/governance/internal-change-detector.ts` — detecta mudanças em arquivos internos do XOCP
+- `packages/core/src/governance/governance-validator.ts` — valida artefatos obrigatórios (Brief de governança)
+- `packages/core/src/governance/governance-reporter.ts` — gera relatório de compliance
+- `scripts/pre-commit-governance.ts` — hook de pre-commit com bloqueio de mudanças internas sem Brief
+- Skip auditável via `XOCP_SKIP_GOVERNANCE=1` com registro persistente em `.opencode/governance-skips.log`; skip é **bloqueado** em arquivos críticos (`packages/core/`, `packages/opencode/`, `AGENTS.md`, `specs/xocp/`)
+- `scripts/cleanup-runtime-artifacts.sh` — limpeza apenas de artefatos de runtime
+
+## Consistência V1/V2 (Fase B)
+- Prompts canônicos vivem em `packages/opencode/src/agent/prompt/*.txt` (V1) e são espelhados em `packages/core/src/plugin/*.txt` (V2)
+- Paridade garantida por hash MD5 idêntico nos 11 prompts ativos
+- Teste automático: `test/prompts-mirror.test.ts` (valida hash arquivo a arquivo e contagem V1 == V2)
 
 ---
 

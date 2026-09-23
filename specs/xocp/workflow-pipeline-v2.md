@@ -1,6 +1,6 @@
 # XOCP — Workflow-Pipeline v2: agentes nativos + trilha de auditoria verificável
 
-**Status: Fase 0 — design formalizado, aguardando implementação (Fases 1a–3).**
+**Status: Implementado (Fases 0–3 concluídas). Ferramentas da Fase 1a ativas em `packages/opencode/src/tool/` (`task-approval-check.ts`, `cycle-tracker.ts`, `execution-summary-write.ts` e correlatas), validadas por testes de transcript determinísticos.**
 
 Substitui a confiança em prosa do v1 (`specs/xocp/workflow-pipeline.md`) por
 mecanismo de código, na mesma migração que o Elicitador já recebeu (papel via

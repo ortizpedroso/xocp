@@ -27,7 +27,7 @@ describe('Prompts Mirror Test', () => {
       const v1Hash = md5Hash(v1Content);
       const v2Hash = md5Hash(v2Content);
       
-      expect(v1Hash).toBe(v2Hash), `Hash MD5 divergente para ${file}: V1=${v1Hash}, V2=${v2Hash}`;
+      expect(v1Hash).toBe(v2Hash); // Hash MD5 divergente para ${file}: V1=${v1Hash}, V2=${v2Hash}
     }
   });
 

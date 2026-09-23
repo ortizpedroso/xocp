@@ -70,7 +70,28 @@ sequenciais.
 Pipeline valida cada ramo isolado. Após todos APROVADOS: smoke test
 manual ou brief de integração separado.
 
-## Limitação v1
+## Atualização v2 (2026-09) — estado vigente do sistema
 
-Não automatizado em código — uso manual via `task`. Validar com tarefas
-reais do XOCP antes de implementar orquestrador.
+A limitação v1 foi superada: o pipeline agora é validado por mecanismos
+de código (Fase 1a implementada). Papéis e ferramentas vigentes:
+
+| Papel | Agente / Tool | Observação |
+|-------|---------------|------------|
+| Triador | `workflow-triador` | prompt em `packages/opencode/src/agent/prompt/workflow-triador.txt` |
+| Analista | `analista` | emite Brief a partir dos templates multi-camada (`specs/xocp/templates/brief-*-template.md`) |
+| Executor | `workflow-executor` + tools `task_approval_check`, `execution_summary_write`, `cycle_tracker` | resumo usa `specs/xocp/templates/executor-*-template.md`; `criteria.id` espelhado em `criteria_met.id` |
+| Avaliador | `avaliador` | **3 Travas + Dual-Lens** (Evidência → Impacto → Confronto com resumo); nunca lê o resumo antes de formar opinião independente |
+| Auditoria | `baseline-auditor`, `elicitador` | trilha verificável em `.opencode/briefs/` e `.opencode/reviews/` (versionados) |
+
+Classificação de escalação humana: L1_LOCAL_ADJUST / L2_REPLANNING /
+L3_REDIRECTION (`packages/core/src/escalation/classification.ts`).
+Continuidade de contexto via State Snapshot
+(`packages/core/src/state/snapshot.ts`).
+
+Paridade de prompts V1↔V2 garantida por `test/prompts-mirror.test.ts`.
+Mudanças em arquivos internos do XOCP exigem Brief de governança
+(`scripts/pre-commit-governance.ts`; skip auditável apenas fora de
+arquivos críticos).
+
+Fonte completa: `specs/xocp/workflow-pipeline-v2.md` e
+`specs/xocp/documentacao.md`.
