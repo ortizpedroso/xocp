@@ -3,3 +3,44 @@ node_modules/
 dist/
 build/
 *.log
+
+# ==========================================
+# XOCP Runtime (NÃO VERSIONADO)
+# ==========================================
+.opencode/state/
+.opencode/execution-log/
+.opencode/dag.db*
+.opencode/dag.db-journal
+.opencode/*.tmp
+.opencode/governance-reports/
+
+# ==========================================
+# XOCP Governança (VERSIONADO - NÃO REMOVER)
+# ==========================================
+# .opencode/briefs/          ← VERSIONADO
+# .opencode/reviews/         ← VERSIONADO
+# .opencode/evolution/       ← VERSIONADO
+# .opencode/governance-skips.log ← VERSIONADO
+
+# ==========================================
+# Desenvolvimento
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Testes e Coverage
+# ==========================================
+coverage/
+.nyc_output/
+
+# ==========================================
+# Ambiente
+# ==========================================
+.env
+.env.local
+.env.*.local
