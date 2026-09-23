@@ -878,6 +878,11 @@ export const dict = {
   "sidebar.project.recentSessions": "เซสชันล่าสุด",
   "sidebar.project.viewAllSessions": "ดูเซสชันทั้งหมด",
   "sidebar.project.clearNotifications": "ล้างการแจ้งเตือน",
+  "sidebar.projects.title": "Projetos e conversas",
+  "sidebar.projects.empty": "Nenhum projeto ainda. Inicie um novo chat ou abra um projeto.",
+  "sidebar.project.noSessions": "Nenhuma sess00e3o neste projeto",
+  "sidebar.chat.new": "Novo chat",
+  "sidebar.chats.withoutProject": "Chats sem projeto",
   "sidebar.empty.title": "ไม่มีโปรเจกต์ที่เปิดอยู่",
   "sidebar.empty.description": "เปิดโปรเจกต์เพื่อเริ่มต้น",
 

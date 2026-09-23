@@ -966,6 +966,11 @@ export const dict = {
   "sidebar.project.recentSessions": "Нещодавні сесії",
   "sidebar.project.viewAllSessions": "Переглянути всі сесії",
   "sidebar.project.clearNotifications": "Очистити сповіщення",
+  "sidebar.projects.title": "Projetos e conversas",
+  "sidebar.projects.empty": "Nenhum projeto ainda. Inicie um novo chat ou abra um projeto.",
+  "sidebar.project.noSessions": "Nenhuma sess00e3o neste projeto",
+  "sidebar.chat.new": "Novo chat",
+  "sidebar.chats.withoutProject": "Chats sem projeto",
   "sidebar.empty.title": "Немає відкритих проєктів",
   "sidebar.empty.description": "Відкрийте проєкт, щоб почати",
 

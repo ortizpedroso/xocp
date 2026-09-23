@@ -906,6 +906,11 @@ export const dict = {
   "sidebar.project.recentSessions": "Son oturumlar",
   "sidebar.project.viewAllSessions": "Tüm oturumları görüntüle",
   "sidebar.project.clearNotifications": "Bildirimleri temizle",
+  "sidebar.projects.title": "Projetos e conversas",
+  "sidebar.projects.empty": "Nenhum projeto ainda. Inicie um novo chat ou abra um projeto.",
+  "sidebar.project.noSessions": "Nenhuma sess00e3o neste projeto",
+  "sidebar.chat.new": "Novo chat",
+  "sidebar.chats.withoutProject": "Chats sem projeto",
   "sidebar.empty.title": "Açık proje yok",
   "sidebar.empty.description": "Başlamak için bir proje açın",
 

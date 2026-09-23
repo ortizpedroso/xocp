@@ -1,1 +1,15 @@
-(empty)
+# Dependencies
+node_modules/
+
+# Build Artifacts / Compiled Files
+*.tsbuildinfo
+# XOCP Runtime (regenerável — não versionar)
+.opencode/state/
+.opencode/execution-log/
+.opencode/dag.db*
+
+# XOCP Governança (AUDITABILIDADE — versionado intencionalmente)
+# .opencode/briefs/
+# .opencode/reviews/
+# .opencode/evolution/
+# .opencode/governance-skips.log

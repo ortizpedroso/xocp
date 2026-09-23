@@ -891,6 +891,11 @@ export const dict = {
   "sidebar.project.recentSessions": "Nedavne sesije",
   "sidebar.project.viewAllSessions": "Prikaži sve sesije",
   "sidebar.project.clearNotifications": "Očisti obavijesti",
+  "sidebar.projects.title": "Projetos e conversas",
+  "sidebar.projects.empty": "Nenhum projeto ainda. Inicie um novo chat ou abra um projeto.",
+  "sidebar.project.noSessions": "Nenhuma sess00e3o neste projeto",
+  "sidebar.chat.new": "Novo chat",
+  "sidebar.chats.withoutProject": "Chats sem projeto",
   "sidebar.empty.title": "Nema otvorenih projekata",
   "sidebar.empty.description": "Otvori projekat za početak",
 

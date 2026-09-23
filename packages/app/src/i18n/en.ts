@@ -873,6 +873,11 @@ export const dict = {
   "sidebar.project.clearNotifications": "Clear notifications",
   "sidebar.empty.title": "No projects open",
   "sidebar.empty.description": "Open a project to get started",
+  "sidebar.projects.title": "Projects and chats",
+  "sidebar.projects.empty": "No projects yet. Start a new chat or open a project.",
+  "sidebar.project.noSessions": "No sessions in this project",
+  "sidebar.chat.new": "New chat",
+  "sidebar.chats.withoutProject": "Chats without project",
 
   "debugBar.ariaLabel": "Development performance diagnostics",
   "debugBar.na": "n/a",

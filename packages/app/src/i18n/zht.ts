@@ -881,6 +881,11 @@ export const dict = {
   "sidebar.project.recentSessions": "最近工作階段",
   "sidebar.project.viewAllSessions": "查看全部工作階段",
   "sidebar.project.clearNotifications": "清除通知",
+  "sidebar.projects.title": "Projetos e conversas",
+  "sidebar.projects.empty": "Nenhum projeto ainda. Inicie um novo chat ou abra um projeto.",
+  "sidebar.project.noSessions": "Nenhuma sess00e3o neste projeto",
+  "sidebar.chat.new": "Novo chat",
+  "sidebar.chats.withoutProject": "Chats sem projeto",
   "sidebar.empty.title": "未開啟任何專案",
   "sidebar.empty.description": "開啟專案以開始使用",
 

@@ -9,7 +9,6 @@ import { Persist, persisted } from "@/utils/persist"
 import { pathKey } from "@/utils/path-key"
 import { displayName, toggleHomeProjectSelection } from "@/pages/layout/helpers"
 import {
-  groupSessionsByProject,
   type HomeSessionRecord,
 } from "@/pages/home/home-sessions-controller"
 import type { HomeController } from "@/pages/home/home-controller"
@@ -39,53 +38,45 @@ export function PersistentSidebar(props: { home: HomeController }) {
   const isCollapsed = (key: string) => state.collapsed[key] ?? false
   const toggleCollapsed = (key: string) => setState("collapsed", key, !isCollapsed(key))
 
-  // All sessions of the focused server (no HOME_SESSION_LIMIT cap here so the
-  // sidebar can list every session grouped by its project).
+  // All sessions across every known project (deduplicated by session id),
+  // sorted most-recently-updated first. No HOME_SESSION_LIMIT cap here so the
+  // sidebar can list every session grouped by its project.
   const allRecords = createMemo<HomeSessionRecord[]>(() => {
-    const ctx = home.server.focusedContext()
-    if (!ctx) return []
-    const seen = new Set<string>()
-    const sessions = home.project.list().flatMap((project) => {
-      const directories = [project.worktree, ...(project.sandboxes ?? [])].map(pathKey)
-      const store = ctx.sync.child(project.worktree, { bootstrap: false })[0]
-      return (store.session ?? []).filter(
-        (session: Session) =>
-          directories.includes(pathKey(session.directory)) &&
-          !session.parentID &&
-          !session.time?.archived &&
-          !seen.has(session.id) &&
-          seen.add(session.id) !== undefined,
-      )
-    })
-    return [...sessions]
-      .sort((a, b) => (b.time.updated ?? b.time.created) - (a.time.updated ?? a.time.created))
-      .map((session) => ({
-        session,
-        project:
-          home.project
-            .list()
-            .find(
-              (item) =>
-                pathKey(item.worktree) === pathKey(session.directory) ||
-                item.sandboxes?.some((sandbox) => pathKey(sandbox) === pathKey(session.directory)),
-            ) ?? home.project.list()[0]!,
-        projectName: "",
-      }))
-      .filter((record) => !!record.project)
-      .map((record) => ({ ...record, projectName: displayName(record.project) }))
+    const projects = home.project.list()
+    const byId = new Map<string, HomeSessionRecord>()
+    for (const project of projects) {
+      const directories = new Set([project.worktree, ...(project.sandboxes ?? [])].map(pathKey))
+      const store = home.server.focusedSync().child(project.worktree, { bootstrap: false })[0]
+      for (const session of store.session ?? []) {
+        if (session.parentID) continue
+        if ((session as { time?: { archived?: number | boolean } }).time?.archived) continue
+        if (!directories.has(pathKey(session.directory))) continue
+        if (byId.has(session.id)) continue
+        byId.set(session.id, { session, project, projectName: displayName(project) })
+      }
+    }
+    return [...byId.values()].sort(
+      (a, b) =>
+        (b.session.time.updated ?? b.session.time.created) - (a.session.time.updated ?? a.session.time.created),
+    )
   })
 
   const recordsForProject = (worktree: string) =>
     allRecords().filter((record) => pathKey(record.project.worktree) === pathKey(worktree))
 
-  const orphanGroups = createMemo(() => {
-    const knownDirectories = new Set(home.project.list().flatMap((project) => [project.worktree, ...(project.sandboxes ?? [])]))
-    const orphans = allRecords().filter((record) => !knownDirectories.has(record.session.directory))
-    return groupSessionsByProject(orphans)
+  // Chats that do not belong to any currently-open project.
+  const orphanRecords = createMemo<HomeSessionRecord[]>(() => {
+    const known = new Set<string>()
+    for (const project of home.project.list()) {
+      known.add(pathKey(project.worktree))
+      for (const sandbox of project.sandboxes ?? []) known.add(pathKey(sandbox))
+    }
+    return allRecords().filter((record) => !known.has(pathKey(record.session.directory)))
   })
 
+
   function openSession(session: Session) {
-    const conn = focusedConn()
+    const conn = focusedConn() ?? home.server.list().find((item) => ServerConnection.key(item) === home.selection.value().server)
     if (!conn) return
     const server = ServerConnection.key(conn)
     startTransition(() => {
@@ -104,13 +95,21 @@ export function PersistentSidebar(props: { home: HomeController }) {
   }
 
   function newChat() {
-    const project = home.project.newSession()
     const conn = focusedConn()
-    if (project && conn) {
+    const project = home.project.newSession()
+    if (conn && project) {
       home.project.openProjectNewSession(conn, project.worktree)
       return
     }
-    navigate("/new-session")
+    if (conn) {
+      home.project.openProjectNewSession(conn, selectionDirectoryFallback())
+      return
+    }
+    navigate("/")
+  }
+
+  function selectionDirectoryFallback() {
+    return home.selection.value().directory ?? ""
   }
 
   // Keep the selected project expanded automatically when navigating to it.
@@ -136,7 +135,7 @@ export function PersistentSidebar(props: { home: HomeController }) {
           class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors hover:bg-surface-raised-base-hover active:bg-surface-raised-base-active text-text-strong text-14-medium"
         >
           <span class="text-icon-large-plus w-4 h-4 shrink-0" aria-hidden />
-          <span>{language.t("command.session.new")}</span>
+          <span>{language.t("sidebar.chat.new")}</span>
         </button>
       </div>
 
@@ -203,7 +202,7 @@ export function PersistentSidebar(props: { home: HomeController }) {
                           </div>
                         }
                       >
-                        <For each={sessions()}>{(record) => <SessionRow record={record} onOpen={openSession} active={isOpen(record)} />}</For>
+                        <For each={sessions()}>{(record) => <SessionRow record={record} onOpen={openSession} active={() => isOpen(record)} />}</For>
                       </Show>
                       <button
                         type="button"
@@ -215,7 +214,7 @@ export function PersistentSidebar(props: { home: HomeController }) {
                         class="w-full flex items-center gap-2 px-2 py-1 rounded-md text-left text-12-regular text-text-weak hover:text-text-base hover:bg-surface-raised-base-hover"
                       >
                         <span aria-hidden>+</span>
-                        <span>{language.t("command.session.new")}</span>
+                        <span>{language.t("sidebar.chat.new")}</span>
                       </button>
                     </div>
                   </Show>
@@ -224,41 +223,45 @@ export function PersistentSidebar(props: { home: HomeController }) {
             }}
           </For>
 
-          <Show when={orphans().length > 0}>
+          <Show when={orphanRecords().length > 0}>
             <div class="mt-2 pt-2 border-t border-border-weak-base flex flex-col gap-1">
-              <For each={orphans()}>
-                {(group) => (
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => toggleCollapsed(group.id)}
-                      class="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left hover:bg-surface-raised-base-hover"
-                    >
-                      <span
-                        class="shrink-0 text-icon-base transition-transform duration-150"
-                        classList={{ "rotate-90": !isCollapsed(group.id) }}
-                        aria-hidden
-                      >
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path
-                            d="M4 2.5L8 6L4 9.5"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                      </span>
-                      <span class="truncate text-13-medium text-text-base">{group.title}</span>
-                    </button>
-                    <Show when={!isCollapsed(group.id)}>
-                      <div class="pl-3 pr-1 pb-1 flex flex-col gap-0.5">
-                        <For each={group.sessions}>{(record) => <SessionRow record={record} onOpen={openSession} active={isOpen(record)} />}</For>
-                      </div>
-                    </Show>
-                  </div>
-                )}
-              </For>
+              <button
+                type="button"
+                data-action="sidebar-orphans-toggle"
+                onClick={() => toggleCollapsed("chats-without-project")}
+                class="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left hover:bg-surface-raised-base-hover"
+              >
+                <span
+                  class="shrink-0 text-icon-base transition-transform duration-150"
+                  classList={{ "rotate-90": !isCollapsed("chats-without-project") }}
+                  aria-hidden
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path
+                      d="M4 2.5L8 6L4 9.5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span class="truncate text-13-medium text-text-base">
+                  {language.t("sidebar.chats.withoutProject")}
+                </span>
+                <span class="ml-auto shrink-0 text-11-regular text-text-weak tabular-nums">
+                  {orphanRecords().length}
+                </span>
+              </button>
+              <Show when={!isCollapsed("chats-without-project")}>
+                <div class="pl-3 pr-1 pb-1 flex flex-col gap-0.5">
+                  <For each={orphanRecords()}>
+                    {(record) => (
+                      <SessionRow record={record} onOpen={openSession} active={() => isOpen(record)} />
+                    )}
+                  </For>
+                </div>
+              </Show>
             </div>
           </Show>
         </Show>

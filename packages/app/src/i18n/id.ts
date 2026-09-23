@@ -953,6 +953,11 @@ export const dict = {
   "sidebar.project.recentSessions": "Sesi terbaru",
   "sidebar.project.viewAllSessions": "Lihat semua sesi",
   "sidebar.project.clearNotifications": "Hapus notifikasi",
+  "sidebar.projects.title": "Projetos e conversas",
+  "sidebar.projects.empty": "Nenhum projeto ainda. Inicie um novo chat ou abra um projeto.",
+  "sidebar.project.noSessions": "Nenhuma sess00e3o neste projeto",
+  "sidebar.chat.new": "Novo chat",
+  "sidebar.chats.withoutProject": "Chats sem projeto",
   "sidebar.empty.title": "Tidak ada proyek terbuka",
   "sidebar.empty.description": "Buka proyek untuk memulai",
 

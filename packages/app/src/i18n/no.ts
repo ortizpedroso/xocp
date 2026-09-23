@@ -1242,6 +1242,11 @@ export const dict = {
   "session.new.workspace.existing": "Arbeidsområde…",
   "session.new.git.none": "Ingen Git",
 
+  "sidebar.projects.title": "Projetos e conversas",
+  "sidebar.projects.empty": "Nenhum projeto ainda. Inicie um novo chat ou abra um projeto.",
+  "sidebar.project.noSessions": "Nenhuma sess00e3o neste projeto",
+  "sidebar.chat.new": "Novo chat",
+  "sidebar.chats.withoutProject": "Chats sem projeto",
   "sidebar.empty.title": "Ingen åpne prosjekter",
   "sidebar.empty.description": "Åpne et prosjekt for å komme i gang",
 
