@@ -1,0 +1,18 @@
+{
+  "name": "XOCP",
+  "install": "command -v bun >/dev/null 2>&1 || curl -fsSL https://bun.sh/install | bash; export PATH=\"$HOME/.bun/bin:$PATH\" && bun install",
+  "terminals": [
+    {
+      "name": "API Server",
+      "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && bun dev serve --port 4096 --hostname 0.0.0.0"
+    },
+    {
+      "name": "Web UI (HMR)",
+      "command": "export PATH=\"$HOME/.bun/bin:$PATH\" && sleep 2 && bun run --cwd packages/app dev -- --port 4444 --host 0.0.0.0"
+    }
+  ],
+  "ports": [
+    { "name": "API", "port": 4096 },
+    { "name": "Web UI", "port": 4444 }
+  ]
+}

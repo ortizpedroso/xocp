@@ -1,0 +1,3 @@
+Increments the durable cycle counter for a workflow task.
+
+Call at the start of each executor attempt. Refuses automatically after 3 cycles.

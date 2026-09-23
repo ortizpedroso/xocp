@@ -1,0 +1,1 @@
+export const GRAPHIFY_PINNED_VERSION = "0.9.52"

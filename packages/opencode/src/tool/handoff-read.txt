@@ -1,0 +1,3 @@
+Read the latest durable handoff summary for this project, if one exists.
+
+Use this when you need continuity from a previous session in the same project directory. If the summary is not enough, use normal tools such as `read`, `grep`, or `git log`.

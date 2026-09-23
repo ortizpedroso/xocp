@@ -1,0 +1,78 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "id": "src_a",
+      "label": "a.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "a.ts",
+      "file_type": "code",
+      "norm_label": "a.ts",
+      "source_file": "src/a.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_a_a",
+      "label": "a",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "a.ts",
+      "file_type": "code",
+      "norm_label": "a",
+      "source_file": "src/a.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_b",
+      "label": "b.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "a.ts",
+      "file_type": "code",
+      "norm_label": "b.ts",
+      "source_file": "src/b.ts",
+      "source_location": "L1"
+    }
+  ],
+  "links": [
+    {
+      "source": "src_b",
+      "target": "src_a_a",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/b.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_b",
+      "target": "src_a",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/b.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_a",
+      "target": "src_a_a",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/a.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": []
+}

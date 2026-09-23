@@ -1,0 +1,7 @@
+Writes the baseline-auditor's checklist result for the current workflow cycle, checking the system against the 11 fixed rules in specs/xocp/baseline-global.md (G-SEC-1..6, G-UX-1..5).
+
+Each item's `id` must be one of the 11 rule IDs, or `not_applicable` when a rule genuinely does not apply (e.g. a G-UX-* rule on a pure API with no visual interface) — never omit a rule silently.
+
+`evidence` must be a grep/file:line reference for mechanical checks, or a short concrete reasoning for judgment checks — never a vague "looks fine".
+
+`overall` must be "fail" if any item has status "fail". The tool rejects `overall: "pass"` when at least one item failed.
