@@ -1,0 +1,61 @@
+name: xocp-governance-ci
+
+# P1 (auditoria 2026-09-24): governança server-side obrigatória.
+# Hooks locais são bypassáveis (--no-verify); este workflow é a linha de defesa real.
+# Combinar com branch protection na main exigindo o check "governance".
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: xocp-governance-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance:
+    name: governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-bun
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Governance tests (skip auditável + validator)
+        run: bun test ./test/governance/skip-audit.test.ts
+
+      - name: Prompts mirror test (V1 ≡ V2)
+        run: bun test ./test/prompts-mirror.test.ts
+
+      - name: Pipeline integration test (E2E)
+        run: bun test ./test/e2e/pipeline-integration.test.ts
+
+      - name: Integrity of governance-skips.log (JSONL)
+        run: |
+          if [ -f .opencode/governance-skips.log ]; then
+            bun -e '
+              import { validateSkipsLog } from "./packages/core/src/governance/governance-reporter.ts";
+              const r = validateSkipsLog();
+              if (!r.valid) {
+                console.error("❌ governance-skips.log corrompido ou editado manualmente:");
+                r.errors.forEach(e => console.error("  - " + e));
+                process.exit(1);
+              }
+              console.log("✅ governance-skips.log íntegro (" + r.total + " registros)");
+            '
+          else
+            echo "✅ Sem skips registrados."
+          fi
+
+      - name: Detect internal XOCP changes without governance brief
+        run: |
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          bun scripts/ci-governance-check.ts "$BASE"

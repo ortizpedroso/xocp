@@ -3,7 +3,7 @@
  * Gera relatórios de compliance e auditoria de mudanças
  */
 
-import { appendFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { appendFileSync, writeFileSync, existsSync, mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import type { FileChange, GovernanceTrigger } from './internal-change-detector.js';
 import type { ValidationResult } from './governance-validator.js';
@@ -170,7 +170,7 @@ export function loadSkipHistory(): Array<{
   }
 
   try {
-    const content = require('fs').readFileSync(SKIPS_LOG, 'utf-8');
+    const content = readFileSync(SKIPS_LOG, 'utf-8');
     return content
       .split('\n')
       .filter(line => line.trim())
@@ -180,9 +180,42 @@ export function loadSkipHistory(): Array<{
   }
 }
 
+/**
+ * Valida a integridade do log de skips (JSONL bem formado).
+ * Usado pelo CI para detectar logs corrompidos ou editados manualmente.
+ */
+export function validateSkipsLog(filePath: string = SKIPS_LOG): {
+  valid: boolean;
+  total: number;
+  errors: string[];
+} {
+  const errors: string[] = [];
+  let total = 0;
+
+  if (!existsSync(filePath)) {
+    return { valid: true, total: 0, errors };
+  }
+
+  const lines = readFileSync(filePath, 'utf-8').split('\n').filter((l) => l.trim() !== '');
+  for (let i = 0; i < lines.length; i++) {
+    total++;
+    try {
+      const record = JSON.parse(lines[i]);
+      if (!record.timestamp || !Array.isArray(record.files_changed)) {
+        errors.push(`linha ${i + 1}: registro sem timestamp ou files_changed`);
+      }
+    } catch {
+      errors.push(`linha ${i + 1}: JSON inválido`);
+    }
+  }
+
+  return { valid: errors.length === 0, total, errors };
+}
+
 export default {
   generateReport,
   logGovernanceSkip,
   printReport,
   loadSkipHistory,
+  validateSkipsLog,
 };

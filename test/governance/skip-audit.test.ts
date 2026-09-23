@@ -103,16 +103,14 @@ describe('Governance Skip Audit', () => {
     console.log('✅ Teste: Histórico de skips carregado corretamente');
   });
 
-  it('deve validar razão do skip', () => {
-    const skipWithoutReason = {
-      timestamp: new Date().toISOString(),
-      author: 'test-user',
-      reason: 'NÃO INFORMADO', // Razão padrão quando não informada
-      files_changed: ['test.md'],
-    };
+  it('deve validar razão do skip (mínimo 10 caracteres exigido pelo hook)', () => {
+    const isValidReason = (reason?: string) => (reason || '').trim().length >= 10;
 
-    expect(skipWithoutReason.reason).toBe('NÃO INFORMADO');
-    console.log('✅ Teste: Validação de razão do skip');
+    expect(isValidReason(undefined)).toBe(false);
+    expect(isValidReason('')).toBe(false);
+    expect(isValidReason('curta')).toBe(false);
+    expect(isValidReason('hotfix de segurança emergencial')).toBe(true);
+    console.log('✅ Teste: Validação de razão do skip (>=10 chars)');
   });
 
   it('deve rejeitar skip sem razão em arquivos críticos', () => {

@@ -67,8 +67,16 @@ async function main() {
       process.exit(1);
     }
     
+    // P2: exige justificativa mínima auditável para o skip
+    const skipReason = (process.env.XOCP_SKIP_REASON || '').trim();
+    if (skipReason.length < 10) {
+      console.error('❌ BLOQUEADO: XOCP_SKIP_REASON é obrigatório (mínimo 10 caracteres).');
+      console.error('Exemplo: XOCP_SKIP_GOVERNANCE=1 XOCP_SKIP_REASON="hotfix de segurança emergencial" git commit ...');
+      process.exit(1);
+    }
+
     // Registra skip em log persistente
-    logGovernanceSkip(stagedFiles, process.env.XOCP_SKIP_REASON, process.env.USER);
+    logGovernanceSkip(stagedFiles, skipReason, process.env.USER);
     process.exit(0);
   }
 
