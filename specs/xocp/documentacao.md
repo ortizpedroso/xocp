@@ -7,7 +7,7 @@ trabalho entre sessões (handoff durável).
 > Fork independente do [OpenCode](https://github.com/anomalyco/opencode)
 > (MIT). Repositório: [github.com/ortizpedroso/xocp](https://github.com/ortizpedroso/xocp).
 
-_Última atualização: gerada a partir de `specs/xocp/documentacao.md`._
+_Última atualização: Arquitetura de Contratos Aninhados implementada._
 
 ---
 
@@ -22,38 +22,147 @@ O XOCP é um **agente de programação** que:
    tarefas em background, incluindo subagentes paralelos via `task`)
 5. Devolve respostas em streaming até concluir o turno ou pedir aprovação
 
-Além da base herdada do OpenCode, o XOCP adiciona três capacidades
-próprias, já em funcionamento:
+Além da base herdada do OpenCode, o XOCP adiciona capacidades próprias
+já em funcionamento, incluindo a **Arquitetura de Contratos Aninhados**:
 
 | # | Recurso | O que faz | Status |
 |---|---------|-----------|--------|
 | 1 | Telemetria de sessão | Observa cada sessão (turnos, ferramentas usadas, duração) e calcula um score de complexidade | **Ativo** |
 | 2/3 | Mapeamento estrutural (Graphify) | Sob demanda (opt-in), mapeia a estrutura do código em um grafo — chamadas, imports, herança — sem custo de LLM. Sugestão aparece quando a sessão fica complexa o suficiente | **Ativo** |
 | 4 | Handoff durável | O agente pode gravar um resumo (até 2000 caracteres) ao fim de um trabalho, pra outra sessão retomar depois sem reconstruir contexto do zero | **Ativo** |
-| 5 | Roteamento automático por domínio (clusters) | Dividir tarefas automaticamente entre agentes especializados por área do código | Adiado — testado, sem ganho comprovado em ambiente controlado; retomada depende de dado de uso real |
-| 6 | Pré-busca de mapa em segundo plano | Mapear o projeto automaticamente antes do usuário pedir | Adiado — depende do item 1 validar valor em produção primeiro |
+| 5 | Templates Multi-Camada | Briefs e Executors com contrato bidirecional por cluster (backend/frontend/core/integration) | **Ativo** |
+| 6 | Avaliador Dual-Lens | Análise independente em duas lentes (Evidência + Impacto) com 3 Travas cognitivas | **Ativo** |
+| 7 | State Snapshot | Persistência de estado para continuidade entre ciclos e escalações | **Ativo** |
+| 8 | Classificação L1/L2/L3 | Intervenção humana escalonada por severidade objetiva | **Ativo** |
+| 9 | Meta-Governança | Auto-compliance: XOCP segue suas próprias regras de mudança | **Pendente** |
+| 10 | Auditabilidade Seletiva | Artefatos de governança versionados, runtime regenerável gitignored | **Parcial** |
 
-## Como o mapeamento de código funciona (Graphify)
+---
 
-Diferente de sistemas baseados em busca por similaridade de texto
-(embeddings/RAG vetorial), o XOCP usa um **grafo real de código**: cada
-arquivo/função vira um nó, cada chamada/import/herança vira uma aresta.
-Isso é extraído localmente via AST (sem enviar código pra nenhuma API),
-usando uma ferramenta externa (`graphifyy`) instalada e versionada
-automaticamente na primeira vez que a função é usada — o usuário nunca
-instala nada manualmente.
+## Agentes Cognitivos XOCP
 
-Quando uma sessão fica complexa o suficiente (score de telemetria acima
-de um limite), o XOCP sugere mapear o projeto. O usuário decide se quer
-— nunca acontece automaticamente.
+O XOCP possui **13 agentes especializados**:
 
-## Continuidade entre sessões (Handoff)
+### Agentes Principais
+- **analista**: Planejamento estratégico e decomposição de tarefas
+- **avaliador**: Validação dual-lens (Evidência + Impacto) com 3 Travas
+- **elicitador**: Elicitação de requisitos e clarificação de contexto
 
-O agente pode, a qualquer momento significativo (tipicamente perto do
-fim de um trabalho), gravar um resumo do que foi feito, o que falta, e
-decisões tomadas. Uma sessão futura no mesmo projeto recebe um aviso
-discreto de que existe esse resumo, e pode optar por consultá-lo — sem
-nunca ser forçado a ler o conteúdo completo automaticamente.
+### Leads por Cluster
+- **backend-lead**: APIs, banco de dados, segurança, performance
+- **frontend-lead**: UI, acessibilidade, design tokens, UX
+- **core-lead**: Primitivas, contratos, invariantes do sistema
+- **integration-lead**: Testes E2E, cross-boundary, integrações
+
+### Agentes de Governança
+- **baseline-auditor**: Auditoria de baseline e padrões
+- **pattern-auditor**: Detecção de padrões e anti-padrões
+- **workflow-executor**: Execução de workflows definidos
+- **workflow-triador**: Triagem e roteamento de workflows
+- **evolution-incident-reporter**: Report de incidentes e evolução
+- **research-operator**: Pesquisa e síntese de informação
+
+---
+
+## Arquitetura de Contratos Aninhados
+
+### Níveis de Validação
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ NÍVEL 5: META-GOVERNANÇA                                │
+│ "O XOCP segue suas próprias regras?"                    │
+├─────────────────────────────────────────────────────────┤
+│ NÍVEL 4: AUDITORIA EXTERNA                              │
+│ "Uma IA independente valida as mudanças?"               │
+├─────────────────────────────────────────────────────────┤
+│ NÍVEL 3: CONTRATO BIDIRECIONAL                          │
+│ "Brief ↔ Executor ↔ Avaliador estão alinhados?"         │
+├─────────────────────────────────────────────────────────┤
+│ NÍVEL 2: INDEPENDÊNCIA COGNITIVA                        │
+│ "Avaliador forma opinião antes do confronto?"           │
+├─────────────────────────────────────────────────────────┤
+│ NÍVEL 1: CONTINUIDADE DE CONTEXTO                       │
+│ "Estado persiste entre ciclos e escalações?"            │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Templates Multi-Camada
+
+Cada cluster possui templates específicos com 3 camadas:
+
+**Camada 1: Contrato Global**
+- Objetivo claro e mensurável
+- Critérios numerados com IDs únicos (`criteria.id`)
+- Definição de Pronto (DoD)
+- Testes obrigatórios
+
+**Camada 2: Contrato do Cluster**
+- Especificidades backend/frontend/core/integration
+- Padrões arquiteturais do domínio
+- Restrições técnicas específicas
+
+**Camada 3: Especificidades do Sistema**
+- Contexto dinâmico
+- Hipóteses assumidas
+- Riscos identificados
+
+**Regra Crítica:** `criteria.id` do Brief DEVE ser espelhado no `criteria_met.id` do Executor.
+
+### Avaliador Dual-Lens (3 Travas)
+
+**TRAVA 1: Validação do Brief (Pré-Avaliação)**
+- YAML frontmatter válido
+- Template do cluster correto
+- Critérios numerados com IDs únicos
+
+**TRAVA 2: Dual-Lens (Análise Independente)**
+
+LENTE 1 — EVIDÊNCIA (O que foi feito está correto?)
+1. Leia Brief completo (fonte da verdade)
+2. Leia código real (arquivos em files_expected)
+3. Execute testes
+4. Avalie: critérios, restrições, padrões
+
+LENTE 2 — IMPACTO (Quais as consequências?)
+5. Use grep para buscar usos do código modificado
+6. Avalie: regressões, segurança, acessibilidade, contratos
+
+**NUNCA leia o resumo do Executor ainda.**
+
+**TRAVA 3: Confronto com Resumo (Pós-Análise)**
+7. AGORA leia execution_summary_read
+8. Compare: Executor DIZ vs VOCÊ encontrou
+9. Verifique criteria.id 1:1
+10. Emite veredito com diagnóstico de AMBAS as lentes
+
+### State Snapshot
+
+Persistência atômica de estado por ciclo:
+- Ciclo atual e timestamp
+- Git hash do estado do código
+- Agente responsável
+- Tarefa em execução
+- Histórico de decisões
+- Erros encontrados
+- Hipóteses ativas
+- Contexto relevante
+
+Permite retomada após interrupções ou escalações humanas.
+
+### Classificação L1/L2/L3
+
+**L1_LOCAL_ADJUST**: Executor retoma com contexto local
+- Gatilho: ≤2 critérios falhando
+- Ação: Ajuste local sem mudar Brief
+
+**L2_REPLANNING**: Analista ajusta Briefs afetados
+- Gatilho: 3-5 critérios OU 1 contrato quebrado
+- Ação: Replanejamento parcial
+
+**L3_REDIRECTION**: Analista re-mapeia abordagem completa
+- Gatilho: >5 critérios OU hipótese fundamental refutada
+- Ação: Redirecionamento estratégico
 
 ---
 
@@ -73,7 +182,7 @@ Pacotes principais do monorepo:
 
 - `packages/opencode` — servidor e CLI
 - `packages/app` — interface web compartilhada
-- `packages/core` — sessão, ferramentas, permissões
+- `packages/core` — sessão, ferramentas, permissões, governança
 - `packages/llm` — streaming com provedores
 
 ---
@@ -148,6 +257,27 @@ Detalhes: `specs/xocp/workflow.md` e `README.md`.
 
 ---
 
+## Governança e Auditabilidade
+
+### Artefatos Versionados
+- `specs/xocp/templates/` — Templates de Brief e Executor
+- `.opencode/briefs/` — Briefs de mudanças (quando aplicável)
+- `.opencode/reviews/` — Reviews de avaliação
+- `.opencode/evolution/` — Histórico evolutivo
+
+### Artefatos Runtime (não versionados)
+- `.opencode/state/` — Snapshots de estado (regeneráveis)
+- `.opencode/execution-log/` — Logs de execução
+- `.opencode/dag.db*` — Banco de dados do grafo
+
+### Meta-Governança (Pendente)
+- Internal Change Detector
+- Governance Validator
+- Pre-commit hooks com bloqueio de críticos
+- Skip auditável com registro persistente
+
+---
+
 ## Como este documento é atualizado
 
 1. **Fonte:** `specs/xocp/documentacao.md` (este arquivo)
@@ -162,4 +292,7 @@ Detalhes: `specs/xocp/workflow.md` e `README.md`.
 - `specs/v2/session.md` — especificação SessionV2
 - `AGENTS.md` — regras de desenvolvimento XOCP
 - `specs/xocp/workflow.md` — fluxo local vs Cloud Agent
-- `specs/xocp/architecture.md` — arquitetura técnica completa (público interno/dev)
+- `specs/xocp/archive/architecture.md` — arquitetura técnica histórica
+- `specs/xocp/templates/` — templates multi-camada por cluster
+- `packages/core/src/state/snapshot.ts` — módulo State Snapshot
+- `packages/core/src/escalation/classification.ts` — classificação L1/L2/L3
