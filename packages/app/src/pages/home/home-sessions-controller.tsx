@@ -31,7 +31,7 @@ export type HomeSessionRecord = {
 }
 
 export type HomeSessionGroup = {
-  id: "today" | "yesterday" | "older"
+  id: "today" | "yesterday" | "older" | `project:${string}`
   title: string
   sessions: HomeSessionRecord[]
 }
@@ -273,6 +273,22 @@ function buildHomeSessionRecords(input: {
 
 export function homeSessionSearchKey(record: HomeSessionRecord) {
   return `${pathKey(record.session.directory)}:${record.session.id}`
+}
+
+export function groupSessionsByProject(records: HomeSessionRecord[]): HomeSessionGroup[] {
+  const groups: HomeSessionGroup[] = []
+  const index = new Map<string, number>()
+  for (const record of records) {
+    const key = pathKey(record.project.worktree)
+    const existing = index.get(key)
+    if (existing === undefined) {
+      index.set(key, groups.length)
+      groups.push({ id: `project:${key}`, title: record.projectName, sessions: [record] })
+      continue
+    }
+    groups[existing]!.sessions.push(record)
+  }
+  return groups
 }
 
 function groupSessions(records: HomeSessionRecord[], language: ReturnType<typeof useLanguage>): HomeSessionGroup[] {
