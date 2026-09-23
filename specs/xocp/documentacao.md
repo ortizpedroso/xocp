@@ -41,26 +41,24 @@ já em funcionamento, incluindo a **Arquitetura de Contratos Aninhados**:
 
 ## Agentes Cognitivos XOCP
 
-O XOCP possui **13 agentes especializados**:
+O XOCP possui **11 agentes especializados** — um para cada prompt canônico em `packages/opencode/src/agent/prompt/*.txt` (V1), espelhado em `packages/core/src/plugin/*.txt` (V2) e garantido por `test/prompts-mirror.test.ts`:
 
-### Agentes Principais
-- **analista**: Planejamento estratégico e decomposição de tarefas
+### Pipeline cognitivo (contratos aninhados)
+- **workflow-triador**: Triagem e roteamento de solicitações para o pipeline
+- **analista**: Planejamento estratégico e decomposição de tarefas (emite Briefs pelos templates multi-camada)
+- **workflow-executor**: Execução de workflows definidos (produz Resumos do Executor com `criteria_met.id`)
 - **avaliador**: Validação dual-lens (Evidência + Impacto) com 3 Travas
 - **elicitador**: Elicitação de requisitos e clarificação de contexto
 
-### Leads por Cluster
-- **backend-lead**: APIs, banco de dados, segurança, performance
-- **frontend-lead**: UI, acessibilidade, design tokens, UX
-- **core-lead**: Primitivas, contratos, invariantes do sistema
-- **integration-lead**: Testes E2E, cross-boundary, integrações
-
-### Agentes de Governança
+### Suporte operacional
 - **baseline-auditor**: Auditoria de baseline e padrões
-- **pattern-auditor**: Detecção de padrões e anti-padrões
-- **workflow-executor**: Execução de workflows definidos
-- **workflow-triador**: Triagem e roteamento de workflows
-- **evolution-incident-reporter**: Report de incidentes e evolução
-- **research-operator**: Pesquisa e síntese de informação
+- **compaction**: Compactação de contexto de sessão
+- **explore**: Exploração estruturada do código
+- **graphify-explorer**: Navegação do grafo estrutural (Graphify)
+- **summary**: Geração de resumos de sessão/handoff
+- **title**: Geração de títulos de sessão
+
+> **Nota:** Os "leads por cluster" (backend/frontend/core/integration) não são agentes separados: são os 4 clusters cobertos pelos templates multi-camada (`specs/xocp/templates/brief-*-template.md` e `executor-*-template.md`), usados pelo analista e pelo workflow-executor. Prompt files planejados e nunca implementados (`backend-lead`, `frontend-lead`, `core-lead`, `integration-lead`, `pattern-auditor`, `evolution-incident-reporter`, `research-operator`) foram removidos desta documentação na auditoria de consistência de 2026-09-24.
 
 ---
 
